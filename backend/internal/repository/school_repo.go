@@ -10,6 +10,7 @@ type SchoolRepository interface{
 	CreateSchool(school *domain.School) error
 	GetAllSchools() ([]*domain.School, error)
 	GetSchoolByID(id string) (*domain.School, error)
+	GetSchoolByCode(code string) (*domain.School, error)
 	UpdateSchool(school *domain.School) error
 	DeleteSchool(id string) error
 }
@@ -39,10 +40,16 @@ func (r *schoolRepository) GetSchoolByID(id string) (*domain.School, error) {
 	return &school, err
 }
 
+func (r *schoolRepository) GetSchoolByCode(code string) (*domain.School, error) {
+	var school domain.School
+	err := r.db.First(&school, "sch_code = ?", code).Error
+	return &school, err
+}
+
 func (r *schoolRepository) UpdateSchool(school *domain.School) error {
 	return r.db.Save(school).Error
 }
 
-func (r *schoolRepository) DeleteSchool(id string) error {
-	return r.db.Delete(&domain.School{}, "sch_id = ?", id).Error
+func (r *schoolRepository) DeleteSchool(code string) error {
+	return r.db.Delete(&domain.School{}, "sch_code = ?", code).Error
 }

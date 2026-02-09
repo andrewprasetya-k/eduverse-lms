@@ -66,6 +66,17 @@ func (h *SchoolHandler) GetSchoolByID(c *gin.Context) {
 	c.JSON(http.StatusOK, school)
 }
 
+//Get By code
+func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
+	code := c.Param("code")
+	school, err := h.service.GetSchoolByCode(code)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, school)
+}
+
 //Put
 func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 	var input dto.UpdateSchoolDTO
@@ -74,8 +85,8 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	id := c.Param("id")
-	school, err := h.service.GetSchoolByID(id)
+	code := c.Param("code")
+	school, err := h.service.GetSchoolByCode(code)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -113,8 +124,8 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 
 //Delete
 func (h *SchoolHandler) DeleteSchool(c *gin.Context) {
-	id := c.Param("id")
-	if err := h.service.DeleteSchool(id); err != nil {
+	code := c.Param("code")
+	if err := h.service.DeleteSchool(code); err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
