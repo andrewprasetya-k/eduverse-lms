@@ -25,6 +25,8 @@ func (h *SchoolHandler) CreateSchool(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
+
+	//mapping dto ke domain(model)
 	school := domain.School{
 		Name:    input.Name,
 		Code:    input.Code,

@@ -3,6 +3,8 @@ package service
 import (
 	"backend/internal/domain"
 	"backend/internal/repository"
+	"math/rand"
+	"time"
 )
 
 type SchoolService interface{
@@ -23,6 +25,15 @@ func NewSchoolService(repo repository.SchoolRepository) SchoolService {
 }
 
 func (s *schoolService) CreateSchool(school *domain.School) error {
+	if school.Code == "" {
+		word := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+		code := make([]rune, 6)
+		seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+		for i := range code {
+			code[i] = word[seededRand.Intn(len(word))]
+		}
+		school.Code = string(code)
+	}
 	return s.repo.CreateSchool(school)
 }
 
