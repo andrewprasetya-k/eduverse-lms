@@ -66,14 +66,42 @@ func (h *SchoolHandler) GetSchoolByID(c *gin.Context) {
 
 //Put
 func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
-	var school domain.School
+	var input dto.UpdateSchoolDTO
 	//parse json dari request body ke struct school
-	if err:= c.ShouldBindJSON(&school); err != nil {
+	if err:= c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
+	id := c.Param("id")
+	school, err := h.service.GetSchoolByID(id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+	//update field yang diubah
+	if input.Name != nil {
+		school.Name = *input.Name
+	}
+	if input.Code != nil {
+		school.Code = *input.Code
+	}
+	if input.LogoID != nil {
+		school.LogoID = input.LogoID
+	}
+	if input.Address != nil {
+		school.Address = *input.Address
+	}
+	if input.Email != nil {
+		school.Email = *input.Email
+	}
+	if input.Phone != nil {
+		school.Phone = *input.Phone
+	}
+	if input.Website != nil {
+		school.Website = input.Website
+	}
 	//panggil service untuk update school
-	if err := h.service.UpdateSchool(&school); err != nil {
+	if err := h.service.UpdateSchool(school); err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
