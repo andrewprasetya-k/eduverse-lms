@@ -32,27 +32,16 @@ func NewSchoolService(repo repository.SchoolRepository) SchoolService {
 func (s *schoolService) CreateSchool(school *domain.School) error {
 	// 1. Jika code kosong, generate otomatis dengan pengecekan keunikan
 	if school.Code == "" {
-		for {
-			newCode := s.generateRandomCode()
-			codeExist, err := s.repo.GetSchoolByCode(newCode)
-			if codeExist != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					school.Code = newCode
-					break
-				}
-				return err
-			}
-		}
+		school.Code = s.generateRandomCode()
 	} else {
-		codeExist, err := s.repo.GetSchoolByCode(school.Code)
-		if codeExist != nil {
+		_, err := s.repo.GetSchoolByCode(school.Code)
+		if err == nil {
 			return fmt.Errorf("school code '%s' already exists", school.Code)
 		}
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
 	}
-
 	return s.repo.CreateSchool(school)
 }
 
@@ -62,6 +51,10 @@ func (s *schoolService) generateRandomCode() string {
 	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := range code {
 		code[i] = word[seededRand.Intn(len(word))]
+	}
+	_,err:=s.GetSchoolByCode(string(code))
+	if err==nil{
+		return s.generateRandomCode()
 	}
 	return string(code)
 }
