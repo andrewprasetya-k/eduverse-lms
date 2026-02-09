@@ -1,8 +1,36 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"backend/internal/handler"
+	"backend/internal/repository"
+	"backend/internal/service"
+	"os"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
 
 func main() {
+	//load env variables
+	godotenv.Load()
+	dsn:= os.Getenv("DB_DSN")
+	if dsn == "" {
+		panic("DB_DSN is not set")
+	}
+
+	//db connection
+	db, err:=gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database: " + err.Error())
+	}
+	//initialize repo, service, hndler
+	schoolRepo := repository.NewSchoolRepository(db)
+	schoolService := service.NewSchoolService(schoolRepo)
+	schoolHandler := handler.NewSchoolHandler(schoolService)
+
+	//router setup
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -10,6 +38,16 @@ func main() {
 			"message": "pong",
 		})
 	})
+	api := r.Group("/api")
+	{
+		schools := api.Group("/schools")
+		{
+			schools.POST("", schoolHandler.CreateSchool)
+			schools.GET("", schoolHandler.GetAllSchools)
+			schools.GET("/:id", schoolHandler.GetSchoolByID)
+		}
+	}
 
+	//run server
 	r.Run(":8080")
 }
