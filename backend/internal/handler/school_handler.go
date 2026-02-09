@@ -2,6 +2,7 @@ package handler
 
 import (
 	"backend/internal/domain"
+	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
 
@@ -18,11 +19,20 @@ func NewSchoolHandler(service service.SchoolService) *SchoolHandler {
 
 //Post
 func (h *SchoolHandler) CreateSchool(c *gin.Context) {
-	var school domain.School
+	var input dto.CreateSchoolDTO
 	//parse json dari request body ke struct school
-	if err:= c.ShouldBindJSON(&school); err != nil {
+	if err:= c.ShouldBindJSON(&input); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
+	}
+	school := domain.School{
+		Name:    input.Name,
+		Code:    input.Code,
+		LogoID:  input.LogoID,
+		Address: input.Address,
+		Email:   input.Email,
+		Phone:   input.Phone,
+		Website: input.Website,
 	}
 	//panggil service untuk create school
 	if err := h.service.CreateSchool(&school); err != nil {

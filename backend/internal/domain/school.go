@@ -11,9 +11,9 @@ type School struct {
 	Name      string         `gorm:"column:sch_name" json:"name"`
 	Code      string         `gorm:"column:sch_code;unique" json:"code"`
 	LogoID    *string        `gorm:"column:sch_logo;type:uuid" json:"logo_id,omitempty"`
-	Address   *string        `gorm:"column:sch_address" json:"address,omitempty"`
-	Email     *string        `gorm:"column:sch_email" json:"email,omitempty"`
-	Phone     *string        `gorm:"column:sch_phone" json:"phone,omitempty"`
+	Address   string        `gorm:"column:sch_address" json:"address"`
+	Email     string        `gorm:"column:sch_email" json:"email"`
+	Phone     string        `gorm:"column:sch_phone" json:"phone"`
 	Website   *string        `gorm:"column:sch_website" json:"website,omitempty"`
 	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
