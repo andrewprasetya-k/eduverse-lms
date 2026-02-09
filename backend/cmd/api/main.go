@@ -21,7 +21,10 @@ func main() {
 	}
 
 	//db connection
-	db, err:=gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  dsn,
+		PreferSimpleProtocol: true, // Mengatasi error prepared statement pada Supabase Pooler
+	}), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database: " + err.Error())
 	}
@@ -44,6 +47,8 @@ func main() {
 		{
 			schools.POST("", schoolHandler.CreateSchool)
 			schools.GET("", schoolHandler.GetAllSchools)
+			schools.PATCH("/:id", schoolHandler.UpdateSchool)
+			schools.DELETE("/:id", schoolHandler.DeleteSchool)
 			schools.GET("/:id", schoolHandler.GetSchoolByID)
 		}
 	}
