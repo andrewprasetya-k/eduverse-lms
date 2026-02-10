@@ -50,6 +50,6 @@ func (r *schoolRepository) UpdateSchool(school *domain.School) error {
 	return r.db.Save(school).Error
 }
 
-func (r *schoolRepository) DeleteSchool(code string) error {
-	return r.db.Delete(&domain.School{}, "sch_code = ?", code).Error
+func (r *schoolRepository) DeleteSchool(id string) error {
+	return r.db.Delete(&domain.School{}, "sch_id = ?", id).Error
 }

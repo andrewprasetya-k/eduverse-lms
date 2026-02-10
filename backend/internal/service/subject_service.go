@@ -3,6 +3,7 @@ package service
 import (
 	"backend/internal/domain"
 	"backend/internal/repository"
+	"errors"
 )
 
 type SubjectService interface {
@@ -25,6 +26,11 @@ func NewSubjectService(subRepo repository.SubjectRepository, schRepo repository.
 }
 
 func (s *subjectService) CreateSubject(subject *domain.Subject) error {
+	// Cek apakah kode sudah ada di sekolah yang sama
+	existing, _ := s.subjectRepo.GetSubjectByCode(subject.Code, subject.SchoolID)
+	if existing != nil && existing.ID != "" {
+		return errors.New("subject code already exists in this school")
+	}
 	return s.subjectRepo.CreateSubject(subject)
 }
 
@@ -46,6 +52,6 @@ func (s *subjectService) UpdateSubject(subject *domain.Subject) error {
 	return s.subjectRepo.UpdateSubject(subject)
 }
 
-func (s *subjectService) DeleteSubject(code string) error {
-	return s.subjectRepo.DeleteSubject(code)
+func (s *subjectService) DeleteSubject(id string) error {
+	return s.subjectRepo.DeleteSubject(id)
 }

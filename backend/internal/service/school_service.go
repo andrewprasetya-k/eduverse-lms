@@ -17,7 +17,7 @@ type SchoolService interface {
 	GetSchoolByID(id string) (*domain.School, error)
 	GetSchoolByCode(code string) (*domain.School, error)
 	UpdateSchool(school *domain.School) error
-	DeleteSchool(code string) error
+	DeleteSchool(id string) error
 }
 
 type schoolService struct {
@@ -76,6 +76,6 @@ func (s *schoolService) UpdateSchool(school *domain.School) error {
 	return s.repo.UpdateSchool(school)
 }
 
-func (s *schoolService) DeleteSchool(code string) error {
-	return s.repo.DeleteSchool(code)
+func (s *schoolService) DeleteSchool(id string) error {
+	return s.repo.DeleteSchool(id)
 }

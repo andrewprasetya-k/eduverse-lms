@@ -15,7 +15,7 @@ import (
 func main() {
 	//load env variables
 	godotenv.Load()
-	dsn:= os.Getenv("DB_DSN")
+	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
 		panic("DB_DSN is not set")
 	}
@@ -28,10 +28,15 @@ func main() {
 	if err != nil {
 		panic("failed to connect database: " + err.Error())
 	}
-	//initialize repo, service, hndler
+
+	//initialize repo, service, handler
 	schoolRepo := repository.NewSchoolRepository(db)
 	schoolService := service.NewSchoolService(schoolRepo)
 	schoolHandler := handler.NewSchoolHandler(schoolService)
+
+	subjectRepo := repository.NewSubjectRepository(db)
+	subjectService := service.NewSubjectService(subjectRepo, schoolRepo)
+	subjectHandler := handler.NewSubjectHandler(subjectService)
 
 	//router setup
 	r := gin.Default()
@@ -41,15 +46,28 @@ func main() {
 			"message": "pong",
 		})
 	})
+
 	api := r.Group("/api")
 	{
+		// School Routes
 		schools := api.Group("/schools")
 		{
 			schools.POST("", schoolHandler.CreateSchool)
 			schools.GET("", schoolHandler.GetAllSchools)
-			schools.GET("/:code", schoolHandler.GetSchoolByCode)
-			schools.PATCH("/:code", schoolHandler.UpdateSchool)
-			schools.DELETE("/:code", schoolHandler.DeleteSchool)
+			schools.GET("/:id", schoolHandler.GetSchoolByID)
+			schools.GET("/code/:code", schoolHandler.GetSchoolByCode)
+			schools.PUT("/:id", schoolHandler.UpdateSchool)
+			schools.DELETE("/:id", schoolHandler.DeleteSchool)
+		}
+
+		// Subject Routes
+		subjects := api.Group("/subjects")
+		{
+			subjects.POST("", subjectHandler.CreateSubject)
+			subjects.GET("", subjectHandler.GetAllSubjects)
+			subjects.GET("/:id", subjectHandler.GetSubjectByID)
+			subjects.PUT("/:id", subjectHandler.UpdateSubject)
+			subjects.DELETE("/:id", subjectHandler.DeleteSubject)
 		}
 	}
 

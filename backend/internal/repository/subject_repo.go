@@ -51,6 +51,6 @@ func (r *subjectRepository) UpdateSubject(subject *domain.Subject) error {
 	return r.db.Save(subject).Error
 }
 
-func (r *subjectRepository) DeleteSubject(code string) error {
-	return r.db.Delete(&domain.Subject{}, "sub_code = ?", code).Error
+func (r *subjectRepository) DeleteSubject(id string) error {
+	return r.db.Delete(&domain.Subject{}, "sub_id = ?", id).Error
 }

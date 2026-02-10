@@ -17,16 +17,14 @@ func NewSchoolHandler(service service.SchoolService) *SchoolHandler {
 	return &SchoolHandler{service: service}
 }
 
-//Post
+// Create
 func (h *SchoolHandler) CreateSchool(c *gin.Context) {
 	var input dto.CreateSchoolDTO
-	//parse json dari request body ke struct school
-	if err:= c.ShouldBindJSON(&input); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	//mapping dto ke domain(model)
 	school := domain.School{
 		Name:    input.Name,
 		Code:    input.Code,
@@ -36,62 +34,62 @@ func (h *SchoolHandler) CreateSchool(c *gin.Context) {
 		Phone:   input.Phone,
 		Website: input.Website,
 	}
-	//panggil service untuk create school
+
 	if err := h.service.CreateSchool(&school); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	//return response
+
 	c.JSON(http.StatusCreated, school)
 }
 
-//Get All
+// Get All
 func (h *SchoolHandler) GetAllSchools(c *gin.Context) {
 	schools, err := h.service.GetAllSchools()
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, schools)
 }
 
-//Get By ID
+// Get By ID
 func (h *SchoolHandler) GetSchoolByID(c *gin.Context) {
 	id := c.Param("id")
 	school, err := h.service.GetSchoolByID(id)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
 		return
 	}
 	c.JSON(http.StatusOK, school)
 }
 
-//Get By code
+// Get By Code
 func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 	code := c.Param("code")
 	school, err := h.service.GetSchoolByCode(code)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
 		return
 	}
 	c.JSON(http.StatusOK, school)
 }
 
-//Put
+// Update
 func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 	var input dto.UpdateSchoolDTO
-	//parse json dari request body ke struct school
-	if err:= c.ShouldBindJSON(&input); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	code := c.Param("code")
-	school, err := h.service.GetSchoolByCode(code)
+
+	id := c.Param("id")
+	school, err := h.service.GetSchoolByID(id)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
 		return
 	}
-	//update field yang diubah
+
 	if input.Name != nil {
 		school.Name = *input.Name
 	}
@@ -113,20 +111,20 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 	if input.Website != nil {
 		school.Website = input.Website
 	}
-	//panggil service untuk update school
+
 	if err := h.service.UpdateSchool(school); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	//return response
+
 	c.JSON(http.StatusOK, school)
 }
 
-//Delete
+// Delete
 func (h *SchoolHandler) DeleteSchool(c *gin.Context) {
-	code := c.Param("code")
-	if err := h.service.DeleteSchool(code); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+	id := c.Param("id")
+	if err := h.service.DeleteSchool(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "School deleted successfully"})
