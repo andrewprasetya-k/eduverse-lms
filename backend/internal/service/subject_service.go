@@ -5,18 +5,18 @@ import (
 	"backend/internal/repository"
 )
 
-type SubjectService interface{
+type SubjectService interface {
 	CreateSubject(subject *domain.Subject) error
-	GetAllSubjects() ([]*domain.Subject, error)
+	GetAllSubjects(schoolID string) ([]*domain.Subject, error) // Tambahkan schoolID
 	GetSubjectByID(id string) (*domain.Subject, error)
-	GetSubjectByCode(code string) (*domain.Subject, error)
+	GetSubjectByCode(code string, schoolID string) (*domain.Subject, error)
 	UpdateSubject(subject *domain.Subject) error
 	DeleteSubject(id string) error
 }
 
 type subjectService struct {
 	subjectRepo repository.SubjectRepository
-	schoolRepo repository.SchoolRepository
+	schoolRepo  repository.SchoolRepository
 }
 
 // constructor
@@ -24,21 +24,21 @@ func NewSubjectService(subRepo repository.SubjectRepository, schRepo repository.
 	return &subjectService{subjectRepo: subRepo, schoolRepo: schRepo}
 }
 
-
 func (s *subjectService) CreateSubject(subject *domain.Subject) error {
 	return s.subjectRepo.CreateSubject(subject)
 }
 
-func (s *subjectService) GetAllSubjects() ([]*domain.Subject, error) {
-	return s.subjectRepo.GetAllSubjects()
+func (s *subjectService) GetAllSubjects(schoolID string) ([]*domain.Subject, error) {
+	// Di sini bisa ditambahkan validasi apakah schoolID ada, jika perlu
+	return s.subjectRepo.GetAllSubjects(schoolID)
 }
 
 func (s *subjectService) GetSubjectByID(id string) (*domain.Subject, error){
 	return s.subjectRepo.GetSubjectByID(id)
 }
 
-func (s *subjectService) GetSubjectByCode(code string) (*domain.Subject, error) {
-	return s.subjectRepo.GetSubjectByCode(code)
+func (s *subjectService) GetSubjectByCode(code string, schoolID string) (*domain.Subject, error) {
+	return s.subjectRepo.GetSubjectByCode(code, schoolID)
 
 }
 

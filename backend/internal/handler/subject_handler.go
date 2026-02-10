@@ -43,7 +43,14 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 
 //Get All
 func (h *SubjectHandler) GetAllSubjects(c *gin.Context) {
-	subjects, err := h.service.GetAllSubjects()
+	// Ambil school_id dari query parameter (?school_id=xxx)
+	schoolID := c.Query("school_id")
+	if schoolID == "" {
+		c.JSON(400, gin.H{"error": "school_id query parameter is required"})
+		return
+	}
+
+	subjects, err := h.service.GetAllSubjects(schoolID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -65,7 +72,8 @@ func (h *SubjectHandler) GetSubjectByID(c *gin.Context) {
 //Get By code
 func (h *SubjectHandler) GetSubjectByCode(c *gin.Context) {
 	code := c.Param("code")
-	subject, err := h.service.GetSubjectByCode(code)
+	schoolID := c.Query("schoolID")
+	subject, err := h.service.GetSubjectByCode(code, schoolID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -82,7 +90,8 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 		return
 	}
 	code := c.Param("code")
-	subject, err := h.service.GetSubjectByCode(code)
+	schoolID := c.Query("schoolID")
+	subject, err := h.service.GetSubjectByCode(code, schoolID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
