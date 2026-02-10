@@ -9,10 +9,9 @@ import (
 type SchoolRepository interface{
 	CreateSchool(school *domain.School) error
 	GetAllSchools() ([]*domain.School, error)
-	GetSchoolByID(id string) (*domain.School, error)
-	GetSchoolByCode(code string) (*domain.School, error)
+	GetSchoolByCode(schoolCode string) (*domain.School, error)
 	UpdateSchool(school *domain.School) error
-	DeleteSchool(id string) error
+	DeleteSchool(schoolCode string) error
 }
 
 type schoolRepository struct {
@@ -34,22 +33,16 @@ func (r *schoolRepository) GetAllSchools() ([]*domain.School, error) {
 	return schools, err
 }
 
-func (r *schoolRepository) GetSchoolByID(id string) (*domain.School, error) {
+func (r *schoolRepository) GetSchoolByCode(schoolCode string) (*domain.School, error) {
 	var school domain.School
-	err := r.db.First(&school, "sch_id = ?", id).Error
-	return &school, err
-}
-
-func (r *schoolRepository) GetSchoolByCode(code string) (*domain.School, error) {
-	var school domain.School
-	err := r.db.First(&school, "sch_code = ?", code).Error
+	err := r.db.Where(&school, "sch_code = ?", schoolCode).First(&school).Error
 	return &school, err
 }
 
 func (r *schoolRepository) UpdateSchool(school *domain.School) error {
-	return r.db.Save(school).Error
+	return r.db.Updates(school).Error
 }
 
-func (r *schoolRepository) DeleteSchool(id string) error {
-	return r.db.Delete(&domain.School{}, "sch_id = ?", id).Error
+func (r *schoolRepository) DeleteSchool(schoolCode string) error {
+	return r.db.Delete(&domain.School{}, "sch_code = ?", schoolCode).Error
 }

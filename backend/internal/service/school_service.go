@@ -14,8 +14,7 @@ import (
 type SchoolService interface {
 	CreateSchool(school *domain.School) error
 	GetAllSchools() ([]*domain.School, error)
-	GetSchoolByID(id string) (*domain.School, error)
-	GetSchoolByCode(code string) (*domain.School, error)
+	GetSchoolByCode(schoolCode string) (*domain.School, error)
 	UpdateSchool(school *domain.School) error
 	DeleteSchool(id string) error
 }
@@ -46,36 +45,36 @@ func (s *schoolService) CreateSchool(school *domain.School) error {
 }
 
 func (s *schoolService) generateRandomCode() string {
-	word := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-	code := make([]rune, 6)
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := range code {
-		code[i] = word[seededRand.Intn(len(word))]
-	}
-	_,err:=s.GetSchoolByCode(string(code))
-	if err==nil{
-		return s.generateRandomCode()
-	}
-	return string(code)
+    word := []rune("ABCDEFGHJKMNPQRSTUVWXYZ23456789")
+    seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+    
+    for range 10 { // Coba maksimal 10 kali
+        code := make([]rune, 6)
+        for j := range code {
+            code[j] = word[seededRand.Intn(len(word))]
+        }
+        
+        // Cek keunikan
+        _, err := s.repo.GetSchoolByCode(string(code))
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return string(code)
+        }
+    }
+    return "" // Atau handle error jika gagal dapet kode unik
 }
 
 func (s *schoolService) GetAllSchools() ([]*domain.School, error) {
 	return s.repo.GetAllSchools()
 }
 
-
-func (s *schoolService) GetSchoolByID(id string) (*domain.School, error) {
-	return s.repo.GetSchoolByID(id)
-}
-
-func (s *schoolService) GetSchoolByCode(code string) (*domain.School, error) {
-	return s.repo.GetSchoolByCode(code)
+func (s *schoolService) GetSchoolByCode(schoolCode string) (*domain.School, error) {
+	return s.repo.GetSchoolByCode(schoolCode)
 }
 
 func (s *schoolService) UpdateSchool(school *domain.School) error {
 	return s.repo.UpdateSchool(school)
 }
 
-func (s *schoolService) DeleteSchool(id string) error {
-	return s.repo.DeleteSchool(id)
+func (s *schoolService) DeleteSchool(schoolCode string) error {
+	return s.repo.DeleteSchool(schoolCode)
 }

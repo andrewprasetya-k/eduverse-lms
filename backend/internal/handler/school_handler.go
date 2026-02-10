@@ -53,21 +53,10 @@ func (h *SchoolHandler) GetAllSchools(c *gin.Context) {
 	c.JSON(http.StatusOK, schools)
 }
 
-// Get By ID
-func (h *SchoolHandler) GetSchoolByID(c *gin.Context) {
-	id := c.Param("id")
-	school, err := h.service.GetSchoolByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
-		return
-	}
-	c.JSON(http.StatusOK, school)
-}
-
 // Get By Code
 func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
-	code := c.Param("code")
-	school, err := h.service.GetSchoolByCode(code)
+	schoolCode := c.Param("schoolCode")
+	school, err := h.service.GetSchoolByCode(schoolCode)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
 		return
@@ -83,8 +72,8 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 		return
 	}
 
-	id := c.Param("id")
-	school, err := h.service.GetSchoolByID(id)
+	schoolCode := c.Param("schoolCode")
+	school, err := h.service.GetSchoolByCode(schoolCode)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
 		return
@@ -122,8 +111,8 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 
 // Delete
 func (h *SchoolHandler) DeleteSchool(c *gin.Context) {
-	id := c.Param("id")
-	if err := h.service.DeleteSchool(id); err != nil {
+	schoolCode := c.Param("schoolCode")
+	if err := h.service.DeleteSchool(schoolCode); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

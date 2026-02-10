@@ -54,8 +54,8 @@ func main() {
 		{
 			schools.POST("", schoolHandler.CreateSchool)
 			schools.GET("", schoolHandler.GetAllSchools)
-			schools.GET("/:id", schoolHandler.GetSchoolByID)
-			schools.GET("/code/:code", schoolHandler.GetSchoolByCode)
+			// schools.GET("/:id", schoolHandler.GetSchoolByID)
+			schools.GET("/:code", schoolHandler.GetSchoolByCode)
 			schools.PUT("/:id", schoolHandler.UpdateSchool)
 			schools.DELETE("/:id", schoolHandler.DeleteSchool)
 		}
