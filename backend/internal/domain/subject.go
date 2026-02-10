@@ -12,7 +12,7 @@ type Subject struct {
 	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
 
-	School School `gorm:"foreignKey:SchoolID;references:ID" json:"school,omitempty"`
+	School *School `gorm:"foreignKey:SchoolID;references:ID" json:"school,omitempty"`
 }
 
 func (Subject) TableName() string {
