@@ -35,7 +35,7 @@ func (r *schoolRepository) GetAllSchools() ([]*domain.School, error) {
 
 func (r *schoolRepository) GetSchoolByCode(schoolCode string) (*domain.School, error) {
 	var school domain.School
-	err := r.db.Where(&school, "sch_code = ?", schoolCode).First(&school).Error
+	err := r.db.Where("sch_code = ?", schoolCode).First(&school).Error
 	return &school, err
 }
 

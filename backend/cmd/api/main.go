@@ -55,9 +55,9 @@ func main() {
 			schools.POST("", schoolHandler.CreateSchool)
 			schools.GET("", schoolHandler.GetAllSchools)
 			// schools.GET("/:id", schoolHandler.GetSchoolByID)
-			schools.GET("/:code", schoolHandler.GetSchoolByCode)
-			schools.PUT("/:id", schoolHandler.UpdateSchool)
-			schools.DELETE("/:id", schoolHandler.DeleteSchool)
+			schools.GET("/:schoolCode", schoolHandler.GetSchoolByCode)
+			schools.PATCH("/:schoolCode", schoolHandler.UpdateSchool)
+			schools.DELETE("/:schoolCode", schoolHandler.DeleteSchool)
 		}
 
 		// Subject Routes
