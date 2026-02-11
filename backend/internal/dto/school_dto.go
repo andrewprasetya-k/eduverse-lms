@@ -1,21 +1,30 @@
 package dto
 
 type CreateSchoolDTO struct {
-	Name      string         `json:"schoolName"`
-	Code      string         ` json:"schoolCode"`
+	Name      string         `json:"schoolName" binding:"required"`
+	Code      string         `json:"schoolCode" binding:"required"`
 	LogoID    *string        `json:"schoolLogo,omitempty"`
-	Address   string        `json:"schoolAddress"`
-	Email     string        `json:"schoolEmail"`
-	Phone     string        `json:"schoolPhone"`
+	Address   string        `json:"schoolAddress" binding:"required"`
+	Email     string        `json:"schoolEmail" binding:"required"`
+	Phone     string        `json:"schoolPhone" binding:"required"`
 	Website   *string        `json:"schoolWebsite,omitempty"`
 }
 
 type UpdateSchoolDTO struct {
 	Name      *string         `json:"schoolName"`
-	Code      *string         ` json:"schoolCode"`
+	Code      *string         `json:"schoolCode"`
 	LogoID    *string        `json:"schoolLogo,omitempty"`
 	Address   *string        `json:"schoolAddress"`
 	Email     *string        `json:"schoolEmail"`
 	Phone     *string        `json:"schoolPhone"`
 	Website   *string        `json:"schoolWebsite,omitempty"`
+}
+
+type SchoolResponseDTO struct{
+	ID string `json:"schoolId"`
+	Name string `json:"schoolName"`
+	Code string `json:"schoolCode"`
+	IsDeleted bool `json:"isDeleted"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
 }
