@@ -19,28 +19,30 @@ func NewSchoolHandler(service service.SchoolService) *SchoolHandler {
 
 // Create
 func (h *SchoolHandler) CreateSchool(c *gin.Context) {
-	var input dto.CreateSchoolDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    var input dto.CreateSchoolDTO
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
 
-	school := domain.School{
-		Name:    input.Name,
-		Code:    input.Code,
-		LogoID:  input.LogoID,
-		Address: input.Address,
-		Email:   input.Email,
-		Phone:   input.Phone,
-		Website: input.Website,
-	}
+    // 1. Ubah DTO menjadi Domain Model
+    school := domain.School{
+        Name:    input.Name,
+        Code:    input.Code,
+        LogoID:  input.LogoID,
+        Address: input.Address,
+        Email:   input.Email,
+        Phone:   input.Phone,
+        Website: input.Website,
+    }
 
-	if err := h.service.CreateSchool(&school); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+    // 2. Kirim Domain Model ke Service
+    if err := h.service.CreateSchool(&school); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
 
-	c.JSON(http.StatusCreated, school)
+    c.JSON(http.StatusCreated, school)
 }
 
 // Get All
@@ -50,7 +52,21 @@ func (h *SchoolHandler) GetAllSchools(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, schools)
+
+	// Buat slice baru untuk menampung kodenya saja
+    var response []dto.SchoolResponseDTO
+    for _, s := range schools {
+        response = append(response, dto.SchoolResponseDTO{
+			ID: s.ID,
+			Name: s.Name,
+            Code: s.Code,
+			IsDeleted: s.DeletedAt.Valid,
+			CreatedAt: s.CreatedAt.Format("02-01-2006 15:04:05"),
+			UpdatedAt: s.UpdatedAt.Format("02-01-2006 15:04:05"),
+        })
+    }
+
+	c.JSON(http.StatusOK, response)
 }
 
 // Get Active
@@ -60,7 +76,19 @@ func (h *SchoolHandler) GetActiveSchools(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, schools)
+	// Buat slice baru untuk menampung kodenya saja
+    var response []dto.SchoolResponseDTO
+    for _, s := range schools {
+        response = append(response, dto.SchoolResponseDTO{
+			ID: s.ID,
+			Name: s.Name,
+            Code: s.Code,
+			IsDeleted: s.DeletedAt.Valid,
+			CreatedAt: s.CreatedAt.Format("02-01-2006 15:04:05"),
+			UpdatedAt: s.UpdatedAt.Format("02-01-2006 15:04:05"),
+        })
+    }
+	c.JSON(http.StatusOK, response)
 }
 
 // Get Deleted
@@ -70,7 +98,19 @@ func (h *SchoolHandler) GetDeletedSchools(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, schools.Code)
+		// Buat slice baru untuk menampung kodenya saja
+    var response []dto.SchoolResponseDTO
+    for _, s := range schools {
+        response = append(response, dto.SchoolResponseDTO{
+			ID: s.ID,
+			Name: s.Name,
+            Code: s.Code,
+			IsDeleted: s.DeletedAt.Valid,
+			CreatedAt: s.CreatedAt.String(),
+			UpdatedAt: s.UpdatedAt.Local().String(),
+        })
+    }
+	c.JSON(http.StatusOK, response)
 }
 
 // Get By Code
