@@ -7,7 +7,7 @@ import (
 )
 
 type School struct {
-	ID        string         `gorm:"primaryKey;column:sch_id;default:gen_random_uuid()" json:"id"`
+	ID        string         `gorm:"primaryKey;column:sch_id;default:gen_random_uuid()" json:"schoolId"`
 	Name      string         `gorm:"column:sch_name" json:"schoolName"`
 	Code      string         `gorm:"column:sch_code;unique" json:"schoolCode"`
 	LogoID    *string        `gorm:"column:sch_logo;type:uuid" json:"logoId,omitempty"`
