@@ -9,7 +9,6 @@ import (
 type SubjectService interface {
 	CreateSubject(subject *domain.Subject) error
 	GetAllSubjects(schoolID string) ([]*domain.Subject, error) // Tambahkan schoolID
-	GetSubjectByID(id string) (*domain.Subject, error)
 	GetSubjectByCode(code string, schoolID string) (*domain.Subject, error)
 	UpdateSubject(subject *domain.Subject) error
 	DeleteSubject(id string) error
@@ -37,10 +36,6 @@ func (s *subjectService) CreateSubject(subject *domain.Subject) error {
 func (s *subjectService) GetAllSubjects(schoolID string) ([]*domain.Subject, error) {
 	// Di sini bisa ditambahkan validasi apakah schoolID ada, jika perlu
 	return s.subjectRepo.GetAllSubjects(schoolID)
-}
-
-func (s *subjectService) GetSubjectByID(id string) (*domain.Subject, error){
-	return s.subjectRepo.GetSubjectByID(id)
 }
 
 func (s *subjectService) GetSubjectByCode(code string, schoolID string) (*domain.Subject, error) {

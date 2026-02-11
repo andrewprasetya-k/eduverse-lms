@@ -64,10 +64,10 @@ func main() {
 		subjects := api.Group("/subjects")
 		{
 			subjects.POST("", subjectHandler.CreateSubject)
-			subjects.GET("", subjectHandler.GetAllSubjects)
-			subjects.GET("/:id", subjectHandler.GetSubjectByID)
-			subjects.PUT("/:id", subjectHandler.UpdateSubject)
-			subjects.DELETE("/:id", subjectHandler.DeleteSubject)
+			subjects.GET("/:schoolCode", subjectHandler.GetAllSubjects)
+			subjects.GET("/:schoolCode/:subjectCode", subjectHandler.GetSubjectByCode)
+			subjects.PATCH("/:subjectCode", subjectHandler.UpdateSubject)
+			subjects.DELETE("/:subjectCode", subjectHandler.DeleteSubject)
 		}
 	}
 

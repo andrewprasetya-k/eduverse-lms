@@ -41,7 +41,7 @@ func (h *SubjectHandler) CreateSubject(c *gin.Context) {
 
 // Get All
 func (h *SubjectHandler) GetAllSubjects(c *gin.Context) {
-	schoolID := c.Query("school_id")
+	schoolID := c.Param("schoolCode")
 	if schoolID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "school_id query parameter is required"})
 		return
@@ -55,10 +55,16 @@ func (h *SubjectHandler) GetAllSubjects(c *gin.Context) {
 	c.JSON(http.StatusOK, subjects)
 }
 
-// Get By ID
-func (h *SubjectHandler) GetSubjectByID(c *gin.Context) {
-	id := c.Param("id")
-	subject, err := h.service.GetSubjectByID(id)
+// Get By Code
+func (h *SubjectHandler) GetSubjectByCode(c *gin.Context) {
+	schoolCode := c.Param("schoolCode")
+	subjectCode := c.Param("subjectCode")
+	if subjectCode == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "code query parameter is required"})
+		return
+	}
+
+	subject, err := h.service.GetSubjectByCode(subjectCode, schoolCode)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Subject not found"})
 		return
@@ -74,8 +80,9 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 		return
 	}
 
-	id := c.Param("id")
-	subject, err := h.service.GetSubjectByID(id)
+	subjectCode := c.Param("subjectCode")
+	schoolCode := c.Query("schoolCode")
+	subject, err := h.service.GetSubjectByCode(subjectCode, schoolCode)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Subject not found"})
 		return
@@ -98,8 +105,8 @@ func (h *SubjectHandler) UpdateSubject(c *gin.Context) {
 
 // Delete
 func (h *SubjectHandler) DeleteSubject(c *gin.Context) {
-	id := c.Param("id")
-	if err := h.service.DeleteSubject(id); err != nil {
+	subjectCode := c.Param("subjectCode")
+	if err := h.service.DeleteSubject(subjectCode); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
