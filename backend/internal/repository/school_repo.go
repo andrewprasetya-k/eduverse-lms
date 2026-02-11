@@ -12,6 +12,7 @@ type SchoolRepository interface{
 	GetActiveSchools() ([]*domain.School, error)
 	GetDeletedSchools() ([]*domain.School, error)
 	GetSchoolByCode(schoolCode string) (*domain.School, error)
+	RestoreDeletedSchool(schoolCode string) error
 	UpdateSchool(school *domain.School) error
 	DeleteSchool(schoolCode string) error
 }
@@ -55,6 +56,10 @@ func (r *schoolRepository) GetSchoolByCode(schoolCode string) (*domain.School, e
 
 func (r *schoolRepository) UpdateSchool(school *domain.School) error {
 	return r.db.Updates(school).Error
+}
+
+func (r *schoolRepository) RestoreDeletedSchool(schoolCode string) error {
+	return r.db.Unscoped().Model(&domain.School{}).Where("sch_code = ?", schoolCode).Update("deleted_at", nil).Error
 }
 
 func (r *schoolRepository) DeleteSchool(schoolCode string) error {

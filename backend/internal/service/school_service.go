@@ -17,6 +17,7 @@ type SchoolService interface {
 	GetActiveSchools() ([]*domain.School, error)
 	GetDeletedSchools() ([]*domain.School, error)
 	GetSchoolByCode(schoolCode string) (*domain.School, error)
+	RestoreDeletedSchool(schoolCode string) error
 	UpdateSchool(school *domain.School) error
 	DeleteSchool(id string) error
 }
@@ -93,6 +94,10 @@ func (s *schoolService) UpdateSchool(school *domain.School) error {
     }
 
     return s.repo.UpdateSchool(school)
+}
+
+func (s *schoolService) RestoreDeletedSchool(schoolCode string) error {
+	return s.repo.RestoreDeletedSchool(schoolCode)
 }
 
 func (s *schoolService) DeleteSchool(schoolCode string) error {

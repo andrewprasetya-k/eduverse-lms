@@ -53,7 +53,8 @@ func main() {
 			schoolAPI.GET("/active", schoolHandler.GetActiveSchools)
 			schoolAPI.GET("/deleted", schoolHandler.GetDeletedSchools)
 			schoolAPI.GET("/:schoolCode", schoolHandler.GetSchoolByCode)
-			schoolAPI.PUT("/:schoolCode", schoolHandler.UpdateSchool)
+			schoolAPI.PATCH("/:schoolCode", schoolHandler.UpdateSchool)
+			schoolAPI.PATCH("/restore/:schoolCode", schoolHandler.RestoreDeletedSchool)
 			schoolAPI.DELETE("/:schoolCode", schoolHandler.DeleteSchool)
 		}
 	}

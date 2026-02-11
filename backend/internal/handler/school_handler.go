@@ -169,6 +169,16 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 	c.JSON(http.StatusOK, school)
 }
 
+//restore deleted school
+func (h *SchoolHandler) RestoreDeletedSchool(c *gin.Context) {
+	schoolCode := c.Param("schoolCode")
+	if err := h.service.RestoreDeletedSchool(schoolCode); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "School restored successfully"})
+}
+
 // Delete
 func (h *SchoolHandler) DeleteSchool(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")
