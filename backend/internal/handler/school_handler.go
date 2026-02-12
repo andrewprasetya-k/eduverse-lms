@@ -133,6 +133,8 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 	}
 	if input.Phone != nil {
 		school.Phone = *input.Phone
+	}else{
+		school.Phone = ""
 	}
 	if input.Website != nil {
 		school.Website = input.Website
