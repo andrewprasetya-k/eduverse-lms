@@ -6,7 +6,7 @@ type CreateSchoolDTO struct {
 	LogoID    *string        `json:"schoolLogo,omitempty"`
 	Address   string        `json:"schoolAddress" binding:"required"`
 	Email     string        `json:"schoolEmail" binding:"required"`
-	Phone     string        `json:"schoolPhone" binding:"required"`
+	Phone     string        `json:"schoolPhone" binding:"omitempty"`
 	Website   *string        `json:"schoolWebsite,omitempty"`
 }
 
@@ -15,9 +15,9 @@ type UpdateSchoolDTO struct {
 	Code      *string         `json:"schoolCode"`
 	LogoID    *string        `json:"schoolLogo,omitempty"`
 	Address   *string        `json:"schoolAddress"`
-	Email     *string        `json:"schoolEmail"`
-	Phone     *string        `json:"schoolPhone"`
-	Website   *string        `json:"schoolWebsite,omitempty"`
+	Email     *string        `json:"schoolEmail" binding:"required,email"`
+	Phone     *string        `json:"schoolPhone" binding:"omitempty"`
+	Website   *string        `json:"schoolWebsite" binding:"omitempty,url"`
 }
 
 type SchoolResponseDTO struct{
