@@ -51,13 +51,13 @@ func (r *schoolRepository) GetDeletedSchools() ([]*domain.School, error) {
 
 func (r *schoolRepository) GetSchoolByCode(schoolCode string) (*domain.School, error) {
 	var school domain.School
-	err := r.db.Where("sch_code = ?", schoolCode).First(&school).Error
+	err := r.db.Unscoped().Where("sch_code = ?", schoolCode).First(&school).Error
 	return &school, err
 }
 
 func (r *schoolRepository) GetSchoolByID(schoolID string) (*domain.School, error) {
 	var school domain.School
-	err := r.db.Where("sch_id = ?", schoolID).First(&school).Error
+	err := r.db.Unscoped().Where("sch_id = ?", schoolID).First(&school).Error
 	return &school, err
 }
 

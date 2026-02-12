@@ -121,7 +121,6 @@ func (s *schoolService) DeleteSchool(schoolCode string) error {
 }
 
 //functional methods
-
 func (s *schoolService) convertCodeToID(schoolCode string) (string, error) {
 	school, err := s.repo.GetSchoolByCode(schoolCode)
 	if err != nil {
