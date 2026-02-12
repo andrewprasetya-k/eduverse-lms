@@ -45,9 +45,12 @@ func (h *SchoolHandler) CreateSchool(c *gin.Context) {
     c.JSON(http.StatusCreated, school)
 }
 
-// Get All
-func (h *SchoolHandler) GetAllSchools(c *gin.Context) {
-	schools, err := h.service.GetAllSchools()
+// Get Schools (with filter)
+func (h *SchoolHandler) GetSchools(c *gin.Context) {
+	status := c.Query("status")
+	search := c.Query("search")
+
+	schools, err := h.service.GetSchools(search, status)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -60,56 +63,17 @@ func (h *SchoolHandler) GetAllSchools(c *gin.Context) {
 			ID: s.ID,
 			Name: s.Name,
             Code: s.Code,
+			LogoID: s.LogoID,
+			Address: s.Address,
+			Email: s.Email,
+			Phone: s.Phone,
+			Website: s.Website,
 			IsDeleted: s.DeletedAt.Valid,
 			CreatedAt: s.CreatedAt.Format("02-01-2006 15:04:05"),
 			UpdatedAt: s.UpdatedAt.Format("02-01-2006 15:04:05"),
         })
     }
 
-	c.JSON(http.StatusOK, response)
-}
-
-// Get Active
-func (h *SchoolHandler) GetActiveSchools(c *gin.Context) {
-	schools, err := h.service.GetActiveSchools()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	// Buat slice baru untuk menampung kodenya saja
-    var response []dto.SchoolResponseDTO
-    for _, s := range schools {
-        response = append(response, dto.SchoolResponseDTO{
-			ID: s.ID,
-			Name: s.Name,
-            Code: s.Code,
-			IsDeleted: s.DeletedAt.Valid,
-			CreatedAt: s.CreatedAt.Format("02-01-2006 15:04:05"),
-			UpdatedAt: s.UpdatedAt.Format("02-01-2006 15:04:05"),
-        })
-    }
-	c.JSON(http.StatusOK, response)
-}
-
-// Get Deleted
-func (h *SchoolHandler) GetDeletedSchools(c *gin.Context) {
-	schools, err := h.service.GetDeletedSchools()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-		// Buat slice baru untuk menampung kodenya saja
-    var response []dto.SchoolResponseDTO
-    for _, s := range schools {
-        response = append(response, dto.SchoolResponseDTO{
-			ID: s.ID,
-			Name: s.Name,
-            Code: s.Code,
-			IsDeleted: s.DeletedAt.Valid,
-			CreatedAt: s.CreatedAt.String(),
-			UpdatedAt: s.UpdatedAt.Local().String(),
-        })
-    }
 	c.JSON(http.StatusOK, response)
 }
 

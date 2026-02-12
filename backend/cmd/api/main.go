@@ -49,9 +49,7 @@ func main() {
 		schoolAPI:=api.Group("/schools")
 		{
 			schoolAPI.POST("/", schoolHandler.CreateSchool)
-			schoolAPI.GET("/", schoolHandler.GetAllSchools)
-			schoolAPI.GET("/active", schoolHandler.GetActiveSchools)
-			schoolAPI.GET("/deleted", schoolHandler.GetDeletedSchools)
+			schoolAPI.GET("/", schoolHandler.GetSchools)
 			schoolAPI.GET("/:schoolCode", schoolHandler.GetSchoolByCode)
 			schoolAPI.PATCH("/:schoolCode", schoolHandler.UpdateSchool)
 			schoolAPI.PATCH("/restore/:schoolCode", schoolHandler.RestoreDeletedSchool)

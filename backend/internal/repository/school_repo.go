@@ -8,9 +8,7 @@ import (
 
 type SchoolRepository interface{
 	CreateSchool(school *domain.School) error
-	GetAllSchools() ([]*domain.School, error)
-	GetActiveSchools() ([]*domain.School, error)
-	GetDeletedSchools() ([]*domain.School, error)
+	GetSchools(search string, status string) ([]*domain.School, error)
 	GetSchoolByCode(schoolCode string) (*domain.School, error)
 	GetSchoolByID(schoolID string) (*domain.School, error)
 	RestoreDeletedSchool(schoolID string) error
@@ -31,21 +29,28 @@ func (r *schoolRepository) CreateSchool(school *domain.School) error {
 	return r.db.Create(school).Error
 }
 
-func (r *schoolRepository) GetAllSchools() ([]*domain.School, error) {
+func (r *schoolRepository) GetSchools(search string, status string) ([]*domain.School, error) {
 	var schools []*domain.School
-	err := r.db.Unscoped().Find(&schools).Error
-	return schools, err
-}
+	query := r.db.Model(&domain.School{})
 
-func (r *schoolRepository) GetActiveSchools() ([]*domain.School, error) {
-	var schools []*domain.School
-	err := r.db.Find(&schools).Error
-	return schools, err
-}
+	// Filter by status
+	switch status {
+	case "active":
+		query = query.Where("deleted_at IS NULL")
+	case "deleted":
+		query = query.Unscoped().Where("deleted_at IS NOT NULL")
+	default:
+		// "all" or empty -> Include soft-deleted records
+		query = query.Unscoped()
+	}
 
-func (r *schoolRepository) GetDeletedSchools() ([]*domain.School, error) {
-	var schools []*domain.School
-	err := r.db.Unscoped().Where("deleted_at IS NOT NULL").Find(&schools).Error
+	// Filter by search term (Name or Code)
+	if search != "" {
+		searchTerm := "%" + search + "%"
+		query = query.Where("sch_name ILIKE ? OR sch_code ILIKE ?", searchTerm, searchTerm)
+	}
+
+	err := query.Find(&schools).Error
 	return schools, err
 }
 

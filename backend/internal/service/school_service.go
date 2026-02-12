@@ -13,9 +13,7 @@ import (
 
 type SchoolService interface {
 	CreateSchool(school *domain.School) error
-	GetAllSchools() ([]*domain.School, error)
-	GetActiveSchools() ([]*domain.School, error)
-	GetDeletedSchools() ([]*domain.School, error)
+	GetSchools(search string, status string) ([]*domain.School, error)
 	GetSchoolByCode(schoolCode string) (*domain.School, error)
 	GetSchoolByID(schoolID string) (*domain.School, error)
 	RestoreDeletedSchool(schoolCode string) error
@@ -70,16 +68,8 @@ func (s *schoolService) generateRandomCode() string {
     return "" // Atau handle error jika gagal dapet kode unik
 }
 
-func (s *schoolService) GetAllSchools() ([]*domain.School, error) {
-	return s.repo.GetAllSchools()
-}
-
-func (s *schoolService) GetActiveSchools() ([]*domain.School, error) {
-	return s.repo.GetActiveSchools()
-}
-
-func (s *schoolService) GetDeletedSchools() ([]*domain.School, error) {
-	return s.repo.GetDeletedSchools()
+func (s *schoolService) GetSchools(search string, status string) ([]*domain.School, error) {
+	return s.repo.GetSchools(search, status)
 }
 
 func (s *schoolService) GetSchoolByCode(schoolCode string) (*domain.School, error) {
