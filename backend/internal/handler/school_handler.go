@@ -5,6 +5,7 @@ import (
 	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -47,10 +48,12 @@ func (h *SchoolHandler) CreateSchool(c *gin.Context) {
 
 // Get Schools (with filter)
 func (h *SchoolHandler) GetSchools(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page","1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit","10"))
 	status := c.Query("status")
 	search := c.Query("search")
 
-	schools, err := h.service.GetSchools(search, status)
+	schools, err := h.service.GetSchools(search, status, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -74,7 +77,17 @@ func (h *SchoolHandler) GetSchools(c *gin.Context) {
         })
     }
 
-	c.JSON(http.StatusOK, response)
+	//return response, mapping ke pagination response
+	var totalItems int64 = int64(len(schools))
+	totalPages := (totalItems + int64(limit) - 1) / int64(limit)
+	paginatedResponse := dto.PaginatedResponse{
+		Data: response,
+		TotalItems: totalItems,
+		Page: page,
+		Limit: limit,
+		TotalPages: int(totalPages),
+	}
+	c.JSON(http.StatusOK, paginatedResponse)
 }
 
 // Get By Code

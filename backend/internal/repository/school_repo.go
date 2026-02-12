@@ -8,7 +8,7 @@ import (
 
 type SchoolRepository interface{
 	CreateSchool(school *domain.School) error
-	GetSchools(search string, status string) ([]*domain.School, error)
+	GetSchools(search string, status string, page int, limit int) ([]*domain.School, error)
 	GetSchoolByCode(schoolCode string) (*domain.School, error)
 	GetSchoolByID(schoolID string) (*domain.School, error)
 	RestoreDeletedSchool(schoolID string) error
@@ -29,8 +29,10 @@ func (r *schoolRepository) CreateSchool(school *domain.School) error {
 	return r.db.Create(school).Error
 }
 
-func (r *schoolRepository) GetSchools(search string, status string) ([]*domain.School, error) {
+func (r *schoolRepository) GetSchools(search string, status string, page int, limit int) ([]*domain.School, error) {
 	var schools []*domain.School
+	var total int64
+
 	query := r.db.Model(&domain.School{})
 
 	// Filter by status
@@ -49,8 +51,12 @@ func (r *schoolRepository) GetSchools(search string, status string) ([]*domain.S
 		searchTerm := "%" + search + "%"
 		query = query.Where("sch_name ILIKE ? OR sch_code ILIKE ?", searchTerm, searchTerm)
 	}
+	//hitung total data
+	query.Count(&total)
 
-	err := query.Find(&schools).Error
+	//pagiatanion
+	offset := (page - 1)*limit
+	err := query.Limit(limit).Offset(offset).Find(&schools).Error
 	return schools, err
 }
 
