@@ -26,7 +26,6 @@ func (h *SchoolHandler) CreateSchool(c *gin.Context) {
         return
     }
 
-    // 1. Ubah DTO menjadi Domain Model
     school := domain.School{
         Name:    input.Name,
         Code:    input.Code,
@@ -37,13 +36,12 @@ func (h *SchoolHandler) CreateSchool(c *gin.Context) {
         Website: input.Website,
     }
 
-    // 2. Kirim Domain Model ke Service
     if err := h.service.CreateSchool(&school); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
 
-    c.JSON(http.StatusCreated, school)
+    c.JSON(http.StatusCreated, h.mapToResponse(&school))
 }
 
 // Get Schools (with filter)
@@ -59,27 +57,15 @@ func (h *SchoolHandler) GetSchools(c *gin.Context) {
 		return
 	}
 
-	// Buat slice baru untuk menampung kodenya saja
     var response []dto.SchoolResponseDTO
     for _, s := range schools {
-        response = append(response, dto.SchoolResponseDTO{
-			ID: s.ID,
-			Name: s.Name,
-            Code: s.Code,
-			LogoID: s.LogoID,
-			Address: s.Address,
-			Email: s.Email,
-			Phone: s.Phone,
-			Website: s.Website,
-			IsDeleted: s.DeletedAt.Valid,
-			CreatedAt: s.CreatedAt.Format("02-01-2006 15:04:05"),
-			UpdatedAt: s.UpdatedAt.Format("02-01-2006 15:04:05"),
-        })
+        response = append(response, h.mapToResponse(s))
     }
 
-	//return response, mapping ke pagination response
+	// TODO: Get real total count from database
 	var totalItems int64 = int64(len(schools))
 	totalPages := (totalItems + int64(limit) - 1) / int64(limit)
+	
 	paginatedResponse := dto.PaginatedResponse{
 		Data: response,
 		TotalItems: totalItems,
@@ -98,7 +84,7 @@ func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
 		return
 	}
-	c.JSON(http.StatusOK, school)
+	c.JSON(http.StatusOK, h.mapToResponse(school))
 }
 
 // Update
@@ -133,8 +119,6 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 	}
 	if input.Phone != nil {
 		school.Phone = *input.Phone
-	}else{
-		school.Phone = ""
 	}
 	if input.Website != nil {
 		school.Website = input.Website
@@ -145,7 +129,25 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, school)
+	c.JSON(http.StatusOK, h.mapToResponse(school))
+}
+
+
+// Helper to map domain to DTO
+func (h *SchoolHandler) mapToResponse(s *domain.School) dto.SchoolResponseDTO {
+	return dto.SchoolResponseDTO{
+		ID:        s.ID,
+		Name:      s.Name,
+		Code:      s.Code,
+		LogoID:    s.LogoID,
+		Address:   s.Address,
+		Email:     s.Email,
+		Phone:     s.Phone,
+		Website:   s.Website,
+		IsDeleted: s.DeletedAt.Valid,
+		CreatedAt: s.CreatedAt.Format("02-01-2006 15:04:05"),
+		UpdatedAt: s.UpdatedAt.Format("02-01-2006 15:04:05"),
+	}
 }
 
 //restore deleted school
