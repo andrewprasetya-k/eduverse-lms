@@ -12,9 +12,10 @@ type SchoolRepository interface{
 	GetActiveSchools() ([]*domain.School, error)
 	GetDeletedSchools() ([]*domain.School, error)
 	GetSchoolByCode(schoolCode string) (*domain.School, error)
-	RestoreDeletedSchool(schoolCode string) error
+	GetSchoolByID(schoolID string) (*domain.School, error)
+	RestoreDeletedSchool(schoolID string) error
 	UpdateSchool(school *domain.School) error
-	DeleteSchool(schoolCode string) error
+	DeleteSchool(schoolID string) error
 }
 
 type schoolRepository struct {
@@ -54,14 +55,20 @@ func (r *schoolRepository) GetSchoolByCode(schoolCode string) (*domain.School, e
 	return &school, err
 }
 
+func (r *schoolRepository) GetSchoolByID(schoolID string) (*domain.School, error) {
+	var school domain.School
+	err := r.db.Where("sch_id = ?", schoolID).First(&school).Error
+	return &school, err
+}
+
 func (r *schoolRepository) UpdateSchool(school *domain.School) error {
 	return r.db.Updates(school).Error
 }
 
-func (r *schoolRepository) RestoreDeletedSchool(schoolCode string) error {
-	return r.db.Unscoped().Model(&domain.School{}).Where("sch_code = ?", schoolCode).Update("deleted_at", nil).Error
+func (r *schoolRepository) RestoreDeletedSchool(schoolID string) error {
+	return r.db.Unscoped().Model(&domain.School{}).Where("sch_id = ?", schoolID).Update("deleted_at", nil).Error
 }
 
-func (r *schoolRepository) DeleteSchool(schoolCode string) error {
-	return r.db.Delete(&domain.School{}, "sch_code = ?", schoolCode).Error
+func (r *schoolRepository) DeleteSchool(schoolID string) error {
+	return r.db.Delete(&domain.School{}, "sch_id = ?", schoolID).Error
 }

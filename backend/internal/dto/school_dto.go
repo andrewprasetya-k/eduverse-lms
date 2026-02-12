@@ -24,6 +24,11 @@ type SchoolResponseDTO struct{
 	ID string `json:"schoolId"`
 	Name string `json:"schoolName"`
 	Code string `json:"schoolCode"`
+	LogoID    *string        `json:"schoolLogo,omitempty"`
+	Address   string        `json:"schoolAddress"`
+	Email     string        `json:"schoolEmail"`
+	Phone     string        `json:"schoolPhone"`
+	Website   *string        `json:"schoolWebsite,omitempty"`
 	IsDeleted bool `json:"isDeleted"`
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
