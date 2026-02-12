@@ -2,7 +2,7 @@ package dto
 
 type CreateSchoolDTO struct {
 	Name      string         `json:"schoolName" binding:"required"`
-	Code      string         `json:"schoolCode" binding:"required"`
+	Code      string         `json:"schoolCode"`
 	LogoID    *string        `json:"schoolLogo,omitempty"`
 	Address   string        `json:"schoolAddress" binding:"required"`
 	Email     string        `json:"schoolEmail" binding:"required"`
