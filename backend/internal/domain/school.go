@@ -15,8 +15,8 @@ type School struct {
 	Email     string        `gorm:"column:sch_email" json:"schoolEmail"`
 	Phone     string        `gorm:"column:sch_phone" json:"schoolPhone"`
 	Website   *string        `gorm:"column:sch_website" json:"schoolWebsite,omitempty"`
-	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
-	UpdatedAt time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updated_at"`
+	CreatedAt time.Time      `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
 }
 
