@@ -8,7 +8,7 @@ Daftar fitur ini dirancang agar tabel `schools` memiliki fungsionalitas penuh (P
 
 _Menyediakan mesin pencari dan manipulasi data pada tabel schools._
 
-- [ ] Ganti schoolCode ke schoolID untuk tabel/entitas schools
+- [x] Ganti schoolCode ke schoolID untuk tabel/entitas schools
 - [ ] **Dynamic FindAll**: Implementasi fungsi `FindAll` yang bisa menerima map filter:
   - [ ] `search`: Query `LIKE` pada kolom `sch_name` dan `sch_code`.
   - [ ] `status`: Pilihan filter `active` (deleted_at IS NULL), `deleted` (deleted_at IS NOT NULL), atau `all`.
