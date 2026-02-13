@@ -169,3 +169,13 @@ func (h *SchoolHandler) DeleteSchool(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "School deleted successfully"})
 }
+
+// Hard Delete
+func (h *SchoolHandler) HardDeleteSchool(c *gin.Context) {
+	schoolCode := c.Param("schoolCode")
+	if err := h.service.HardDeleteSchool(schoolCode); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "School permanently deleted successfully"})
+}

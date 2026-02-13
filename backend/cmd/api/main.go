@@ -54,6 +54,7 @@ func main() {
 			schoolAPI.PATCH("/:schoolCode", schoolHandler.UpdateSchool)
 			schoolAPI.PATCH("/restore/:schoolCode", schoolHandler.RestoreDeletedSchool)
 			schoolAPI.DELETE("/:schoolCode", schoolHandler.DeleteSchool)
+			schoolAPI.DELETE("/:schoolCode/permanent", schoolHandler.HardDeleteSchool)
 		}
 	}
 

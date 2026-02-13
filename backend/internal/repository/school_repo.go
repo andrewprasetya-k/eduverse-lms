@@ -15,6 +15,7 @@ type SchoolRepository interface{
 	RestoreDeletedSchool(schoolID string) error
 	UpdateSchool(school *domain.School) error
 	DeleteSchool(schoolID string) error
+	HardDeleteSchool(schoolID string) error
 	CheckEmailExists(email string, excludeID string) (bool, error)
 	CheckPhoneExists(phone string, excludeID string) (bool, error)
 }
@@ -96,6 +97,10 @@ func (r *schoolRepository) RestoreDeletedSchool(schoolID string) error {
 
 func (r *schoolRepository) DeleteSchool(schoolID string) error {
 	return r.db.Delete(&domain.School{}, "sch_id = ?", schoolID).Error
+}
+
+func (r *schoolRepository) HardDeleteSchool(schoolID string) error {
+	return r.db.Unscoped().Delete(&domain.School{}, "sch_id = ?", schoolID).Error
 }
 
 func (r *schoolRepository) CheckEmailExists(email string, excludeID string) (bool, error) {

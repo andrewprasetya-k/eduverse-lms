@@ -20,9 +20,10 @@ type SchoolService interface {
 	RestoreDeletedSchool(schoolCode string) error
 	UpdateSchool(school *domain.School) error
 	DeleteSchool(schoolCode string) error
+	HardDeleteSchool(schoolCode string) error
 
 	//functional methods
-	convertCodeToID(schoolCode string) (string, error)
+	ConvertCodeToID(schoolCode string) (string, error)
 }
 
 type schoolService struct {
@@ -149,7 +150,7 @@ func (s *schoolService) UpdateSchool(school *domain.School) error {
 }
 
 func (s *schoolService) RestoreDeletedSchool(schoolCode string) error {
-	schoolID, err:= s.convertCodeToID(schoolCode)
+	schoolID, err:= s.ConvertCodeToID(schoolCode)
 	if err != nil {
 		return err
 	}
@@ -157,15 +158,23 @@ func (s *schoolService) RestoreDeletedSchool(schoolCode string) error {
 }
 
 func (s *schoolService) DeleteSchool(schoolCode string) error {
-	schoolID, err:= s.convertCodeToID(schoolCode)
+	schoolID, err:= s.ConvertCodeToID(schoolCode)
 	if err != nil {
 		return err
 	}
 	return s.repo.DeleteSchool(schoolID)
 }
 
+func (s *schoolService) HardDeleteSchool(schoolCode string) error {
+	schoolID, err:= s.ConvertCodeToID(schoolCode)
+	if err != nil {
+		return err
+	}
+	return s.repo.HardDeleteSchool(schoolID)
+}
+
 //functional methods
-func (s *schoolService) convertCodeToID(schoolCode string) (string, error) {
+func (s *schoolService) ConvertCodeToID(schoolCode string) (string, error) {
 	school, err := s.repo.GetSchoolByCode(schoolCode)
 	if err != nil {
 		return "", err
