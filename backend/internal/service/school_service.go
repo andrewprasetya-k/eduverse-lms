@@ -37,7 +37,25 @@ func NewSchoolService(repo repository.SchoolRepository) SchoolService {
 func (s *schoolService) CreateSchool(school *domain.School) error {
 	s.sanitizeInput(school)
 
-	// 1. Jika code kosong, generate otomatis dengan pengecekan keunikan
+	// 1. Validasi Duplikasi Email
+	exists, err := s.repo.CheckEmailExists(school.Email, "")
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("email sekolah '%s' sudah terdaftar", school.Email)
+	}
+
+	// 2. Validasi Duplikasi Telepon
+	exists, err = s.repo.CheckPhoneExists(school.Phone, "")
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("nomor telepon sekolah '%s' sudah terdaftar", school.Phone)
+	}
+
+	// 3. Jika code kosong, generate otomatis dengan pengecekan keunikan
 	if school.Code == "" {
 		school.Code = s.generateRandomCode()
 	} else {
@@ -98,6 +116,24 @@ func (s *schoolService) GetSchoolByID(schoolID string) (*domain.School, error) {
 
 func (s *schoolService) UpdateSchool(school *domain.School) error {
     s.sanitizeInput(school)
+
+	// 1. Validasi Duplikasi Email (kecuali milik sekolah ini sendiri)
+	exists, err := s.repo.CheckEmailExists(school.Email, school.ID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("email sekolah '%s' sudah terdaftar", school.Email)
+	}
+
+	// 2. Validasi Duplikasi Telepon (kecuali milik sekolah ini sendiri)
+	exists, err = s.repo.CheckPhoneExists(school.Phone, school.ID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("nomor telepon sekolah '%s' sudah terdaftar", school.Phone)
+	}
     
     existing, err := s.repo.GetSchoolByCode(school.Code)
     

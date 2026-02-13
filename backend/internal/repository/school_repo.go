@@ -15,6 +15,8 @@ type SchoolRepository interface{
 	RestoreDeletedSchool(schoolID string) error
 	UpdateSchool(school *domain.School) error
 	DeleteSchool(schoolID string) error
+	CheckEmailExists(email string, excludeID string) (bool, error)
+	CheckPhoneExists(phone string, excludeID string) (bool, error)
 }
 
 type schoolRepository struct {
@@ -94,4 +96,24 @@ func (r *schoolRepository) RestoreDeletedSchool(schoolID string) error {
 
 func (r *schoolRepository) DeleteSchool(schoolID string) error {
 	return r.db.Delete(&domain.School{}, "sch_id = ?", schoolID).Error
+}
+
+func (r *schoolRepository) CheckEmailExists(email string, excludeID string) (bool, error) {
+	var count int64
+	query := r.db.Model(&domain.School{}).Where("sch_email = ?", email)
+	if excludeID != "" {
+		query = query.Where("sch_id != ?", excludeID)
+	}
+	err := query.Count(&count).Error
+	return count > 0, err
+}
+
+func (r *schoolRepository) CheckPhoneExists(phone string, excludeID string) (bool, error) {
+	var count int64
+	query := r.db.Model(&domain.School{}).Where("sch_phone = ?", phone)
+	if excludeID != "" {
+		query = query.Where("sch_id != ?", excludeID)
+	}
+	err := query.Count(&count).Error
+	return count > 0, err
 }
