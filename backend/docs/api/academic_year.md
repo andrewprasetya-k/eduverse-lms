@@ -83,7 +83,7 @@ Update basic information of an academic year.
 Set an academic year as the active one for its school. This will automatically deactivate all other academic years in the same school.
 
 - **URL:** `/activate/:id`
-- **Method:** `POST`
+- **Method:** `PATCH`
 - **Response:** `{"message": "Academic year activated successfully"}`
 
 ---
@@ -92,7 +92,7 @@ Set an academic year as the active one for its school. This will automatically d
 Manually deactivate an academic year.
 
 - **URL:** `/deactivate/:id`
-- **Method:** `POST`
+- **Method:** `PATCH`
 - **Response:** `{"message": "Academic year deactivated successfully"}`
 
 ---

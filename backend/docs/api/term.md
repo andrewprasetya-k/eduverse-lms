@@ -72,7 +72,7 @@ Update name of a term.
 Set a term as the active one for its academic year. This will automatically deactivate all other terms in the same academic year.
 
 - **URL:** `/activate/:id`
-- **Method:** `POST`
+- **Method:** `PATCH`
 - **Response:** `{"message": "Term activated successfully"}`
 
 ---
@@ -81,7 +81,7 @@ Set a term as the active one for its academic year. This will automatically deac
 Manually deactivate a term.
 
 - **URL:** `/deactivate/:id`
-- **Method:** `POST`
+- **Method:** `PATCH`
 - **Response:** `{"message": "Term deactivated successfully"}`
 
 ---
