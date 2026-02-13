@@ -3,6 +3,7 @@ package service
 import (
 	"backend/internal/domain"
 	"backend/internal/repository"
+	"fmt"
 	"strings"
 )
 
@@ -31,6 +32,16 @@ func NewAcademicYearService(repo repository.AcademicYearRepository, schoolServic
 
 func (s *academicYearService) Create(acy *domain.AcademicYear) error {
 	acy.Name = strings.TrimSpace(acy.Name)
+
+	// 1. Validasi Duplikasi Nama di Sekolah yang sama
+	exists, err := s.repo.CheckDuplicateName(acy.SchoolID, acy.Name, "")
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("tahun ajaran '%s' sudah terdaftar di sekolah ini", acy.Name)
+	}
+
 	acy.IsActive = false // Selalu default false saat baru dibuat
 	return s.repo.Create(acy)
 }
@@ -53,10 +64,29 @@ func (s *academicYearService) GetByID(id string) (*domain.AcademicYear, error) {
 
 func (s *academicYearService) Update(acy *domain.AcademicYear) error {
 	acy.Name = strings.TrimSpace(acy.Name)
+
+	// 1. Validasi Duplikasi Nama
+	exists, err := s.repo.CheckDuplicateName(acy.SchoolID, acy.Name, acy.ID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("tahun ajaran '%s' sudah terdaftar di sekolah ini", acy.Name)
+	}
+
 	return s.repo.Update(acy)
 }
 
 func (s *academicYearService) Delete(id string) error {
+	// 1. Proteksi: Cek apakah masih ada Terms (Semester) yang bergantung
+	hasTerms, err := s.repo.HasTerms(id)
+	if err != nil {
+		return err
+	}
+	if hasTerms {
+		return fmt.Errorf("tahun ajaran tidak bisa dihapus karena masih memiliki data semester (terms)")
+	}
+
 	return s.repo.Delete(id)
 }
 

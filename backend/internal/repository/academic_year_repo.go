@@ -14,6 +14,8 @@ type AcademicYearRepository interface {
 	Delete(id string) error
 	DeactivateAllExcept(schoolID string, activeID string) error
 	SetActiveStatus(id string, isActive bool) error
+	HasTerms(id string) (bool, error)
+	CheckDuplicateName(schoolID string, name string, excludeID string) (bool, error)
 }
 
 type academicYearRepository struct {
@@ -77,4 +79,21 @@ func (r *academicYearRepository) DeactivateAllExcept(schoolID string, activeID s
 
 func (r *academicYearRepository) SetActiveStatus(id string, isActive bool) error {
 	return r.db.Model(&domain.AcademicYear{}).Where("acy_id = ?", id).Update("is_active", isActive).Error
+}
+
+func (r *academicYearRepository) HasTerms(id string) (bool, error) {
+	var count int64
+	// Kita cek ke tabel edv.terms
+	err := r.db.Table("edv.terms").Where("trm_acy_id = ?", id).Count(&count).Error
+	return count > 0, err
+}
+
+func (r *academicYearRepository) CheckDuplicateName(schoolID string, name string, excludeID string) (bool, error) {
+	var count int64
+	query := r.db.Model(&domain.AcademicYear{}).Where("acy_sch_id = ? AND acy_name = ?", schoolID, name)
+	if excludeID != "" {
+		query = query.Where("acy_id != ?", excludeID)
+	}
+	err := query.Count(&count).Error
+	return count > 0, err
 }
