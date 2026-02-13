@@ -74,8 +74,8 @@ func main() {
 			academicYearAPI.GET("/:id", academicYearHandler.GetByID)
 			academicYearAPI.GET("/school/:schoolCode", academicYearHandler.GetBySchool)
 			academicYearAPI.PATCH("/:id", academicYearHandler.Update)
-			academicYearAPI.POST("/activate/:id", academicYearHandler.Activate)
-			academicYearAPI.POST("/deactivate/:id", academicYearHandler.Deactivate)
+			academicYearAPI.PATCH("/activate/:id", academicYearHandler.Activate)
+			academicYearAPI.PATCH("/deactivate/:id", academicYearHandler.Deactivate)
 			academicYearAPI.DELETE("/:id", academicYearHandler.Delete)
 		}
 
@@ -86,8 +86,8 @@ func main() {
 			termAPI.GET("/:id", termHandler.GetByID)
 			termAPI.GET("/academic-year/:academicYearId", termHandler.GetByAcademicYear)
 			termAPI.PATCH("/:id", termHandler.Update)
-			termAPI.POST("/activate/:id", termHandler.Activate)
-			termAPI.POST("/deactivate/:id", termHandler.Deactivate)
+			termAPI.PATCH("/activate/:id", termHandler.Activate)
+			termAPI.PATCH("/deactivate/:id", termHandler.Deactivate)
 			termAPI.DELETE("/:id", termHandler.Delete)
 		}
 	}
