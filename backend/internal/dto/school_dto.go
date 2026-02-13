@@ -33,3 +33,9 @@ type SchoolResponseDTO struct{
 	CreatedAt string `json:"createdAt"`
 	UpdatedAt string `json:"updatedAt"`
 }
+
+type SchoolSummaryDTO struct {
+	TotalActive  int64 `json:"totalActive"`
+	TotalDeleted int64 `json:"totalDeleted"`
+	TotalSchools int64 `json:"totalSchools"`
+}

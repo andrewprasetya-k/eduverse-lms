@@ -50,6 +50,8 @@ func main() {
 		{
 			schoolAPI.POST("/", schoolHandler.CreateSchool)
 			schoolAPI.GET("/", schoolHandler.GetSchools)
+			schoolAPI.GET("/summary", schoolHandler.GetSchoolSummary)
+			schoolAPI.GET("/check-code/:schoolCode", schoolHandler.CheckCodeAvailability)
 			schoolAPI.GET("/:schoolCode", schoolHandler.GetSchoolByCode)
 			schoolAPI.PATCH("/:schoolCode", schoolHandler.UpdateSchool)
 			schoolAPI.PATCH("/restore/:schoolCode", schoolHandler.RestoreDeletedSchool)

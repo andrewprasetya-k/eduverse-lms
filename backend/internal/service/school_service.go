@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/internal/domain"
+	"backend/internal/dto"
 	"backend/internal/repository"
 	"errors"
 	"fmt"
@@ -21,6 +22,8 @@ type SchoolService interface {
 	UpdateSchool(school *domain.School) error
 	DeleteSchool(schoolCode string) error
 	HardDeleteSchool(schoolCode string) error
+	GetSchoolSummary() (*dto.SchoolSummaryDTO, error)
+	CheckCodeAvailability(schoolCode string) (bool, error)
 
 	//functional methods
 	ConvertCodeToID(schoolCode string) (string, error)
@@ -171,6 +174,29 @@ func (s *schoolService) HardDeleteSchool(schoolCode string) error {
 		return err
 	}
 	return s.repo.HardDeleteSchool(schoolID)
+}
+
+func (s *schoolService) GetSchoolSummary() (*dto.SchoolSummaryDTO, error) {
+	active, deleted, total, err := s.repo.GetSchoolSummary()
+	if err != nil {
+		return nil, err
+	}
+	return &dto.SchoolSummaryDTO{
+		TotalActive:  active,
+		TotalDeleted: deleted,
+		TotalSchools: total,
+	}, nil
+}
+
+func (s *schoolService) CheckCodeAvailability(schoolCode string) (bool, error) {
+	_, err := s.repo.GetSchoolByCode(strings.TrimSpace(schoolCode))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return true, nil // Tersedia
+		}
+		return false, err
+	}
+	return false, nil // Sudah ada (tidak tersedia)
 }
 
 //functional methods

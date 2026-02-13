@@ -76,6 +76,30 @@ func (h *SchoolHandler) GetSchools(c *gin.Context) {
 	c.JSON(http.StatusOK, paginatedResponse)
 }
 
+// Get Summary
+func (h *SchoolHandler) GetSchoolSummary(c *gin.Context) {
+	summary, err := h.service.GetSchoolSummary()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, summary)
+}
+
+// Check Availability
+func (h *SchoolHandler) CheckCodeAvailability(c *gin.Context) {
+	schoolCode := c.Param("schoolCode")
+	available, err := h.service.CheckCodeAvailability(schoolCode)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"schoolCode": schoolCode,
+		"available":  available,
+	})
+}
+
 // Get By Code
 func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")

@@ -18,6 +18,7 @@ type SchoolRepository interface{
 	HardDeleteSchool(schoolID string) error
 	CheckEmailExists(email string, excludeID string) (bool, error)
 	CheckPhoneExists(phone string, excludeID string) (bool, error)
+	GetSchoolSummary() (active int64, deleted int64, total int64, err error)
 }
 
 type schoolRepository struct {
@@ -121,4 +122,17 @@ func (r *schoolRepository) CheckPhoneExists(phone string, excludeID string) (boo
 	}
 	err := query.Count(&count).Error
 	return count > 0, err
+}
+
+func (r *schoolRepository) GetSchoolSummary() (active int64, deleted int64, total int64, err error) {
+	// Total Active
+	if err = r.db.Model(&domain.School{}).Count(&active).Error; err != nil {
+		return
+	}
+	// Total Deleted
+	if err = r.db.Model(&domain.School{}).Unscoped().Where("deleted_at IS NOT NULL").Count(&deleted).Error; err != nil {
+		return
+	}
+	total = active + deleted
+	return
 }
