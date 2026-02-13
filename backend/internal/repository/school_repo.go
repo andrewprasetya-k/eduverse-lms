@@ -101,19 +101,47 @@ func (r *schoolRepository) GetSchoolByID(schoolID string) (*domain.School, error
 }
 
 func (r *schoolRepository) UpdateSchool(school *domain.School) error {
-	return r.db.Updates(school).Error
+	result := r.db.Updates(school)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *schoolRepository) RestoreDeletedSchool(schoolID string) error {
-	return r.db.Unscoped().Model(&domain.School{}).Where("sch_id = ?", schoolID).Update("deleted_at", nil).Error
+	result := r.db.Unscoped().Model(&domain.School{}).Where("sch_id = ?", schoolID).Update("deleted_at", nil)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *schoolRepository) DeleteSchool(schoolID string) error {
-	return r.db.Delete(&domain.School{}, "sch_id = ?", schoolID).Error
+	result := r.db.Delete(&domain.School{}, "sch_id = ?", schoolID)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *schoolRepository) HardDeleteSchool(schoolID string) error {
-	return r.db.Unscoped().Delete(&domain.School{}, "sch_id = ?", schoolID).Error
+	result := r.db.Unscoped().Delete(&domain.School{}, "sch_id = ?", schoolID)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *schoolRepository) CheckEmailExists(email string, excludeID string) (bool, error) {

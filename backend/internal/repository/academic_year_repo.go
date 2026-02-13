@@ -64,11 +64,25 @@ func (r *academicYearRepository) GetByID(id string) (*domain.AcademicYear, error
 }
 
 func (r *academicYearRepository) Update(acy *domain.AcademicYear) error {
-	return r.db.Save(acy).Error
+	result := r.db.Save(acy)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *academicYearRepository) Delete(id string) error {
-	return r.db.Delete(&domain.AcademicYear{}, "acy_id = ?", id).Error
+	result := r.db.Delete(&domain.AcademicYear{}, "acy_id = ?", id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 // DeactivateAllExcept memastikan hanya satu tahun ajaran yang aktif per sekolah
@@ -79,7 +93,14 @@ func (r *academicYearRepository) DeactivateAllExcept(schoolID string, activeID s
 }
 
 func (r *academicYearRepository) SetActiveStatus(id string, isActive bool) error {
-	return r.db.Model(&domain.AcademicYear{}).Where("acy_id = ?", id).Update("is_active", isActive).Error
+	result := r.db.Model(&domain.AcademicYear{}).Where("acy_id = ?", id).Update("is_active", isActive)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *academicYearRepository) HasTerms(id string) (bool, error) {

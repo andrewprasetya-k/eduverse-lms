@@ -63,11 +63,25 @@ func (r *termRepository) GetByID(id string) (*domain.Term, error) {
 }
 
 func (r *termRepository) Update(term *domain.Term) error {
-	return r.db.Save(term).Error
+	result := r.db.Save(term)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *termRepository) Delete(id string) error {
-	return r.db.Delete(&domain.Term{}, "trm_id = ?", id).Error
+	result := r.db.Delete(&domain.Term{}, "trm_id = ?", id)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *termRepository) DeactivateAllExcept(acyID string, activeID string) error {
@@ -77,7 +91,14 @@ func (r *termRepository) DeactivateAllExcept(acyID string, activeID string) erro
 }
 
 func (r *termRepository) SetActiveStatus(id string, isActive bool) error {
-	return r.db.Model(&domain.Term{}).Where("trm_id = ?", id).Update("is_active", isActive).Error
+	result := r.db.Model(&domain.Term{}).Where("trm_id = ?", id).Update("is_active", isActive)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *termRepository) CheckDuplicateName(acyID string, name string, excludeID string) (bool, error) {
