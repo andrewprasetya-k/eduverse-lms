@@ -52,6 +52,17 @@ Register a new global user profile. Password will be securely hashed.
 
 ---
 
-## 5. Delete User
+## 5. Change Password
+Update user password. Old password verification is required.
+
+- **URL:** `/:id/change-password`
+- **Method:** `PATCH`
+- **Body:**
+  - `oldPassword` (string, required)
+  - `newPassword` (string, required, min 6)
+
+---
+
+## 6. Delete User
 - **URL:** `/:id`
 - **Method:** `DELETE`

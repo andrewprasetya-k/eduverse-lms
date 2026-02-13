@@ -16,6 +16,7 @@ type UserService interface {
 	GetByEmail(email string) (*domain.User, error)
 	Update(user *domain.User) error
 	Delete(id string) error
+	ChangePassword(id string, oldPassword string, newPassword string) error
 }
 
 type userService struct {
@@ -79,4 +80,26 @@ func (s *userService) Update(user *domain.User) error {
 
 func (s *userService) Delete(id string) error {
 	return s.repo.Delete(id)
+}
+
+func (s *userService) ChangePassword(id string, oldPassword string, newPassword string) error {
+	user, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	// 1. Verifikasi Password Lama
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword))
+	if err != nil {
+		return fmt.Errorf("password lama salah")
+	}
+
+	// 2. Hash Password Baru
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.Password = string(hashedPassword)
+
+	return s.repo.Update(user)
 }

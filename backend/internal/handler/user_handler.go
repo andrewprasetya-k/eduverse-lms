@@ -115,6 +115,22 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.ChangePasswordDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.ChangePassword(id, input.OldPassword, input.NewPassword); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Password changed successfully"})
+}
+
 func (h *UserHandler) mapToResponse(user *domain.User) dto.UserResponseDTO {
 	return dto.UserResponseDTO{
 		ID:        user.ID,

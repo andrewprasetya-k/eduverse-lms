@@ -105,6 +105,7 @@ func main() {
 			userAPI.GET("/", userHandler.FindAll)
 			userAPI.GET("/:id", userHandler.GetByID)
 			userAPI.PATCH("/:id", userHandler.Update)
+			userAPI.PATCH("/change-password/:id", userHandler.ChangePassword)
 			userAPI.DELETE("/:id", userHandler.Delete)
 		}
 

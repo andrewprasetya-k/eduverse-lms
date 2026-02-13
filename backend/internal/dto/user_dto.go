@@ -11,6 +11,11 @@ type UpdateUserDTO struct {
 	Email    *string `json:"email" binding:"omitempty,email"`
 }
 
+type ChangePasswordDTO struct {
+	OldPassword string `json:"oldPassword" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required,min=6"`
+}
+
 type UserResponseDTO struct {
 	ID        string `json:"userId"`
 	FullName  string `json:"fullName"`

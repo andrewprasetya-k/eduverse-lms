@@ -53,3 +53,8 @@ _Menyediakan akses bagi user/frontend ke fitur-fitur di atas._
 
 - [ ] **Constraint Handling**: Menangani pesan error database agar lebih ramah (misal: "Email sudah terdaftar" daripada "Error 1062 Duplicate Entry").
 - [ ] **Default Values**: Memastikan `sch_logo` bisa menerima `NULL` jika sekolah belum memiliki logo.
+
+---
+
+## 🔒 5. User & Auth TODOs
+- [ ] **Email Confirmation**: Add email confirmation flow before allowing password changes or critical updates.
