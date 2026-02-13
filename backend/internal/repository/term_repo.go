@@ -52,7 +52,7 @@ func (r *termRepository) FindAll(search string, page int, limit int) ([]*domain.
 
 func (r *termRepository) GetByAcademicYear(acyID string) ([]*domain.Term, error) {
 	var terms []*domain.Term
-	err := r.db.Preload("AcademicYear.School").Where("trm_acy_id = ?", acyID).Order("trm_name asc").Find(&terms).Error
+	err := r.db.Preload("AcademicYear.School").Where("trm_acy_id = ?", acyID).Order("created_at asc").Find(&terms).Error
 	return terms, err
 }
 

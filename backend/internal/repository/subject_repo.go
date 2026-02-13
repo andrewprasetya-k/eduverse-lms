@@ -2,6 +2,7 @@ package repository
 
 import (
 	"backend/internal/domain"
+
 	"gorm.io/gorm"
 )
 
@@ -49,7 +50,7 @@ func (r *subjectRepository) FindAll(search string, page int, limit int) ([]*doma
 
 func (r *subjectRepository) GetBySchool(schoolID string) ([]*domain.Subject, error) {
 	var subjects []*domain.Subject
-	err := r.db.Preload("School").Where("sub_sch_id = ?", schoolID).Order("sub_name asc").Find(&subjects).Error
+	err := r.db.Preload("School").Where("sub_sch_id = ?", schoolID).Order("created_at asc").Find(&subjects).Error
 	return subjects, err
 }
 
