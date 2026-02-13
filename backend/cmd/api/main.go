@@ -70,6 +70,32 @@ func main() {
 	enrollmentService := service.NewEnrollmentService(enrollmentRepo)
 	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentService)
 
+	mediaRepo := repository.NewMediaRepository(db)
+	mediaService := service.NewMediaService(mediaRepo)
+	mediaHandler := handler.NewMediaHandler(mediaService)
+
+	attachmentRepo := repository.NewAttachmentRepository(db)
+	attachmentService := service.NewAttachmentService(attachmentRepo)
+
+	materialRepo := repository.NewMaterialRepository(db)
+	materialService := service.NewMaterialService(materialRepo, attachmentService, mediaRepo)
+	materialHandler := handler.NewMaterialHandler(materialService)
+
+	feedRepo := repository.NewFeedRepository(db)
+	feedService := service.NewFeedService(feedRepo, attachmentService)
+	commentRepo := repository.NewCommentRepository(db)
+	commentService := service.NewCommentService(commentRepo)
+	feedHandler := handler.NewFeedHandler(feedService, commentService)
+	commentHandler := handler.NewCommentHandler(commentService)
+
+	assignmentRepo := repository.NewAssignmentRepository(db)
+	assignmentService := service.NewAssignmentService(assignmentRepo, attachmentService)
+	assignmentHandler := handler.NewAssignmentHandler(assignmentService)
+
+	logRepo := repository.NewLogRepository(db)
+	logService := service.NewLogService(logRepo)
+	logHandler := handler.NewLogHandler(logService)
+
 
 	//router setup
 	r := gin.Default()
@@ -189,6 +215,48 @@ func main() {
 			enrollmentAPI.GET("/class/:classId", enrollmentHandler.GetByClass)
 			enrollmentAPI.GET("/member/:schoolUserId", enrollmentHandler.GetByMember)
 			enrollmentAPI.DELETE("/:id", enrollmentHandler.Unenroll)
+		}
+
+		mediaAPI := api.Group("/medias")
+		{
+			mediaAPI.POST("/metadata", mediaHandler.RecordMetadata)
+			mediaAPI.GET("/:id", mediaHandler.GetByID)
+			mediaAPI.DELETE("/:id", mediaHandler.Delete)
+		}
+
+		materialAPI := api.Group("/materials")
+		{
+			materialAPI.POST("/", materialHandler.Create)
+			materialAPI.GET("/", materialHandler.FindAll)
+			materialAPI.GET("/:id", materialHandler.GetByID)
+			materialAPI.POST("/progress", materialHandler.UpdateProgress)
+		}
+
+		feedAPI := api.Group("/feeds")
+		{
+			feedAPI.POST("/", feedHandler.Create)
+			feedAPI.GET("/class/:classId", feedHandler.GetByClass)
+		}
+
+		commentAPI := api.Group("/comments")
+		{
+			commentAPI.POST("/", commentHandler.Create)
+			commentAPI.GET("/", commentHandler.GetBySource)
+			commentAPI.DELETE("/:id", commentHandler.Delete)
+		}
+
+		assignmentAPI := api.Group("/assignments")
+		{
+			assignmentAPI.POST("/categories", assignmentHandler.CreateCategory)
+			assignmentAPI.POST("/", assignmentHandler.CreateAssignment)
+			assignmentAPI.GET("/class/:classId", assignmentHandler.GetByClass)
+			assignmentAPI.POST("/submit", assignmentHandler.Submit)
+			assignmentAPI.POST("/assess", assignmentHandler.Assess)
+		}
+
+		logAPI := api.Group("/logs")
+		{
+			logAPI.GET("/school/:schoolId", logHandler.GetBySchool)
 		}
 	}
 
