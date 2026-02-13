@@ -50,6 +50,10 @@ func main() {
 	schoolUserService := service.NewSchoolUserService(schoolUserRepo)
 	schoolUserHandler := handler.NewSchoolUserHandler(schoolUserService)
 
+	subjectRepo := repository.NewSubjectRepository(db)
+	subjectService := service.NewSubjectService(subjectRepo, schoolService)
+	subjectHandler := handler.NewSubjectHandler(subjectService)
+
 
 	//router setup
 	r := gin.Default()
@@ -115,6 +119,16 @@ func main() {
 			schoolUserAPI.GET("/school/:schoolId", schoolUserHandler.GetMembersBySchool)
 			schoolUserAPI.GET("/user/:userId", schoolUserHandler.GetSchoolsByUser)
 			schoolUserAPI.DELETE("/:id", schoolUserHandler.Unenroll)
+		}
+
+		subjectAPI := api.Group("/subjects")
+		{
+			subjectAPI.POST("/", subjectHandler.Create)
+			subjectAPI.GET("/", subjectHandler.FindAll)
+			subjectAPI.GET("/:id", subjectHandler.GetByID)
+			subjectAPI.GET("/school/:schoolCode", subjectHandler.GetBySchool)
+			subjectAPI.PATCH("/:id", subjectHandler.Update)
+			subjectAPI.DELETE("/:id", subjectHandler.Delete)
 		}
 	}
 
