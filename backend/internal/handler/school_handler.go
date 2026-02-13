@@ -51,7 +51,7 @@ func (h *SchoolHandler) GetSchools(c *gin.Context) {
 	status := c.Query("status")
 	search := c.Query("search")
 
-	schools, err := h.service.GetSchools(search, status, page, limit)
+	schools, total, err := h.service.GetSchools(search, status, page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -62,13 +62,11 @@ func (h *SchoolHandler) GetSchools(c *gin.Context) {
         response = append(response, h.mapToResponse(s))
     }
 
-	// TODO: Get real total count from database
-	var totalItems int64 = int64(len(schools))
-	totalPages := (totalItems + int64(limit) - 1) / int64(limit)
+	totalPages := (total + int64(limit) - 1) / int64(limit)
 	
 	paginatedResponse := dto.PaginatedResponse{
 		Data: response,
-		TotalItems: totalItems,
+		TotalItems: total,
 		Page: page,
 		Limit: limit,
 		TotalPages: int(totalPages),
