@@ -1,63 +1,33 @@
-# 🏫 School Domain - Single Table Completion Checklist
+# 🎓 Eduverse LMS - Development Progress
 
-Daftar fitur ini dirancang agar tabel `schools` memiliki fungsionalitas penuh (Pencarian, Validasi, Manajemen Status, dan Statistik) secara mandiri.
+## ✅ 1. Core Infrastructure (100% Done)
+- [x] **School Management**: CRUD, Status, Search, Sorting, Summary Stats.
+- [x] **Academic Periods**: Academic Years & Terms with auto-activation logic.
+- [x] **User System**: Global Profile, Bcrypt Hashing, Password Management.
+- [x] **Membership**: School User connection logic.
+- [x] **RBAC**: Roles, Permissions, and User Assignments.
 
----
+## ✅ 2. Academic Structure (100% Done)
+- [x] **Subjects**: Unique code per school validation.
+- [x] **Classes**: Class groups with School/Term/Creator relations.
+- [x] **Subject-Class Mapping**: Linking Teachers and Subjects to Classes.
+- [x] **Enrollments**: Student registration to classes with role validation.
 
-## 🛠️ 1. Repository Layer (Database Access)
+## ✅ 3. Content & Social (100% Done)
+- [x] **Media System**: Metadata tracking and polymorphic attachments.
+- [x] **Learning Materials**: Content delivery and completion tracking.
+- [x] **Classroom Social**: Feeds (Announcements) and polymorphic Comment system.
 
-_Menyediakan mesin pencari dan manipulasi data pada tabel schools._
-
-- [x] Ganti schoolCode ke schoolID untuk tabel/entitas schools
-- [x] **Dynamic FindAll**: Implementasi fungsi `FindAll` yang bisa menerima map filter:
-  - [x] `search`: Query `LIKE` pada kolom `sch_name` dan `sch_code`.
-  - [x] `status`: Pilihan filter `active` (deleted_at IS NULL), `deleted` (deleted_at IS NOT NULL), atau `all`.
-  - [x] `pagination`: Menggunakan `.Limit()` dan `.Offset()`.
-  - [x] `sorting`: Mengurutkan berdasarkan `created_at` atau `sch_name`.
-- [x] **CheckCodeExists**: Fungsi efisien untuk mengecek apakah `sch_code` sudah ada (untuk validasi sebelum insert/update).
-- [x] **RestoreSchool**: Fungsi untuk mengubah `deleted_at` menjadi `NULL` berdasarkan `sch_code`.
-- [x] **HardDeleteSchool**: Fungsi `Unscoped().Delete()` untuk menghapus data secara fisik dari tabel.
-
----
-
-## 🧠 2. Service Layer (Business Logic)
-
-_Logika pemrosesan data sebelum dikirim atau disimpan._
-
-- [x] **Input Sanitization**: Fungsi otomatis untuk `TrimSpace` pada nama, alamat, dan email agar tidak ada data "spasi kosong".
-- [x] **Automatic Code Generator**: (Jika belum) Logika untuk membuat `sch_code` otomatis jika user tidak mengisinya.
-- [x] **Validation Logic**:
-  - [x] Cek duplikasi email sekolah.
-  - [x] Cek duplikasi nomor telepon sekolah.
-- [x] **School Statistics**: Fungsi untuk menghitung total baris:
-  - [x] `CountAll()`
-  - [x] `CountActive()`
-  - [x] `CountDeleted()`
+## ✅ 4. Evaluation & Audit (100% Done)
+- [x] **Assignment System**: Categories, Assignments, Submissions.
+- [x] **Grading**: Teacher assessments and scoring.
+- [x] **Audit Trail**: System-wide activity logs.
 
 ---
 
-## 🌐 3. Handler Layer (API Endpoints)
-
-_Menyediakan akses bagi user/frontend ke fitur-fitur di atas._
-
-- [x] **Unified GET /schools**: Mengganti semua fungsi GET list menjadi satu endpoint yang menerima Query Params:
-  - `?search=...&status=...&page=...&limit=...`
-- [x] **PATCH /schools/:code/restore**: Endpoint khusus untuk mengaktifkan kembali sekolah.
-- [x] **DELETE /schools/:code/permanent**: Endpoint untuk menghapus data secara permanen.
-- [x] **GET /schools/check-code/:code**: Endpoint cepat untuk validasi ketersediaan kode di frontend.
-- [x] **GET /schools/summary**: Endpoint yang mengembalikan jumlah total (Statistik).
-
----
-
-## 🛡️ 4. Data Integrity (GORM/DB Level)
-
-- [x] **Constraint Handling**: Menangani pesan error database agar lebih ramah (misal: "Email sudah terdaftar" daripada "Error 1062 Duplicate Entry").
-- [x] **Default Values**: Memastikan `sch_logo` bisa menerima `NULL` jika sekolah belum memiliki logo.
-
----
-
-## 🔒 5. User & Auth TODOs
-- [ ] **Email Confirmation**: Add email confirmation flow before allowing password changes or critical updates.
-- [x] **Password Hashing**: Implement secure password hashing using bcrypt.
-- [x] **Global User Management**: CRUD operations for users.
-- [x] **School Membership**: Connect users to specific schools.
+## 🚀 Next Priorities (Future Tasks)
+- [ ] **Authentication Middleware**: Implement JWT/Session protection for all routes.
+- [ ] **File Upload Integration**: Connect `medias` module to actual S3/Supabase storage.
+- [ ] **Advanced Grading**: Implementation of Assessment Weights logic.
+- [ ] **Frontend Integration**: Start building the UI based on `docs/api/`.
+- [ ] **Email Service**: Implement actual email sending for confirmation and password reset.
