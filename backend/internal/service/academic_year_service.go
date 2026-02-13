@@ -8,36 +8,44 @@ import (
 
 type AcademicYearService interface {
 	Create(acy *domain.AcademicYear) error
-	GetBySchool(schoolID string) ([]*domain.AcademicYear, error)
+	GetBySchool(schoolCode string) ([]*domain.AcademicYear, error)
 	GetByID(id string) (*domain.AcademicYear, error)
 	Update(acy *domain.AcademicYear) error
 	Delete(id string) error
 }
 
 type academicYearService struct {
-	repo repository.AcademicYearRepository
+	repo          repository.AcademicYearRepository
+	schoolService SchoolService
 }
 
-func NewAcademicYearService(repo repository.AcademicYearRepository) AcademicYearService {
-	return &academicYearService{repo: repo}
+func NewAcademicYearService(repo repository.AcademicYearRepository, schoolService SchoolService) AcademicYearService {
+	return &academicYearService{
+		repo:          repo,
+		schoolService: schoolService,
+	}
 }
 
 func (s *academicYearService) Create(acy *domain.AcademicYear) error {
 	acy.Name = strings.TrimSpace(acy.Name)
-	
+
+	// Paksa aktif untuk tahun ajaran baru
+	acy.IsActive = true
+
 	err := s.repo.Create(acy)
 	if err != nil {
 		return err
 	}
 
-	// Jika di-set aktif, nonaktifkan yang lain
-	if acy.IsActive {
-		return s.repo.DeactivateAllExcept(acy.SchoolID, acy.ID)
-	}
-	return nil
+	// Otomatis nonaktifkan yang lain
+	return s.repo.DeactivateAllExcept(acy.SchoolID, acy.ID)
 }
 
-func (s *academicYearService) GetBySchool(schoolID string) ([]*domain.AcademicYear, error) {
+func (s *academicYearService) GetBySchool(schoolCode string) ([]*domain.AcademicYear, error) {
+	schoolID, err := s.schoolService.ConvertCodeToID(schoolCode)
+	if err != nil {
+		return nil, err
+	}
 	return s.repo.GetBySchool(schoolID)
 }
 

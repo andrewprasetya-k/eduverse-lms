@@ -39,8 +39,8 @@ func (h *AcademicYearHandler) Create(c *gin.Context) {
 }
 
 func (h *AcademicYearHandler) GetBySchool(c *gin.Context) {
-	schoolID := c.Param("schoolId")
-	years, err := h.service.GetBySchool(schoolID)
+	schoolCode := c.Param("schoolCode")
+	years, err := h.service.GetBySchool(schoolCode)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -52,6 +52,16 @@ func (h *AcademicYearHandler) GetBySchool(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *AcademicYearHandler) GetByID(c *gin.Context) {
+	id := c.Param("id")
+	acy, err := h.service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Academic year not found"})
+		return
+	}
+	c.JSON(http.StatusOK, h.mapToResponse(acy))
 }
 
 func (h *AcademicYearHandler) Update(c *gin.Context) {

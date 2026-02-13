@@ -35,7 +35,7 @@ func main() {
 	schoolHandler := handler.NewSchoolHandler(schoolService)
 
 	academicYearRepo := repository.NewAcademicYearRepository(db)
-	academicYearService := service.NewAcademicYearService(academicYearRepo)
+	academicYearService := service.NewAcademicYearService(academicYearRepo, schoolService)
 	academicYearHandler := handler.NewAcademicYearHandler(academicYearService)
 
 
@@ -66,7 +66,8 @@ func main() {
 		academicYearAPI := api.Group("/academic-years")
 		{
 			academicYearAPI.POST("/", academicYearHandler.Create)
-			academicYearAPI.GET("/school/:schoolId", academicYearHandler.GetBySchool)
+			academicYearAPI.GET("/:id", academicYearHandler.GetByID)
+			academicYearAPI.GET("/school/:schoolCode", academicYearHandler.GetBySchool)
 			academicYearAPI.PATCH("/:id", academicYearHandler.Update)
 			academicYearAPI.DELETE("/:id", academicYearHandler.Delete)
 		}

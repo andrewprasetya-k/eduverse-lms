@@ -3,9 +3,9 @@
 Base URL: `/api/academic-years`
 
 ## 1. List Academic Years by School
-Retrieve all academic years for a specific school.
+Retrieve all academic years for a specific school using its code.
 
-- **URL:** `/school/:schoolId`
+- **URL:** `/school/:schoolCode`
 - **Method:** `GET`
 
 **Response Example:**
@@ -23,7 +23,15 @@ Retrieve all academic years for a specific school.
 
 ---
 
-## 2. Create Academic Year
+## 2. Get Academic Year Detail
+Retrieve detail of a specific academic year by its ID.
+
+- **URL:** `/:id`
+- **Method:** `GET`
+
+---
+
+## 3. Create Academic Year
 Create a new academic year for a school.
 
 - **URL:** `/`
@@ -33,22 +41,22 @@ Create a new academic year for a school.
 | :--- | :--- | :--- | :--- |
 | `schoolId` | uuid | Yes | Reference to School ID |
 | `academicYearName` | string | Yes | e.g., "2023/2024" |
-| `isActive` | boolean| No | If true, other years in the same school will be deactivated |
+| `isActive` | boolean| No | Automatically set to `true` on creation |
 
 ---
 
-## 3. Update Academic Year
+## 4. Update Academic Year
 Update name or activation status.
 
 - **URL:** `/:id`
 - **Method:** `PATCH`
 - **Body:** (Partial updates allowed)
   - `academicYearName` (string)
-  - `isActive` (boolean)
+  - `isActive` (boolean) - If set to `true`, other years in the same school will be deactivated.
 
 ---
 
-## 4. Delete Academic Year
+## 5. Delete Academic Year
 Permanently remove an academic year.
 
 - **URL:** `/:id`
