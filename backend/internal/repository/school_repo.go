@@ -2,13 +2,14 @@ package repository
 
 import (
 	"backend/internal/domain"
+	"fmt"
 
 	"gorm.io/gorm"
 )
 
 type SchoolRepository interface{
 	CreateSchool(school *domain.School) error
-	GetSchools(search string, status string, page int, limit int) ([]*domain.School, int64, error)
+	GetSchools(search string, status string, page int, limit int, sortBy string, order string) ([]*domain.School, int64, error)
 	GetSchoolByCode(schoolCode string) (*domain.School, error)
 	GetSchoolByID(schoolID string) (*domain.School, error)
 	RestoreDeletedSchool(schoolID string) error
@@ -29,7 +30,7 @@ func (r *schoolRepository) CreateSchool(school *domain.School) error {
 	return r.db.Create(school).Error
 }
 
-func (r *schoolRepository) GetSchools(search string, status string, page int, limit int) ([]*domain.School, int64, error) {
+func (r *schoolRepository) GetSchools(search string, status string, page int, limit int, sortBy string, order string) ([]*domain.School, int64, error) {
 	var schools []*domain.School
 	var total int64
 
@@ -55,6 +56,15 @@ func (r *schoolRepository) GetSchools(search string, status string, page int, li
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
+
+	// Sorting
+	if sortBy == "" {
+		sortBy = "created_at"
+	}
+	if order == "" {
+		order = "desc"
+	}
+	query = query.Order(fmt.Sprintf("%s %s", sortBy, order))
 
 	//pagiatanion
 	offset := (page - 1)*limit

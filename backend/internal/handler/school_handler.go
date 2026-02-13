@@ -50,8 +50,10 @@ func (h *SchoolHandler) GetSchools(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit","10"))
 	status := c.Query("status")
 	search := c.Query("search")
+	sortBy := c.Query("sortBy")
+	order := c.Query("order")
 
-	schools, total, err := h.service.GetSchools(search, status, page, limit)
+	schools, total, err := h.service.GetSchools(search, status, page, limit, sortBy, order)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
