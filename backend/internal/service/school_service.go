@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -34,6 +35,8 @@ func NewSchoolService(repo repository.SchoolRepository) SchoolService {
 }
 
 func (s *schoolService) CreateSchool(school *domain.School) error {
+	s.sanitizeInput(school)
+
 	// 1. Jika code kosong, generate otomatis dengan pengecekan keunikan
 	if school.Code == "" {
 		school.Code = s.generateRandomCode()
@@ -47,6 +50,19 @@ func (s *schoolService) CreateSchool(school *domain.School) error {
 		}
 	}
 	return s.repo.CreateSchool(school)
+}
+
+func (s *schoolService) sanitizeInput(school *domain.School) {
+	school.Name = strings.TrimSpace(school.Name)
+	school.Address = strings.TrimSpace(school.Address)
+	school.Email = strings.TrimSpace(school.Email)
+	school.Phone = strings.TrimSpace(school.Phone)
+	school.Code = strings.TrimSpace(school.Code)
+
+	if school.Website != nil {
+		trimmed := strings.TrimSpace(*school.Website)
+		school.Website = &trimmed
+	}
 }
 
 func (s *schoolService) generateRandomCode() string {
@@ -81,6 +97,8 @@ func (s *schoolService) GetSchoolByID(schoolID string) (*domain.School, error) {
 }
 
 func (s *schoolService) UpdateSchool(school *domain.School) error {
+    s.sanitizeInput(school)
+    
     existing, err := s.repo.GetSchoolByCode(school.Code)
     
     // Kalau kodenya ketemu, cek apakah itu milik sekolah LAIN?
