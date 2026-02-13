@@ -10,22 +10,47 @@ Retrieve a paginated list of schools with filtering, searching, and sorting capa
 - **Query Parameters:**
   - `page` (default: `1`): Page number.
   - `limit` (default: `10`): Items per page.
-  - `search` (optional): Filter by school name or code.
-  - `status` (optional): `active` (default), `deleted` (in trash), `all`.
-  - `sortBy` (optional): Sort column using these keys:
-    - `name` (maps to school name)
-    - `code` (maps to school code)
-    - `createdAt` (maps to creation date, default)
-    - `updatedAt` (maps to last update date)
-  - `order` (optional): `asc` (A-Z) or `desc` (Z-A, newest, default).
+  - `search` (optional): Filter by school name or code (Case Insensitive).
+  - `status` (optional): 
+    - `active` (default): Only non-deleted schools.
+    - `deleted`: Only soft-deleted schools.
+    - `all`: All schools including deleted.
+  - `sortBy` (optional): 
+    - `name`: Sort by school name.
+    - `code`: Sort by school code.
+    - `createdAt`: Sort by creation date (default).
+    - `updatedAt`: Sort by last update date.
+  - `order` (optional): `asc` (A-Z) or `desc` (Z-A/Newest, default).
 
-**Example Request:**
-`GET /api/schools?search=edu&status=active&sortBy=name&order=asc`
+**Response Example:**
+```json
+{
+  "data": [
+    {
+      "schoolId": "uuid-string",
+      "schoolName": "Eduverse Academy",
+      "schoolCode": "EDU01",
+      "schoolLogo": "uuid-media-id",
+      "schoolAddress": "Jl. Merdeka No. 1",
+      "schoolEmail": "admin@edu.com",
+      "schoolPhone": "081234567890",
+      "schoolWebsite": "https://edu.com",
+      "isDeleted": false,
+      "createdAt": "13-02-2026 09:00:00",
+      "updatedAt": "13-02-2026 09:00:00"
+    }
+  ],
+  "totalItems": 50,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 5
+}
+```
 
 ---
 
 ## 2. Get School Summary
-Get high-level statistics for school management.
+Get high-level statistics for school management cards.
 
 - **URL:** `/summary`
 - **Method:** `GET`
@@ -42,7 +67,7 @@ Get high-level statistics for school management.
 ---
 
 ## 3. Check Code Availability
-Quickly check if a school code is already taken before submitting a form.
+Quickly check if a school code is already taken.
 
 - **URL:** `/check-code/:schoolCode`
 - **Method:** `GET`
@@ -58,19 +83,28 @@ Quickly check if a school code is already taken before submitting a form.
 ---
 
 ## 4. Create School
-Register a new school in the system.
+Register a new school. Input will be automatically trimmed of leading/trailing spaces.
 
 - **URL:** `/`
 - **Method:** `POST`
-- **Payload:**
+- **Body:**
+| Field | Type | Required | Validation |
+| :--- | :--- | :--- | :--- |
+| `schoolName` | string | Yes | Min 1 char |
+| `schoolCode` | string | No | Unique, auto-generated if empty |
+| `schoolLogo` | uuid | No | Reference to Media ID |
+| `schoolAddress`| string | Yes | Min 1 char |
+| `schoolEmail` | string | Yes | Unique, valid email format |
+| `schoolPhone` | string | Yes | Unique, numeric, min 10 chars |
+| `schoolWebsite`| string | No | Valid URL format |
+
+**Example Response (201 Created):**
 ```json
 {
+  "schoolId": "uuid",
   "schoolName": "Eduverse Academy",
   "schoolCode": "EDU01",
-  "schoolAddress": "Jl. Merdeka No. 1",
-  "schoolEmail": "admin@edu.com",
-  "schoolPhone": "081234567890",
-  "schoolWebsite": "https://edu.com"
+  ...
 }
 ```
 
@@ -82,18 +116,39 @@ Get full information of a specific school by its code.
 - **URL:** `/:schoolCode`
 - **Method:** `GET`
 
+**Response Example:** Same as List School item.
+
 ---
 
 ## 6. Update School
-Update existing school information.
+Update existing school information. Partial updates are supported.
 
 - **URL:** `/:schoolCode`
 - **Method:** `PATCH`
-- **Payload:** (Partial updates are allowed)
+- **Body:** Same as Create School (all fields are optional).
+
+**Error Responses:**
+- `400 Bad Request`: Validation failed (e.g., invalid email format).
+- `500 Internal Server Error`: Conflict error (e.g., "email already exists").
 
 ---
 
 ## 7. Management Actions
-- **Soft Delete:** `DELETE /:schoolCode` (Moves to trash)
-- **Restore:** `PATCH /restore/:schoolCode` (Brings back from trash)
-- **Hard Delete:** `DELETE /:schoolCode/permanent` (Permanently removes from DB)
+
+### Soft Delete
+Moves school to trash (sets `deleted_at`).
+- **URL:** `/:schoolCode`
+- **Method:** `DELETE`
+- **Response:** `{"message": "School deleted successfully"}`
+
+### Restore
+Brings back a school from trash.
+- **URL:** `/restore/:schoolCode`
+- **Method:** `PATCH`
+- **Response:** `{"message": "School restored successfully"}`
+
+### Hard Delete (Permanent)
+Permanently removes school from database. **Warning: This cannot be undone.**
+- **URL:** `/:schoolCode/permanent`
+- **Method:** `DELETE`
+- **Response:** `{"message": "School permanently deleted successfully"}`
