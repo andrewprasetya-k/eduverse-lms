@@ -1,0 +1,143 @@
+package handler
+
+import (
+	"backend/internal/domain"
+	"backend/internal/dto"
+	"backend/internal/service"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+)
+
+type ClassHandler struct {
+	service service.ClassService
+}
+
+func NewClassHandler(service service.ClassService) *ClassHandler {
+	return &ClassHandler{service: service}
+}
+
+func (h *ClassHandler) Create(c *gin.Context) {
+	var input dto.CreateClassDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	class := domain.Class{
+		SchoolID:    input.SchoolID,
+		TermID:      input.TermID,
+		Code:        input.Code,
+		Title:       input.Title,
+		Description: input.Description,
+		CreatedBy:   input.CreatedBy,
+	}
+
+	if err := h.service.Create(&class); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, h.mapToResponse(&class))
+}
+
+func (h *ClassHandler) FindAll(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+	schoolCode := c.Query("schoolCode")
+	termID := c.Query("termId")
+
+	classes, total, err := h.service.FindAll(search, schoolCode, termID, page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var response []dto.ClassResponseDTO
+	for _, cls := range classes {
+		response = append(response, h.mapToResponse(cls))
+	}
+
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
+	paginatedResponse := dto.PaginatedResponse{
+		Data:       response,
+		TotalItems: total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: int(totalPages),
+	}
+	c.JSON(http.StatusOK, paginatedResponse)
+}
+
+func (h *ClassHandler) GetByID(c *gin.Context) {
+	id := c.Param("id")
+	class, err := h.service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Class not found"})
+		return
+	}
+	c.JSON(http.StatusOK, h.mapToResponse(class))
+}
+
+func (h *ClassHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.UpdateClassDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	class, err := h.service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Class not found"})
+		return
+	}
+
+	if input.Title != nil {
+		class.Title = *input.Title
+	}
+	if input.Description != nil {
+		class.Description = *input.Description
+	}
+	if input.IsActive != nil {
+		class.IsActive = *input.IsActive
+	}
+
+	if err := h.service.Update(class); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, h.mapToResponse(class))
+}
+
+func (h *ClassHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.Delete(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Class deleted successfully"})
+}
+
+func (h *ClassHandler) mapToResponse(c *domain.Class) dto.ClassResponseDTO {
+	return dto.ClassResponseDTO{
+		ID:               c.ID,
+		SchoolID:         c.SchoolID,
+		SchoolName:       c.School.Name,
+		TermID:           c.TermID,
+		TermName:         c.Term.Name,
+		AcademicYearName: c.Term.AcademicYear.Name,
+		Code:             c.Code,
+		Title:            c.Title,
+		Description:      c.Description,
+		CreatedBy:        c.CreatedBy,
+		CreatorName:      c.Creator.FullName,
+		IsActive:         c.IsActive,
+		CreatedAt:        c.CreatedAt.Format("02-01-2006 15:04:05"),
+		UpdatedAt:        c.UpdatedAt.Format("02-01-2006 15:04:05"),
+	}
+}

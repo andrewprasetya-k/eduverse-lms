@@ -58,6 +58,10 @@ func main() {
 	rbacService := service.NewRBACService(rbacRepo, schoolService)
 	rbacHandler := handler.NewRBACHandler(rbacService)
 
+	classRepo := repository.NewClassRepository(db)
+	classService := service.NewClassService(classRepo, schoolService)
+	classHandler := handler.NewClassHandler(classService)
+
 
 	//router setup
 	r := gin.Default()
@@ -152,6 +156,15 @@ func main() {
 			rbacAPI.POST("/assignments", rbacHandler.AssignRole)
 			rbacAPI.DELETE("/assignments", rbacHandler.RemoveRole)
 			rbacAPI.GET("/assignments/user/:schoolUserId", rbacHandler.GetUserRoles)
+		}
+
+		classAPI := api.Group("/classes")
+		{
+			classAPI.POST("/", classHandler.Create)
+			classAPI.GET("/", classHandler.FindAll)
+			classAPI.GET("/:id", classHandler.GetByID)
+			classAPI.PATCH("/:id", classHandler.Update)
+			classAPI.DELETE("/:id", classHandler.Delete)
 		}
 	}
 
