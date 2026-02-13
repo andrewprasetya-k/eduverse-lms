@@ -8,17 +8,21 @@ import (
 
 type SchoolUserService interface {
 	Enroll(scu *domain.SchoolUser) error
-	GetMembersBySchool(schoolID string) ([]*domain.SchoolUser, error)
+	GetMembersBySchool(schoolCode string) ([]*domain.SchoolUser, error)
 	GetSchoolsByUser(userID string) ([]*domain.SchoolUser, error)
 	Unenroll(id string) error
 }
 
 type schoolUserService struct {
-	repo repository.SchoolUserRepository
+	repo          repository.SchoolUserRepository
+	schoolService SchoolService
 }
 
-func NewSchoolUserService(repo repository.SchoolUserRepository) SchoolUserService {
-	return &schoolUserService{repo: repo}
+func NewSchoolUserService(repo repository.SchoolUserRepository, schoolService SchoolService) SchoolUserService {
+	return &schoolUserService{
+		repo:          repo,
+		schoolService: schoolService,
+	}
 }
 
 func (s *schoolUserService) Enroll(scu *domain.SchoolUser) error {
@@ -34,7 +38,11 @@ func (s *schoolUserService) Enroll(scu *domain.SchoolUser) error {
 	return s.repo.Create(scu)
 }
 
-func (s *schoolUserService) GetMembersBySchool(schoolID string) ([]*domain.SchoolUser, error) {
+func (s *schoolUserService) GetMembersBySchool(schoolCode string) ([]*domain.SchoolUser, error) {
+	schoolID, err := s.schoolService.ConvertCodeToID(schoolCode)
+	if err != nil {
+		return nil, err
+	}
 	return s.repo.GetBySchool(schoolID)
 }
 

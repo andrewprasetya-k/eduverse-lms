@@ -42,17 +42,17 @@ func (h *SchoolUserHandler) Enroll(c *gin.Context) {
 }
 
 func (h *SchoolUserHandler) GetMembersBySchool(c *gin.Context) {
-	schoolID := c.Param("schoolId")
+	schoolCode := c.Param("schoolCode")
 
-	// 1. Ambil data sekolah
-	school, err := h.schoolService.GetSchoolByID(schoolID)
+	// 1. Ambil data sekolah (untuk header) menggunakan code
+	school, err := h.schoolService.GetSchoolByCode(schoolCode)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
 		return
 	}
 
-	// 2. Ambil daftar anggota
-	members, err := h.service.GetMembersBySchool(schoolID)
+	// 2. Ambil daftar anggota menggunakan code (akan dikonversi di service)
+	members, err := h.service.GetMembersBySchool(schoolCode)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

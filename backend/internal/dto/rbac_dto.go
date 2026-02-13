@@ -12,12 +12,11 @@ type UpdateRoleDTO struct {
 }
 
 type RoleResponseDTO struct {
-	ID         string               `json:"roleId"`
-	SchoolID   string               `json:"schoolId"`
-	SchoolName string               `json:"schoolName,omitempty"`
-	Name       string               `json:"roleName"`
+	ID          string                  `json:"roleId"`
+	School      SchoolHeaderDTO         `json:"school"`
+	Name        string                  `json:"roleName"`
 	Permissions []PermissionResponseDTO `json:"permissions,omitempty"`
-	CreatedAt  string               `json:"createdAt"`
+	CreatedAt   string                  `json:"createdAt"`
 }
 
 // Permission DTOs

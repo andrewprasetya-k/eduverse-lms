@@ -8,6 +8,22 @@ Base URL: `/api/rbac`
 - **URL:** `/roles/school/:schoolCode`
 - **Method:** `GET`
 
+**Response Example:**
+```json
+[
+  {
+    "roleId": "uuid",
+    "school": {
+      "schoolId": "uuid",
+      "schoolName": "Eduverse Academy",
+      "schoolCode": "SD-ANGKASA"
+    },
+    "roleName": "Guru",
+    "createdAt": "..."
+  }
+]
+```
+
 ### Create Role
 - **URL:** `/roles`
 - **Method:** `POST`

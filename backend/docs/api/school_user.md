@@ -18,7 +18,7 @@ Connect an existing user to a school.
 ## 2. List Members by School
 Retrieve all users who belong to a specific school, including school details.
 
-- **URL:** `/school/:schoolId`
+- **URL:** `/school/:schoolCode`
 - **Method:** `GET`
 
 **Response Example:**
@@ -27,7 +27,7 @@ Retrieve all users who belong to a specific school, including school details.
   "school": {
     "schoolId": "uuid",
     "schoolName": "Eduverse Academy",
-    "schoolCode": "EDU01",
+    "schoolCode": "SD-ANGKASA",
     ...
   },
   "members": [

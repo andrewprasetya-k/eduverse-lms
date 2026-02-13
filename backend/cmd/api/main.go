@@ -124,7 +124,7 @@ func main() {
 		schoolUserAPI := api.Group("/school-users")
 		{
 			schoolUserAPI.POST("/enroll", schoolUserHandler.Enroll)
-			schoolUserAPI.GET("/school/:schoolId", schoolUserHandler.GetMembersBySchool)
+			schoolUserAPI.GET("/school/:schoolCode", schoolUserHandler.GetMembersBySchool)
 			schoolUserAPI.GET("/user/:userId", schoolUserHandler.GetSchoolsByUser)
 			schoolUserAPI.DELETE("/:id", schoolUserHandler.Unenroll)
 		}
