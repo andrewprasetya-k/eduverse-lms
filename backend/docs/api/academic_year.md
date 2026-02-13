@@ -37,6 +37,8 @@ Retrieve all academic years for a specific school using its code.
   {
     "academicYearId": "uuid-string",
     "schoolId": "uuid-school-id",
+    "schoolName": "Eduverse Academy",
+    "schoolCode": "EDU01",
     "academicYearName": "2023/2024",
     "isActive": true,
     "createdAt": "13-02-2026 10:00:00"

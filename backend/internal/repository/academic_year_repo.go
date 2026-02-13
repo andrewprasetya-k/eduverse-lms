@@ -32,7 +32,7 @@ func (r *academicYearRepository) FindAll(search string, page int, limit int) ([]
 	var years []*domain.AcademicYear
 	var total int64
 
-	query := r.db.Model(&domain.AcademicYear{})
+	query := r.db.Model(&domain.AcademicYear{}).Joins("School")
 
 	if search != "" {
 		searchTerm := "%" + search + "%"
@@ -44,19 +44,19 @@ func (r *academicYearRepository) FindAll(search string, page int, limit int) ([]
 	}
 
 	offset := (page - 1) * limit
-	err := query.Limit(limit).Offset(offset).Order("created_at desc").Find(&years).Error
+	err := query.Limit(limit).Offset(offset).Order("edv.academic_years.created_at desc").Find(&years).Error
 	return years, total, err
 }
 
 func (r *academicYearRepository) GetBySchool(schoolID string) ([]*domain.AcademicYear, error) {
 	var years []*domain.AcademicYear
-	err := r.db.Where("acy_sch_id = ?", schoolID).Order("acy_name desc").Find(&years).Error
+	err := r.db.Joins("School").Where("acy_sch_id = ?", schoolID).Order("acy_name desc").Find(&years).Error
 	return years, err
 }
 
 func (r *academicYearRepository) GetByID(id string) (*domain.AcademicYear, error) {
 	var acy domain.AcademicYear
-	err := r.db.Where("acy_id = ?", id).First(&acy).Error
+	err := r.db.Joins("School").Where("acy_id = ?", id).First(&acy).Error
 	return &acy, err
 }
 
