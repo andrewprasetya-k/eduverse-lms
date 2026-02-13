@@ -42,6 +42,14 @@ func main() {
 	termService := service.NewTermService(termRepo)
 	termHandler := handler.NewTermHandler(termService)
 
+	userRepo := repository.NewUserRepository(db)
+	userService := service.NewUserService(userRepo)
+	userHandler := handler.NewUserHandler(userService)
+
+	schoolUserRepo := repository.NewSchoolUserRepository(db)
+	schoolUserService := service.NewSchoolUserService(schoolUserRepo)
+	schoolUserHandler := handler.NewSchoolUserHandler(schoolUserService)
+
 
 	//router setup
 	r := gin.Default()
@@ -89,6 +97,22 @@ func main() {
 			termAPI.PATCH("/activate/:id", termHandler.Activate)
 			termAPI.PATCH("/deactivate/:id", termHandler.Deactivate)
 			termAPI.DELETE("/:id", termHandler.Delete)
+		}
+
+		userAPI := api.Group("/users")
+		{
+			userAPI.POST("/", userHandler.Create)
+			userAPI.GET("/:id", userHandler.GetByID)
+			userAPI.PATCH("/:id", userHandler.Update)
+			userAPI.DELETE("/:id", userHandler.Delete)
+		}
+
+		schoolUserAPI := api.Group("/school-users")
+		{
+			schoolUserAPI.POST("/enroll", schoolUserHandler.Enroll)
+			schoolUserAPI.GET("/school/:schoolId", schoolUserHandler.GetMembersBySchool)
+			schoolUserAPI.GET("/user/:userId", schoolUserHandler.GetSchoolsByUser)
+			schoolUserAPI.DELETE("/:id", schoolUserHandler.Unenroll)
 		}
 	}
 
