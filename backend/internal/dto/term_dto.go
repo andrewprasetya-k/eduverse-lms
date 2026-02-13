@@ -11,10 +11,10 @@ type UpdateTermDTO struct {
 
 type TermResponseDTO struct {
 	ID               string `json:"termId"`
+	Name             string `json:"termName"`
 	AcademicYearID   string `json:"academicYearId"`
 	AcademicYearName string `json:"academicYearName,omitempty"`
 	SchoolName       string `json:"schoolName,omitempty"`
-	Name             string `json:"termName"`
 	IsActive         bool   `json:"isActive"`
 	CreatedAt        string `json:"createdAt"`
 }
