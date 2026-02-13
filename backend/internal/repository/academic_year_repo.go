@@ -2,6 +2,7 @@ package repository
 
 import (
 	"backend/internal/domain"
+
 	"gorm.io/gorm"
 )
 
@@ -52,7 +53,7 @@ func (r *academicYearRepository) FindAll(search string, page int, limit int) ([]
 
 func (r *academicYearRepository) GetBySchool(schoolID string) ([]*domain.AcademicYear, error) {
 	var years []*domain.AcademicYear
-	err := r.db.Joins("School").Where("acy_sch_id = ?", schoolID).Order("acy_name desc").Find(&years).Error
+	err := r.db.Joins("School").Where("acy_sch_id = ?", schoolID).Order("created_at desc").Find(&years).Error
 	return years, err
 }
 
