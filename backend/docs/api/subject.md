@@ -15,10 +15,30 @@ Retrieve a paginated list of all subjects (Super Admin view).
 ---
 
 ## 2. List Subjects by School
-Retrieve all subjects for a specific school.
+Retrieve all subjects for a specific school, including school details.
 
 - **URL:** `/school/:schoolCode`
 - **Method:** `GET`
+
+**Response Example:**
+```json
+{
+  "school": {
+    "schoolId": "uuid",
+    "schoolName": "Eduverse Academy",
+    "schoolCode": "EDU01",
+    ...
+  },
+  "subjects": [
+    {
+      "subjectId": "uuid",
+      "subjectName": "Matematika",
+      "subjectCode": "MTK",
+      "createdAt": "13-02-2026 15:00:00"
+    }
+  ]
+}
+```
 
 ---
 

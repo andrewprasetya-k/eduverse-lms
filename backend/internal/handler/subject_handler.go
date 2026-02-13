@@ -11,11 +11,15 @@ import (
 )
 
 type SubjectHandler struct {
-	service service.SubjectService
+	service       service.SubjectService
+	schoolService service.SchoolService
 }
 
-func NewSubjectHandler(service service.SubjectService) *SubjectHandler {
-	return &SubjectHandler{service: service}
+func NewSubjectHandler(service service.SubjectService, schoolService service.SchoolService) *SubjectHandler {
+	return &SubjectHandler{
+		service:       service,
+		schoolService: schoolService,
+	}
 }
 
 func (h *SubjectHandler) Create(c *gin.Context) {
@@ -69,18 +73,41 @@ func (h *SubjectHandler) FindAll(c *gin.Context) {
 
 func (h *SubjectHandler) GetBySchool(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")
+
+	// 1. Ambil data sekolah (untuk header)
+	school, err := h.schoolService.GetSchoolByCode(schoolCode)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		return
+	}
+
+	// 2. Ambil daftar mata pelajaran
 	subjects, err := h.service.GetBySchool(schoolCode)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	var response []dto.SubjectResponseDTO
+	var subjectsDTO []dto.SubjectResponseDTO
 	for _, s := range subjects {
-		response = append(response, h.mapToResponse(s))
+		subjectsDTO = append(subjectsDTO, h.mapToResponse(s))
+	}
+
+	response := dto.SchoolWithSubjectsDTO{
+		School:   h.mapSchoolToHeader(school),
+		Subjects: subjectsDTO,
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *SubjectHandler) mapSchoolToHeader(s *domain.School) dto.SchoolHeaderDTO {
+	return dto.SchoolHeaderDTO{
+		ID:     s.ID,
+		Name:   s.Name,
+		Code:   s.Code,
+		LogoID: s.LogoID,
+	}
 }
 
 func (h *SubjectHandler) GetByID(c *gin.Context) {

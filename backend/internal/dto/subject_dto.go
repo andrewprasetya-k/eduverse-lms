@@ -20,3 +20,8 @@ type SubjectResponseDTO struct {
 	Code       string `json:"subjectCode"`
 	CreatedAt  string `json:"createdAt"`
 }
+
+type SchoolWithSubjectsDTO struct {
+	School   SchoolHeaderDTO      `json:"school"`
+	Subjects []SubjectResponseDTO `json:"subjects"`
+}

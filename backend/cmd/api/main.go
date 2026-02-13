@@ -52,7 +52,7 @@ func main() {
 
 	subjectRepo := repository.NewSubjectRepository(db)
 	subjectService := service.NewSubjectService(subjectRepo, schoolService)
-	subjectHandler := handler.NewSubjectHandler(subjectService)
+	subjectHandler := handler.NewSubjectHandler(subjectService, schoolService)
 
 
 	//router setup
