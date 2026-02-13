@@ -62,6 +62,14 @@ func main() {
 	classService := service.NewClassService(classRepo, schoolService)
 	classHandler := handler.NewClassHandler(classService)
 
+	subjectClassRepo := repository.NewSubjectClassRepository(db)
+	subjectClassService := service.NewSubjectClassService(subjectClassRepo)
+	subjectClassHandler := handler.NewSubjectClassHandler(subjectClassService)
+
+	enrollmentRepo := repository.NewEnrollmentRepository(db)
+	enrollmentService := service.NewEnrollmentService(enrollmentRepo)
+	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentService)
+
 
 	//router setup
 	r := gin.Default()
@@ -165,6 +173,22 @@ func main() {
 			classAPI.GET("/:id", classHandler.GetByID)
 			classAPI.PATCH("/:id", classHandler.Update)
 			classAPI.DELETE("/:id", classHandler.Delete)
+		}
+
+		subjectClassAPI := api.Group("/subject-classes")
+		{
+			subjectClassAPI.POST("/assign", subjectClassHandler.Assign)
+			subjectClassAPI.GET("/class/:classId", subjectClassHandler.GetByClass)
+			subjectClassAPI.GET("/:id", subjectClassHandler.GetByID)
+			subjectClassAPI.DELETE("/:id", subjectClassHandler.Unassign)
+		}
+
+		enrollmentAPI := api.Group("/enrollments")
+		{
+			enrollmentAPI.POST("/enroll", enrollmentHandler.Enroll)
+			enrollmentAPI.GET("/class/:classId", enrollmentHandler.GetByClass)
+			enrollmentAPI.GET("/member/:schoolUserId", enrollmentHandler.GetByMember)
+			enrollmentAPI.DELETE("/:id", enrollmentHandler.Unenroll)
 		}
 	}
 
