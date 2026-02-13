@@ -1,0 +1,97 @@
+package handler
+
+import (
+	"backend/internal/domain"
+	"backend/internal/dto"
+	"backend/internal/service"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type UserHandler struct {
+	service service.UserService
+}
+
+func NewUserHandler(service service.UserService) *UserHandler {
+	return &UserHandler{service: service}
+}
+
+func (h *UserHandler) Create(c *gin.Context) {
+	var input dto.CreateUserDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user := domain.User{
+		FullName: input.FullName,
+		Email:    input.Email,
+		Password: input.Password,
+	}
+
+	if err := h.service.Create(&user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, h.mapToResponse(&user))
+}
+
+func (h *UserHandler) GetByID(c *gin.Context) {
+	id := c.Param("id")
+	user, err := h.service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+	c.JSON(http.StatusOK, h.mapToResponse(user))
+}
+
+func (h *UserHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.UpdateUserDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := h.service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	if input.FullName != nil {
+		user.FullName = *input.FullName
+	}
+	if input.Email != nil {
+		user.Email = *input.Email
+	}
+
+	if err := h.service.Update(user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, h.mapToResponse(user))
+}
+
+func (h *UserHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.Delete(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}
+
+func (h *UserHandler) mapToResponse(user *domain.User) dto.UserResponseDTO {
+	return dto.UserResponseDTO{
+		ID:        user.ID,
+		FullName:  user.FullName,
+		Email:     user.Email,
+		IsActive:  user.IsActive,
+		CreatedAt: user.CreatedAt.Format("02-01-2006 15:04:05"),
+	}
+}
