@@ -34,6 +34,10 @@ func main() {
 	schoolService := service.NewSchoolService(schoolRepo)
 	schoolHandler := handler.NewSchoolHandler(schoolService)
 
+	academicYearRepo := repository.NewAcademicYearRepository(db)
+	academicYearService := service.NewAcademicYearService(academicYearRepo)
+	academicYearHandler := handler.NewAcademicYearHandler(academicYearService)
+
 
 	//router setup
 	r := gin.Default()
@@ -57,6 +61,14 @@ func main() {
 			schoolAPI.PATCH("/restore/:schoolCode", schoolHandler.RestoreDeletedSchool)
 			schoolAPI.DELETE("/:schoolCode", schoolHandler.DeleteSchool)
 			schoolAPI.DELETE("/:schoolCode/permanent", schoolHandler.HardDeleteSchool)
+		}
+
+		academicYearAPI := api.Group("/academic-years")
+		{
+			academicYearAPI.POST("/", academicYearHandler.Create)
+			academicYearAPI.GET("/school/:schoolId", academicYearHandler.GetBySchool)
+			academicYearAPI.PATCH("/:id", academicYearHandler.Update)
+			academicYearAPI.DELETE("/:id", academicYearHandler.Delete)
 		}
 	}
 
