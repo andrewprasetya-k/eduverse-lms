@@ -3,6 +3,7 @@ package repository
 import (
 	"backend/internal/domain"
 	"fmt"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -61,14 +62,25 @@ func (r *schoolRepository) GetSchools(search string, status string, page int, li
 		return nil, 0, err
 	}
 
-	// Sorting
-	if sortBy == "" {
-		sortBy = "created_at"
+	// Sorting Whitelist & Mapping
+	sortMap := map[string]string{
+		"name":      "sch_name",
+		"code":      "sch_code",
+		"createdAt": "created_at",
+		"updatedAt": "updated_at",
 	}
-	if order == "" {
+
+	column, ok := sortMap[sortBy]
+	if !ok {
+		column = "created_at" // Default sort column
+	}
+
+	// Validate order
+	if strings.ToLower(order) != "asc" {
 		order = "desc"
 	}
-	query = query.Order(fmt.Sprintf("%s %s", sortBy, order))
+
+	query = query.Order(fmt.Sprintf("%s %s", column, order))
 
 	//pagiatanion
 	offset := (page - 1)*limit
