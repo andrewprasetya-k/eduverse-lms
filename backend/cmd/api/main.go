@@ -38,6 +38,10 @@ func main() {
 	academicYearService := service.NewAcademicYearService(academicYearRepo, schoolService)
 	academicYearHandler := handler.NewAcademicYearHandler(academicYearService)
 
+	termRepo := repository.NewTermRepository(db)
+	termService := service.NewTermService(termRepo)
+	termHandler := handler.NewTermHandler(termService)
+
 
 	//router setup
 	r := gin.Default()
@@ -70,9 +74,21 @@ func main() {
 			academicYearAPI.GET("/:id", academicYearHandler.GetByID)
 			academicYearAPI.GET("/school/:schoolCode", academicYearHandler.GetBySchool)
 			academicYearAPI.PATCH("/:id", academicYearHandler.Update)
-			academicYearAPI.PATCH("/activate/:id", academicYearHandler.Activate)
-			academicYearAPI.PATCH("/deactivate/:id", academicYearHandler.Deactivate)
+			academicYearAPI.POST("/activate/:id", academicYearHandler.Activate)
+			academicYearAPI.POST("/deactivate/:id", academicYearHandler.Deactivate)
 			academicYearAPI.DELETE("/:id", academicYearHandler.Delete)
+		}
+
+		termAPI := api.Group("/terms")
+		{
+			termAPI.POST("/", termHandler.Create)
+			termAPI.GET("/", termHandler.FindAll)
+			termAPI.GET("/:id", termHandler.GetByID)
+			termAPI.GET("/academic-year/:academicYearId", termHandler.GetByAcademicYear)
+			termAPI.PATCH("/:id", termHandler.Update)
+			termAPI.POST("/activate/:id", termHandler.Activate)
+			termAPI.POST("/deactivate/:id", termHandler.Deactivate)
+			termAPI.DELETE("/:id", termHandler.Delete)
 		}
 	}
 
