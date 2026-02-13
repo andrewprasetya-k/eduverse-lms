@@ -15,3 +15,8 @@ type SchoolUserResponseDTO struct {
 	SchoolCode string `json:"schoolCode,omitempty"`
 	CreatedAt  string `json:"createdAt"`
 }
+
+type SchoolWithMembersDTO struct {
+	School  SchoolHeaderDTO         `json:"school"`
+	Members []SchoolUserResponseDTO `json:"members"`
+}

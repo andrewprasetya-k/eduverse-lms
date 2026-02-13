@@ -10,11 +10,15 @@ import (
 )
 
 type SchoolUserHandler struct {
-	service service.SchoolUserService
+	service       service.SchoolUserService
+	schoolService service.SchoolService
 }
 
-func NewSchoolUserHandler(service service.SchoolUserService) *SchoolUserHandler {
-	return &SchoolUserHandler{service: service}
+func NewSchoolUserHandler(service service.SchoolUserService, schoolService service.SchoolService) *SchoolUserHandler {
+	return &SchoolUserHandler{
+		service:       service,
+		schoolService: schoolService,
+	}
 }
 
 func (h *SchoolUserHandler) Enroll(c *gin.Context) {
@@ -39,15 +43,24 @@ func (h *SchoolUserHandler) Enroll(c *gin.Context) {
 
 func (h *SchoolUserHandler) GetMembersBySchool(c *gin.Context) {
 	schoolID := c.Param("schoolId")
+
+	// 1. Ambil data sekolah
+	school, err := h.schoolService.GetSchoolByID(schoolID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		return
+	}
+
+	// 2. Ambil daftar anggota
 	members, err := h.service.GetMembersBySchool(schoolID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	var response []dto.SchoolUserResponseDTO
+	var membersDTO []dto.SchoolUserResponseDTO
 	for _, m := range members {
-		response = append(response, dto.SchoolUserResponseDTO{
+		membersDTO = append(membersDTO, dto.SchoolUserResponseDTO{
 			ID:        m.ID,
 			UserID:    m.UserID,
 			FullName:  m.User.FullName,
@@ -57,7 +70,21 @@ func (h *SchoolUserHandler) GetMembersBySchool(c *gin.Context) {
 		})
 	}
 
+	response := dto.SchoolWithMembersDTO{
+		School:  h.mapSchoolToHeader(school),
+		Members: membersDTO,
+	}
+
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *SchoolUserHandler) mapSchoolToHeader(s *domain.School) dto.SchoolHeaderDTO {
+	return dto.SchoolHeaderDTO{
+		ID:     s.ID,
+		Name:   s.Name,
+		Code:   s.Code,
+		LogoID: s.LogoID,
+	}
 }
 
 func (h *SchoolUserHandler) GetSchoolsByUser(c *gin.Context) {

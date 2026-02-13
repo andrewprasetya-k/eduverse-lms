@@ -48,7 +48,7 @@ func main() {
 
 	schoolUserRepo := repository.NewSchoolUserRepository(db)
 	schoolUserService := service.NewSchoolUserService(schoolUserRepo)
-	schoolUserHandler := handler.NewSchoolUserHandler(schoolUserService)
+	schoolUserHandler := handler.NewSchoolUserHandler(schoolUserService, schoolService)
 
 	subjectRepo := repository.NewSubjectRepository(db)
 	subjectService := service.NewSubjectService(subjectRepo, schoolService)

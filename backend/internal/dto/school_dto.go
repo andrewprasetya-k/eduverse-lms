@@ -34,6 +34,13 @@ type SchoolResponseDTO struct{
 	UpdatedAt string `json:"updatedAt"`
 }
 
+type SchoolHeaderDTO struct {
+	ID     string  `json:"schoolId"`
+	Name   string  `json:"schoolName"`
+	Code   string  `json:"schoolCode"`
+	LogoID *string `json:"schoolLogo,omitempty"`
+}
+
 type SchoolSummaryDTO struct {
 	TotalActive  int64 `json:"totalActive"`
 	TotalDeleted int64 `json:"totalDeleted"`
