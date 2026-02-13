@@ -70,8 +70,8 @@ func main() {
 			academicYearAPI.GET("/:id", academicYearHandler.GetByID)
 			academicYearAPI.GET("/school/:schoolCode", academicYearHandler.GetBySchool)
 			academicYearAPI.PATCH("/:id", academicYearHandler.Update)
-			academicYearAPI.POST("/activate/:id", academicYearHandler.Activate)
-			academicYearAPI.POST("/deactivate/:id", academicYearHandler.Deactivate)
+			academicYearAPI.PATCH("/activate/:id", academicYearHandler.Activate)
+			academicYearAPI.PATCH("/deactivate/:id", academicYearHandler.Deactivate)
 			academicYearAPI.DELETE("/:id", academicYearHandler.Delete)
 		}
 	}
