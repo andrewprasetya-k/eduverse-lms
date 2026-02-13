@@ -27,7 +27,6 @@ func (h *AcademicYearHandler) Create(c *gin.Context) {
 	acy := domain.AcademicYear{
 		SchoolID: input.SchoolID,
 		Name:     input.Name,
-		IsActive: input.IsActive,
 	}
 
 	if err := h.service.Create(&acy); err != nil {
@@ -81,9 +80,6 @@ func (h *AcademicYearHandler) Update(c *gin.Context) {
 	if input.Name != nil {
 		acy.Name = *input.Name
 	}
-	if input.IsActive != nil {
-		acy.IsActive = *input.IsActive
-	}
 
 	if err := h.service.Update(acy); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -91,6 +87,24 @@ func (h *AcademicYearHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, h.mapToResponse(acy))
+}
+
+func (h *AcademicYearHandler) Activate(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.Activate(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Academic year activated successfully"})
+}
+
+func (h *AcademicYearHandler) Deactivate(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.Deactivate(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Academic year deactivated successfully"})
 }
 
 func (h *AcademicYearHandler) Delete(c *gin.Context) {

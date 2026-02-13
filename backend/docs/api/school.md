@@ -149,6 +149,6 @@ Brings back a school from trash.
 
 ### Hard Delete (Permanent)
 Permanently removes school from database. **Warning: This cannot be undone.**
-- **URL:** `/:schoolCode/permanent`
+- **URL:** `/permanent/:schoolCode`
 - **Method:** `DELETE`
 - **Response:** `{"message": "School permanently deleted successfully"}`

@@ -60,7 +60,7 @@ func main() {
 			schoolAPI.PATCH("/:schoolCode", schoolHandler.UpdateSchool)
 			schoolAPI.PATCH("/restore/:schoolCode", schoolHandler.RestoreDeletedSchool)
 			schoolAPI.DELETE("/:schoolCode", schoolHandler.DeleteSchool)
-			schoolAPI.DELETE("/:schoolCode/permanent", schoolHandler.HardDeleteSchool)
+			schoolAPI.DELETE("/permanent/:schoolCode", schoolHandler.HardDeleteSchool)
 		}
 
 		academicYearAPI := api.Group("/academic-years")
@@ -69,6 +69,8 @@ func main() {
 			academicYearAPI.GET("/:id", academicYearHandler.GetByID)
 			academicYearAPI.GET("/school/:schoolCode", academicYearHandler.GetBySchool)
 			academicYearAPI.PATCH("/:id", academicYearHandler.Update)
+			academicYearAPI.POST("/activate/:id", academicYearHandler.Activate)
+			academicYearAPI.POST("/deactivate/:id", academicYearHandler.Deactivate)
 			academicYearAPI.DELETE("/:id", academicYearHandler.Delete)
 		}
 	}

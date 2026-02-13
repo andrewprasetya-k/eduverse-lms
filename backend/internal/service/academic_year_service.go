@@ -12,6 +12,8 @@ type AcademicYearService interface {
 	GetByID(id string) (*domain.AcademicYear, error)
 	Update(acy *domain.AcademicYear) error
 	Delete(id string) error
+	Activate(id string) error
+	Deactivate(id string) error
 }
 
 type academicYearService struct {
@@ -28,17 +30,8 @@ func NewAcademicYearService(repo repository.AcademicYearRepository, schoolServic
 
 func (s *academicYearService) Create(acy *domain.AcademicYear) error {
 	acy.Name = strings.TrimSpace(acy.Name)
-
-	// Paksa aktif untuk tahun ajaran baru
-	acy.IsActive = true
-
-	err := s.repo.Create(acy)
-	if err != nil {
-		return err
-	}
-
-	// Otomatis nonaktifkan yang lain
-	return s.repo.DeactivateAllExcept(acy.SchoolID, acy.ID)
+	acy.IsActive = false // Selalu default false saat baru dibuat
+	return s.repo.Create(acy)
 }
 
 func (s *academicYearService) GetBySchool(schoolCode string) ([]*domain.AcademicYear, error) {
@@ -55,18 +48,28 @@ func (s *academicYearService) GetByID(id string) (*domain.AcademicYear, error) {
 
 func (s *academicYearService) Update(acy *domain.AcademicYear) error {
 	acy.Name = strings.TrimSpace(acy.Name)
-	
-	err := s.repo.Update(acy)
-	if err != nil {
-		return err
-	}
-
-	if acy.IsActive {
-		return s.repo.DeactivateAllExcept(acy.SchoolID, acy.ID)
-	}
-	return nil
+	return s.repo.Update(acy)
 }
 
 func (s *academicYearService) Delete(id string) error {
 	return s.repo.Delete(id)
+}
+
+func (s *academicYearService) Activate(id string) error {
+	acy, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	// 1. Aktifkan tahun ajaran ini
+	if err := s.repo.SetActiveStatus(id, true); err != nil {
+		return err
+	}
+
+	// 2. Nonaktifkan yang lainnya di sekolah yang sama
+	return s.repo.DeactivateAllExcept(acy.SchoolID, id)
+}
+
+func (s *academicYearService) Deactivate(id string) error {
+	return s.repo.SetActiveStatus(id, false)
 }

@@ -32,7 +32,7 @@ Retrieve detail of a specific academic year by its ID.
 ---
 
 ## 3. Create Academic Year
-Create a new academic year for a school.
+Create a new academic year for a school. Status is `false` by default.
 
 - **URL:** `/`
 - **Method:** `POST`
@@ -41,22 +41,38 @@ Create a new academic year for a school.
 | :--- | :--- | :--- | :--- |
 | `schoolId` | uuid | Yes | Reference to School ID |
 | `academicYearName` | string | Yes | e.g., "2023/2024" |
-| `isActive` | boolean| No | Automatically set to `true` on creation |
 
 ---
 
 ## 4. Update Academic Year
-Update name or activation status.
+Update basic information of an academic year.
 
 - **URL:** `/:id`
 - **Method:** `PATCH`
-- **Body:** (Partial updates allowed)
+- **Body:**
   - `academicYearName` (string)
-  - `isActive` (boolean) - If set to `true`, other years in the same school will be deactivated.
 
 ---
 
-## 5. Delete Academic Year
+## 5. Activate Academic Year
+Set an academic year as the active one for its school. This will automatically deactivate all other academic years in the same school.
+
+- **URL:** `/activate/:id`
+- **Method:** `POST`
+- **Response:** `{"message": "Academic year activated successfully"}`
+
+---
+
+## 6. Deactivate Academic Year
+Manually deactivate an academic year.
+
+- **URL:** `/deactivate/:id`
+- **Method:** `POST`
+- **Response:** `{"message": "Academic year deactivated successfully"}`
+
+---
+
+## 7. Delete Academic Year
 Permanently remove an academic year.
 
 - **URL:** `/:id`

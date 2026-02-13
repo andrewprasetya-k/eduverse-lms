@@ -12,6 +12,7 @@ type AcademicYearRepository interface {
 	Update(acy *domain.AcademicYear) error
 	Delete(id string) error
 	DeactivateAllExcept(schoolID string, activeID string) error
+	SetActiveStatus(id string, isActive bool) error
 }
 
 type academicYearRepository struct {
@@ -51,4 +52,8 @@ func (r *academicYearRepository) DeactivateAllExcept(schoolID string, activeID s
 	return r.db.Model(&domain.AcademicYear{}).
 		Where("acy_sch_id = ? AND acy_id != ?", schoolID, activeID).
 		Update("is_active", false).Error
+}
+
+func (r *academicYearRepository) SetActiveStatus(id string, isActive bool) error {
+	return r.db.Model(&domain.AcademicYear{}).Where("acy_id = ?", id).Update("is_active", isActive).Error
 }
