@@ -5,6 +5,7 @@ import (
 	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -35,6 +36,34 @@ func (h *AcademicYearHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, h.mapToResponse(&acy))
+}
+
+func (h *AcademicYearHandler) FindAll(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+
+	years, total, err := h.service.FindAll(search, page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var response []dto.AcademicYearResponseDTO
+	for _, y := range years {
+		response = append(response, h.mapToResponse(y))
+	}
+
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
+	paginatedResponse := dto.PaginatedResponse{
+		Data:       response,
+		TotalItems: total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: int(totalPages),
+	}
+	c.JSON(http.StatusOK, paginatedResponse)
 }
 
 func (h *AcademicYearHandler) GetBySchool(c *gin.Context) {

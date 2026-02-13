@@ -7,6 +7,7 @@ import (
 
 type AcademicYearRepository interface {
 	Create(acy *domain.AcademicYear) error
+	FindAll(search string, page int, limit int) ([]*domain.AcademicYear, int64, error)
 	GetBySchool(schoolID string) ([]*domain.AcademicYear, error)
 	GetByID(id string) (*domain.AcademicYear, error)
 	Update(acy *domain.AcademicYear) error
@@ -25,6 +26,26 @@ func NewAcademicYearRepository(db *gorm.DB) AcademicYearRepository {
 
 func (r *academicYearRepository) Create(acy *domain.AcademicYear) error {
 	return r.db.Create(acy).Error
+}
+
+func (r *academicYearRepository) FindAll(search string, page int, limit int) ([]*domain.AcademicYear, int64, error) {
+	var years []*domain.AcademicYear
+	var total int64
+
+	query := r.db.Model(&domain.AcademicYear{})
+
+	if search != "" {
+		searchTerm := "%" + search + "%"
+		query = query.Where("acy_name ILIKE ?", searchTerm)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	err := query.Limit(limit).Offset(offset).Order("created_at desc").Find(&years).Error
+	return years, total, err
 }
 
 func (r *academicYearRepository) GetBySchool(schoolID string) ([]*domain.AcademicYear, error) {

@@ -8,6 +8,7 @@ import (
 
 type AcademicYearService interface {
 	Create(acy *domain.AcademicYear) error
+	FindAll(search string, page int, limit int) ([]*domain.AcademicYear, int64, error)
 	GetBySchool(schoolCode string) ([]*domain.AcademicYear, error)
 	GetByID(id string) (*domain.AcademicYear, error)
 	Update(acy *domain.AcademicYear) error
@@ -32,6 +33,10 @@ func (s *academicYearService) Create(acy *domain.AcademicYear) error {
 	acy.Name = strings.TrimSpace(acy.Name)
 	acy.IsActive = false // Selalu default false saat baru dibuat
 	return s.repo.Create(acy)
+}
+
+func (s *academicYearService) FindAll(search string, page int, limit int) ([]*domain.AcademicYear, int64, error) {
+	return s.repo.FindAll(search, page, limit)
 }
 
 func (s *academicYearService) GetBySchool(schoolCode string) ([]*domain.AcademicYear, error) {

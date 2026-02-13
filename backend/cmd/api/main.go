@@ -66,6 +66,7 @@ func main() {
 		academicYearAPI := api.Group("/academic-years")
 		{
 			academicYearAPI.POST("/", academicYearHandler.Create)
+			academicYearAPI.GET("/", academicYearHandler.FindAll)
 			academicYearAPI.GET("/:id", academicYearHandler.GetByID)
 			academicYearAPI.GET("/school/:schoolCode", academicYearHandler.GetBySchool)
 			academicYearAPI.PATCH("/:id", academicYearHandler.Update)

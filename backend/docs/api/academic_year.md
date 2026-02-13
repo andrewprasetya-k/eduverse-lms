@@ -2,7 +2,30 @@
 
 Base URL: `/api/academic-years`
 
-## 1. List Academic Years by School
+## 1. List All Academic Years
+Retrieve a paginated list of all academic years (Super Admin view).
+
+- **URL:** `/`
+- **Method:** `GET`
+- **Query Parameters:**
+  - `page` (default: `1`)
+  - `limit` (default: `10`)
+  - `search` (optional): Search by academic year name.
+
+**Response Example:**
+```json
+{
+  "data": [...],
+  "totalItems": 100,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 10
+}
+```
+
+---
+
+## 2. List Academic Years by School
 Retrieve all academic years for a specific school using its code.
 
 - **URL:** `/school/:schoolCode`
@@ -23,7 +46,7 @@ Retrieve all academic years for a specific school using its code.
 
 ---
 
-## 2. Get Academic Year Detail
+## 3. Get Academic Year Detail
 Retrieve detail of a specific academic year by its ID.
 
 - **URL:** `/:id`
@@ -31,7 +54,7 @@ Retrieve detail of a specific academic year by its ID.
 
 ---
 
-## 3. Create Academic Year
+## 4. Create Academic Year
 Create a new academic year for a school. Status is `false` by default.
 
 - **URL:** `/`
@@ -44,7 +67,7 @@ Create a new academic year for a school. Status is `false` by default.
 
 ---
 
-## 4. Update Academic Year
+## 5. Update Academic Year
 Update basic information of an academic year.
 
 - **URL:** `/:id`
@@ -54,7 +77,7 @@ Update basic information of an academic year.
 
 ---
 
-## 5. Activate Academic Year
+## 6. Activate Academic Year
 Set an academic year as the active one for its school. This will automatically deactivate all other academic years in the same school.
 
 - **URL:** `/activate/:id`
@@ -63,7 +86,7 @@ Set an academic year as the active one for its school. This will automatically d
 
 ---
 
-## 6. Deactivate Academic Year
+## 7. Deactivate Academic Year
 Manually deactivate an academic year.
 
 - **URL:** `/deactivate/:id`
@@ -72,7 +95,7 @@ Manually deactivate an academic year.
 
 ---
 
-## 7. Delete Academic Year
+## 8. Delete Academic Year
 Permanently remove an academic year.
 
 - **URL:** `/:id`
