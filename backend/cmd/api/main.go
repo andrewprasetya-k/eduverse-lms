@@ -102,6 +102,7 @@ func main() {
 		userAPI := api.Group("/users")
 		{
 			userAPI.POST("/", userHandler.Create)
+			userAPI.GET("/", userHandler.FindAll)
 			userAPI.GET("/:id", userHandler.GetByID)
 			userAPI.PATCH("/:id", userHandler.Update)
 			userAPI.DELETE("/:id", userHandler.Delete)

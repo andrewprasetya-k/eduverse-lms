@@ -7,6 +7,7 @@ import (
 
 type UserRepository interface {
 	Create(user *domain.User) error
+	FindAll(search string, page int, limit int) ([]*domain.User, int64, error)
 	GetByID(id string) (*domain.User, error)
 	GetByEmail(email string) (*domain.User, error)
 	Update(user *domain.User) error
@@ -24,6 +25,26 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 
 func (r *userRepository) Create(user *domain.User) error {
 	return r.db.Create(user).Error
+}
+
+func (r *userRepository) FindAll(search string, page int, limit int) ([]*domain.User, int64, error) {
+	var users []*domain.User
+	var total int64
+
+	query := r.db.Model(&domain.User{})
+
+	if search != "" {
+		searchTerm := "%" + search + "%"
+		query = query.Where("usr_nama_lengkap ILIKE ? OR usr_email ILIKE ?", searchTerm, searchTerm)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	err := query.Limit(limit).Offset(offset).Order("created_at desc").Find(&users).Error
+	return users, total, err
 }
 
 func (r *userRepository) GetByID(id string) (*domain.User, error) {

@@ -2,7 +2,30 @@
 
 Base URL: `/api/users`
 
-## 1. Create User
+## 1. List All Users
+Retrieve a paginated list of all global users.
+
+- **URL:** `/`
+- **Method:** `GET`
+- **Query Parameters:**
+  - `page` (default: `1`)
+  - `limit` (default: `10`)
+  - `search` (optional): Search by full name or email.
+
+**Response Example:**
+```json
+{
+  "data": [...],
+  "totalItems": 100,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 10
+}
+```
+
+---
+
+## 2. Create User
 Register a new global user profile. Password will be securely hashed.
 
 - **URL:** `/`
@@ -16,19 +39,19 @@ Register a new global user profile. Password will be securely hashed.
 
 ---
 
-## 2. Get User Detail
+## 3. Get User Detail
 - **URL:** `/:id`
 - **Method:** `GET`
 
 ---
 
-## 3. Update User Detail
+## 4. Update User Detail
 - **URL:** `/:id`
 - **Method:** `PATCH`
 - **Body:** `fullName`, `email`.
 
 ---
 
-## 4. Delete User
+## 5. Delete User
 - **URL:** `/:id`
 - **Method:** `DELETE`

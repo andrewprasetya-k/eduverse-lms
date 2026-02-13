@@ -5,6 +5,7 @@ import (
 	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,6 +37,34 @@ func (h *UserHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, h.mapToResponse(&user))
+}
+
+func (h *UserHandler) FindAll(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	search := c.Query("search")
+
+	users, total, err := h.service.FindAll(search, page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var response []dto.UserResponseDTO
+	for _, u := range users {
+		response = append(response, h.mapToResponse(u))
+	}
+
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
+	paginatedResponse := dto.PaginatedResponse{
+		Data:       response,
+		TotalItems: total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: int(totalPages),
+	}
+	c.JSON(http.StatusOK, paginatedResponse)
 }
 
 func (h *UserHandler) GetByID(c *gin.Context) {

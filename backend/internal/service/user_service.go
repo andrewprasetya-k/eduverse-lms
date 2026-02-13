@@ -11,6 +11,7 @@ import (
 
 type UserService interface {
 	Create(user *domain.User) error
+	FindAll(search string, page int, limit int) ([]*domain.User, int64, error)
 	GetByID(id string) (*domain.User, error)
 	GetByEmail(email string) (*domain.User, error)
 	Update(user *domain.User) error
@@ -46,6 +47,10 @@ func (s *userService) Create(user *domain.User) error {
 	user.Password = string(hashedPassword)
 
 	return s.repo.Create(user)
+}
+
+func (s *userService) FindAll(search string, page int, limit int) ([]*domain.User, int64, error) {
+	return s.repo.FindAll(search, page, limit)
 }
 
 func (s *userService) GetByID(id string) (*domain.User, error) {
