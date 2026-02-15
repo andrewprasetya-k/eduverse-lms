@@ -17,6 +17,10 @@ Eduverse is a Learning Management System (LMS) built with **Go (Gin Framework)**
     - **Internal (DB)**: Use UUID for all Primary and Foreign Keys.
     - **External (URL)**: Use `schoolCode` or `subjectCode` in API paths for human-readability.
     - **Converter**: Always use `schoolService.ConvertCodeToID(code)` in the Service layer to translate codes to internal IDs.
+    - **Route Pattern (Option A)**:
+      - Default detail: `/:id` (UUID).
+      - List by parent: `/school/:schoolCode`.
+      - Detail by code: `/school/:schoolCode/:subjectCode`.
 
 3.  **Data Integrity**:
     - Repositories **MUST** check `RowsAffected == 0` on Update/Delete/Patch and return `gorm.ErrRecordNotFound` if no row was modified.
