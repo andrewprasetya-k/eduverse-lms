@@ -120,6 +120,18 @@ func (h *SubjectHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, h.mapToResponse(subject))
 }
 
+func (h *SubjectHandler) GetByCode(c *gin.Context) {
+	schoolCode := c.Param("schoolCode")
+	subjectCode := c.Param("subjectCode")
+
+	subject, err := h.service.GetByCode(schoolCode, subjectCode)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Subject not found"})
+		return
+	}
+	c.JSON(http.StatusOK, h.mapToResponse(subject))
+}
+
 func (h *SubjectHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.UpdateSubjectDTO

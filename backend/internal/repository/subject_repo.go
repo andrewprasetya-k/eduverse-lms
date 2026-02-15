@@ -11,6 +11,7 @@ type SubjectRepository interface {
 	FindAll(search string, page int, limit int) ([]*domain.Subject, int64, error)
 	GetBySchool(schoolID string) ([]*domain.Subject, error)
 	GetByID(id string) (*domain.Subject, error)
+	GetByCode(schoolID string, code string) (*domain.Subject, error)
 	Update(subject *domain.Subject) error
 	Delete(id string) error
 	CheckDuplicateCode(schoolID string, code string, excludeID string) (bool, error)
@@ -57,6 +58,12 @@ func (r *subjectRepository) GetBySchool(schoolID string) ([]*domain.Subject, err
 func (r *subjectRepository) GetByID(id string) (*domain.Subject, error) {
 	var subject domain.Subject
 	err := r.db.Preload("School").Where("sub_id = ?", id).First(&subject).Error
+	return &subject, err
+}
+
+func (r *subjectRepository) GetByCode(schoolID string, code string) (*domain.Subject, error) {
+	var subject domain.Subject
+	err := r.db.Preload("School").Where("sub_sch_id = ? AND sub_code = ?", schoolID, code).First(&subject).Error
 	return &subject, err
 }
 

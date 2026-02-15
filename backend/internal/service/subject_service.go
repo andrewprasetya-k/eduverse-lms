@@ -12,6 +12,7 @@ type SubjectService interface {
 	FindAll(search string, page int, limit int) ([]*domain.Subject, int64, error)
 	GetBySchool(schoolCode string) ([]*domain.Subject, error)
 	GetByID(id string) (*domain.Subject, error)
+	GetByCode(schoolCode string, subjectCode string) (*domain.Subject, error)
 	Update(subject *domain.Subject) error
 	Delete(id string) error
 }
@@ -58,6 +59,14 @@ func (s *subjectService) GetBySchool(schoolCode string) ([]*domain.Subject, erro
 
 func (s *subjectService) GetByID(id string) (*domain.Subject, error) {
 	return s.repo.GetByID(id)
+}
+
+func (s *subjectService) GetByCode(schoolCode string, subjectCode string) (*domain.Subject, error) {
+	schoolID, err := s.schoolService.ConvertCodeToID(schoolCode)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.GetByCode(schoolID, strings.ToUpper(subjectCode))
 }
 
 func (s *subjectService) Update(subject *domain.Subject) error {
