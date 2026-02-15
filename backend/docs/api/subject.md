@@ -43,7 +43,7 @@ Retrieve all subjects for a specific school, including school details.
 ---
 
 ## 3. Get Subject Detail (by ID)
-- **URL:** `/:id`
+- **URL:** `/id/:id`
 - **Method:** `GET`
 
 ---

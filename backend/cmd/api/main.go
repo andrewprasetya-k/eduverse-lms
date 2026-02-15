@@ -167,7 +167,7 @@ func main() {
 		{
 			subjectAPI.POST("/", subjectHandler.Create)
 			subjectAPI.GET("/", subjectHandler.FindAll)
-			subjectAPI.GET("/:id", subjectHandler.GetByID)
+			subjectAPI.GET("/id/:id", subjectHandler.GetByID)
 			subjectAPI.GET("/:schoolCode", subjectHandler.GetBySchool)
 			subjectAPI.GET("/:schoolCode/:subjectCode", subjectHandler.GetByCode)
 			subjectAPI.PATCH("/:id", subjectHandler.Update)
