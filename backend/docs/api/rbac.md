@@ -43,7 +43,7 @@ Base URL: `/api/rbac`
 
 ### Set Role Permissions (Sync)
 Replace all permissions for a role.
-- **URL:** `/roles/:id/permissions`
+- **URL:** `/roles/permissions/:id`
 - **Method:** `PATCH`
 - **Body:** `{"permissionIds": ["uuid-1", "uuid-3"]}`
 

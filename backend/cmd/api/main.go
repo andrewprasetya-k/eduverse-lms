@@ -167,9 +167,9 @@ func main() {
 		{
 			subjectAPI.POST("/", subjectHandler.Create)
 			subjectAPI.GET("/", subjectHandler.FindAll)
-			subjectAPI.GET("/id/:id", subjectHandler.GetByID)
-			subjectAPI.GET("/:schoolCode", subjectHandler.GetBySchool)
-			subjectAPI.GET("/:schoolCode/:subjectCode", subjectHandler.GetByCode)
+			subjectAPI.GET("/:id", subjectHandler.GetByID)
+			subjectAPI.GET("/school/:schoolCode", subjectHandler.GetBySchool)
+			subjectAPI.GET("/school/:schoolCode/:subjectCode", subjectHandler.GetByCode)
 			subjectAPI.PATCH("/:id", subjectHandler.Update)
 			subjectAPI.DELETE("/:id", subjectHandler.Delete)
 		}
@@ -182,7 +182,7 @@ func main() {
 			rbacAPI.GET("/roles/:id", rbacHandler.GetRoleByID)
 			rbacAPI.PATCH("/roles/:id", rbacHandler.UpdateRole)
 			rbacAPI.DELETE("/roles/:id", rbacHandler.DeleteRole)
-			rbacAPI.PATCH("/roles/:id/permissions", rbacHandler.SetRolePermissions)
+			rbacAPI.PATCH("/roles/permissions/:id", rbacHandler.SetRolePermissions)
 
 			// Permissions
 			rbacAPI.GET("/permissions", rbacHandler.GetAllPermissions)

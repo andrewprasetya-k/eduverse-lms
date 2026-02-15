@@ -17,7 +17,7 @@ Retrieve a paginated list of all subjects (Super Admin view).
 ## 2. List Subjects by School
 Retrieve all subjects for a specific school, including school details.
 
-- **URL:** `/:schoolCode`
+- **URL:** `/school/:schoolCode`
 - **Method:** `GET`
 
 **Response Example:**
@@ -43,7 +43,7 @@ Retrieve all subjects for a specific school, including school details.
 ---
 
 ## 3. Get Subject Detail (by ID)
-- **URL:** `/id/:id`
+- **URL:** `/:id`
 - **Method:** `GET`
 
 ---
@@ -51,7 +51,7 @@ Retrieve all subjects for a specific school, including school details.
 ## 4. Get Subject Detail (by Code)
 Retrieve subject details by school code and subject code.
 
-- **URL:** `/:schoolCode/:subjectCode`
+- **URL:** `/school/:schoolCode/:subjectCode`
 - **Method:** `GET`
 
 ---
