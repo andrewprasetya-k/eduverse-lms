@@ -17,7 +17,7 @@ Retrieve a paginated list of all subjects (Super Admin view).
 ## 2. List Subjects by School
 Retrieve all subjects for a specific school, including school details.
 
-- **URL:** `/school/:schoolCode`
+- **URL:** `/:schoolCode`
 - **Method:** `GET`
 
 **Response Example:**
@@ -42,13 +42,21 @@ Retrieve all subjects for a specific school, including school details.
 
 ---
 
-## 3. Get Subject Detail
+## 3. Get Subject Detail (by ID)
 - **URL:** `/:id`
 - **Method:** `GET`
 
 ---
 
-## 4. Create Subject
+## 4. Get Subject Detail (by Code)
+Retrieve subject details by school code and subject code.
+
+- **URL:** `/:schoolCode/:subjectCode`
+- **Method:** `GET`
+
+---
+
+## 5. Create Subject
 Register a new subject for a school.
 
 - **URL:** `/`
@@ -62,13 +70,13 @@ Register a new subject for a school.
 
 ---
 
-## 5. Update Subject
+## 6. Update Subject
 - **URL:** `/:id`
 - **Method:** `PATCH`
 - **Body:** `subjectName`, `subjectCode`.
 
 ---
 
-## 6. Delete Subject
+## 7. Delete Subject
 - **URL:** `/:id`
 - **Method:** `DELETE`
