@@ -3,11 +3,10 @@ package service
 import (
 	"backend/internal/domain"
 	"backend/internal/repository"
-	"fmt"
 )
 
 type EnrollmentService interface {
-	Enroll(enr *domain.Enrollment) error
+	Enroll(schoolID string, classID string, schoolUserIDs []string, role string) error
 	GetByClass(classID string) ([]*domain.Enrollment, error)
 	GetByMember(schoolUserID string) ([]*domain.Enrollment, error)
 	Unenroll(id string) error
@@ -21,17 +20,29 @@ func NewEnrollmentService(repo repository.EnrollmentRepository) EnrollmentServic
 	return &enrollmentService{repo: repo}
 }
 
-func (s *enrollmentService) Enroll(enr *domain.Enrollment) error {
-	// 1. Validasi: Apakah sudah terdaftar di kelas ini?
-	already, err := s.repo.CheckExists(enr.ClassID, enr.SchoolUserID)
-	if err != nil {
-		return err
-	}
-	if already {
-		return fmt.Errorf("user sudah terdaftar di kelas ini")
-	}
+func (s *enrollmentService) Enroll(schoolID string, classID string, schoolUserIDs []string, role string) error {
+	for _, scuID := range schoolUserIDs {
+		// 1. Validasi: Apakah sudah terdaftar di kelas ini?
+		already, err := s.repo.CheckExists(classID, scuID)
+		if err != nil {
+			return err
+		}
+		if already {
+			continue // Jika sudah ada, lewati user ini
+		}
 
-	return s.repo.Create(enr)
+		enr := domain.Enrollment{
+			SchoolID:     schoolID,
+			ClassID:      classID,
+			SchoolUserID: scuID,
+			Role:         role,
+		}
+
+		if err := s.repo.Create(&enr); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *enrollmentService) GetByClass(classID string) ([]*domain.Enrollment, error) {

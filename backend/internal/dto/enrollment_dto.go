@@ -1,10 +1,10 @@
 package dto
 
 type CreateEnrollmentDTO struct {
-	SchoolID     string `json:"schoolId" binding:"required,uuid"`
-	SchoolUserID string `json:"schoolUserId" binding:"required,uuid"`
-	ClassID      string `json:"classId" binding:"required,uuid"`
-	Role         string `json:"role" binding:"required,oneof=teacher student"`
+	SchoolID      string   `json:"schoolId" binding:"required,uuid"`
+	SchoolUserIDs []string `json:"schoolUserIds" binding:"required,dive,uuid"`
+	ClassID       string   `json:"classId" binding:"required,uuid"`
+	Role          string   `json:"role" binding:"required,oneof=teacher student"`
 }
 
 type EnrollmentResponseDTO struct {

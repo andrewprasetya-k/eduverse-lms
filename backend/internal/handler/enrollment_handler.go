@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"backend/internal/domain"
 	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
@@ -24,19 +23,12 @@ func (h *EnrollmentHandler) Enroll(c *gin.Context) {
 		return
 	}
 
-	enr := domain.Enrollment{
-		SchoolID:     input.SchoolID,
-		SchoolUserID: input.SchoolUserID,
-		ClassID:      input.ClassID,
-		Role:         input.Role,
-	}
-
-	if err := h.service.Enroll(&enr); err != nil {
+	if err := h.service.Enroll(input.SchoolID, input.ClassID, input.SchoolUserIDs, input.Role); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User enrolled to class successfully"})
+	c.JSON(http.StatusCreated, gin.H{"message": "Users enrolled to class successfully"})
 }
 
 func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
