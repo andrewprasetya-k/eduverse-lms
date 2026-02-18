@@ -11,7 +11,7 @@ type CreateClassDTO struct {
 
 type UpdateClassDTO struct {
 	Title       *string `json:"classTitle"`
-	Description *string `json:"classDescription"`
+	Description *string `json:"classDesc"`
 	IsActive    *bool   `json:"isActive"`
 }
 
@@ -24,7 +24,7 @@ type ClassResponseDTO struct {
 	AcademicYearName string `json:"academicYearName,omitempty"`
 	Code             string `json:"classCode"`
 	Title            string `json:"classTitle"`
-	Description      string `json:"classDescription"`
+	Description      string `json:"classDesc"`
 	CreatedBy        string `json:"createdBy"`
 	CreatorName      string `json:"creatorName,omitempty"`
 	IsActive         bool   `json:"isActive"`
