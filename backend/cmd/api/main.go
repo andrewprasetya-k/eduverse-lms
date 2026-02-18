@@ -182,7 +182,7 @@ func main() {
 			rbacAPI.GET("/roles/:id", rbacHandler.GetRoleByID)
 			rbacAPI.PATCH("/roles/:id", rbacHandler.UpdateRole)
 			rbacAPI.DELETE("/roles/:id", rbacHandler.DeleteRole)
-			rbacAPI.PATCH("/roles/permissions/:id", rbacHandler.SetRolePermissions)
+			rbacAPI.POST("/roles/permissions/:id", rbacHandler.SetRolePermissions)
 
 			// Permissions
 			rbacAPI.POST("/permissions", rbacHandler.CreatePermission)
