@@ -209,6 +209,22 @@ func (h *RBACHandler) GetUserRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *RBACHandler) UpdateUserRoles(c *gin.Context) {
+	schoolUserID := c.Param("schoolUserId")
+	var input dto.SyncUserRolesDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.service.SyncUserRoles(schoolUserID, input.RoleIDs); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User roles updated successfully"})
+}
+
 // Helpers
 func (h *RBACHandler) mapRoleToResponse(role *domain.Role) dto.RoleResponseDTO {
 	var perms []dto.PermissionResponseDTO

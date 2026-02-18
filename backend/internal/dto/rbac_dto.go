@@ -36,6 +36,10 @@ type AssignRoleDTO struct {
 	RoleID       string `json:"roleId" binding:"required,uuid"`
 }
 
+type SyncUserRolesDTO struct {
+	RoleIDs []string `json:"roleIds" binding:"required"`
+}
+
 type SetRolePermissionsDTO struct {
 	PermissionIDs []string `json:"permissionIds" binding:"required"`
 }

@@ -24,6 +24,7 @@ type RBACService interface {
 	AssignRoleToUser(schoolUserID string, roleID string) error
 	RemoveRoleFromUser(schoolUserID string, roleID string) error
 	GetUserRoles(schoolUserID string) ([]*domain.UserRole, error)
+	SyncUserRoles(schoolUserID string, roleIDs []string) error
 }
 
 type rbacService struct {
@@ -130,4 +131,8 @@ func (s *rbacService) RemoveRoleFromUser(schoolUserID string, roleID string) err
 
 func (s *rbacService) GetUserRoles(schoolUserID string) ([]*domain.UserRole, error) {
 	return s.repo.GetUserRoles(schoolUserID)
+}
+
+func (s *rbacService) SyncUserRoles(schoolUserID string, roleIDs []string) error {
+	return s.repo.SyncUserRoles(schoolUserID, roleIDs)
 }

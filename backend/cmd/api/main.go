@@ -188,10 +188,11 @@ func main() {
 			rbacAPI.POST("/permissions", rbacHandler.CreatePermission)
 			rbacAPI.GET("/permissions", rbacHandler.GetAllPermissions)
 
-			// Assignments
-			rbacAPI.POST("/assignments", rbacHandler.AssignRole)
-			rbacAPI.DELETE("/assignments", rbacHandler.RemoveRole)
-			rbacAPI.GET("/assignments/user/:schoolUserId", rbacHandler.GetUserRoles)
+			// User Roles (Assignments)
+			rbacAPI.POST("/user-roles", rbacHandler.AssignRole)
+			rbacAPI.DELETE("/user-roles", rbacHandler.RemoveRole)
+			rbacAPI.GET("/user-roles/user/:schoolUserId", rbacHandler.GetUserRoles)
+			rbacAPI.PATCH("/user-roles/user/:schoolUserId", rbacHandler.UpdateUserRoles)
 		}
 
 		classAPI := api.Group("/classes")

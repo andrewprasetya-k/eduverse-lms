@@ -26,6 +26,7 @@ type RBACRepository interface {
 	AssignRole(userRole *domain.UserRole) error
 	RemoveRoleFromUser(schoolUserID string, roleID string) error
 	GetUserRoles(schoolUserID string) ([]*domain.UserRole, error)
+	SyncUserRoles(schoolUserID string, roleIDs []string) error
 }
 
 type rbacRepository struct {
@@ -149,4 +150,28 @@ func (r *rbacRepository) GetUserRoles(schoolUserID string) ([]*domain.UserRole, 
 	var userRoles []*domain.UserRole
 	err := r.db.Preload("Role.Permissions").Where("urol_scu_id = ?", schoolUserID).Find(&userRoles).Error
 	return userRoles, err
+}
+
+func (r *rbacRepository) SyncUserRoles(schoolUserID string, roleIDs []string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Delete existing roles
+		if err := tx.Where("urol_scu_id = ?", schoolUserID).Delete(&domain.UserRole{}).Error; err != nil {
+			return err
+		}
+
+		// 2. Add new roles
+		if len(roleIDs) > 0 {
+			var userRoles []domain.UserRole
+			for _, rid := range roleIDs {
+				userRoles = append(userRoles, domain.UserRole{
+					SchoolUserID: schoolUserID,
+					RoleID:       rid,
+				})
+			}
+			if err := tx.Create(&userRoles).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

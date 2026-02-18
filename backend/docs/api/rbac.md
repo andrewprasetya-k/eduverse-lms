@@ -71,10 +71,10 @@ Retrieve global permission keys.
 
 ---
 
-## 3. User Role Assignment
+## 3. User Role Management (Assignments)
 
 ### Assign Role to User
-- **URL:** `/assignments`
+- **URL:** `/user-roles`
 - **Method:** `POST`
 - **Body:**
 ```json
@@ -85,9 +85,15 @@ Retrieve global permission keys.
 ```
 
 ### Remove Role from User
-- **URL:** `/assignments?schoolUserId=...&roleId=...`
+- **URL:** `/user-roles?schoolUserId=...&roleId=...`
 - **Method:** `DELETE`
 
 ### List User's Roles
-- **URL:** `/assignments/user/:schoolUserId`
+- **URL:** `/user-roles/user/:schoolUserId`
 - **Method:** `GET`
+
+### Update User Roles (Sync)
+Replace all roles for a user.
+- **URL:** `/user-roles/user/:schoolUserId`
+- **Method:** `PATCH`
+- **Body:** `{"roleIds": ["role-uuid-1", "role-uuid-2"]}`

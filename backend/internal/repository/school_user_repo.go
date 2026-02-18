@@ -28,7 +28,10 @@ func (r *schoolUserRepository) Create(scu *domain.SchoolUser) error {
 
 func (r *schoolUserRepository) GetBySchool(schoolID string) ([]*domain.SchoolUser, error) {
 	var members []*domain.SchoolUser
-	err := r.db.Preload("User").Where("scu_sch_id = ?", schoolID).Find(&members).Error
+	err := r.db.Preload("User").
+		Preload("Roles.Role.Permissions").
+		Where("scu_sch_id = ?", schoolID).
+		Find(&members).Error
 	return members, err
 }
 
