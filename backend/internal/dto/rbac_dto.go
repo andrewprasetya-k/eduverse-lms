@@ -13,7 +13,6 @@ type UpdateRoleDTO struct {
 
 type RoleResponseDTO struct {
 	ID          string                  `json:"roleId"`
-	School      SchoolHeaderDTO         `json:"school"`
 	Name        string                  `json:"roleName"`
 	Permissions []PermissionResponseDTO `json:"permissions,omitempty"`
 	CreatedAt   string                  `json:"createdAt"`

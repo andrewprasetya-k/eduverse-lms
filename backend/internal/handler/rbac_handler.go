@@ -192,7 +192,6 @@ func (h *RBACHandler) mapRoleToResponse(role *domain.Role) dto.RoleResponseDTO {
 
 	return dto.RoleResponseDTO{
 		ID:          role.ID,
-		School:      h.mapSchoolToHeader(&role.School),
 		Name:        role.Name,
 		Permissions: perms,
 		CreatedAt:   role.CreatedAt.Format("02-01-2006 15:04:05"),
