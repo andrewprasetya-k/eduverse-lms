@@ -2,6 +2,7 @@
 
 1. buat header yg diambil dari response json. endpoint yang berupa get by school atau get by selain id harus ada header sekolahnya
 2. cek bagaimana cara mencari permissions yang diperbolehkan sebelum melakukan operasi (apakah menggunakan tabel tambahan atau gimana)
+3. ubah error binding (ga ada foreign key, dan lain lain) jadi lebih tersirat biar ga tampilin nama kolom pure di UI
 
 ## 🚀 Next Priorities (Future Tasks)
 
