@@ -49,7 +49,20 @@ Replace all permissions for a role.
 
 ---
 
-## 2. Permission Management (Read Only)
+## 2. Permission Management
+Retrieve or create global permission keys.
+
+### Create Permission
+Create a new global permission key.
+- **URL:** `/permissions`
+- **Method:** `POST`
+- **Body:**
+```json
+{
+  "permissionKey": "COURSE_CREATE",
+  "description": "Ability to create new courses"
+}
+```
 
 ### List All Available Permissions
 Retrieve global permission keys.
