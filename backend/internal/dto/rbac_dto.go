@@ -19,6 +19,11 @@ type RoleResponseDTO struct {
 }
 
 // Permission DTOs
+type CreatePermissionDTO struct {
+	Key         string `json:"permissionKey" binding:"required"`
+	Description string `json:"description" binding:"required"`
+}
+
 type PermissionResponseDTO struct {
 	ID          string `json:"permissionId"`
 	Key         string `json:"permissionKey"`

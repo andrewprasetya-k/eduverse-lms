@@ -185,6 +185,7 @@ func main() {
 			rbacAPI.PATCH("/roles/permissions/:id", rbacHandler.SetRolePermissions)
 
 			// Permissions
+			rbacAPI.POST("/permissions", rbacHandler.CreatePermission)
 			rbacAPI.GET("/permissions", rbacHandler.GetAllPermissions)
 
 			// Assignments

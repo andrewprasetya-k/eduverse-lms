@@ -116,6 +116,30 @@ func (h *RBACHandler) DeleteRole(c *gin.Context) {
 }
 
 // Permission Handlers
+func (h *RBACHandler) CreatePermission(c *gin.Context) {
+	var input dto.CreatePermissionDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	permission := domain.Permission{
+		Key:         input.Key,
+		Description: input.Description,
+	}
+
+	if err := h.service.CreatePermission(&permission); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, dto.PermissionResponseDTO{
+		ID:          permission.ID,
+		Key:         permission.Key,
+		Description: permission.Description,
+	})
+}
+
 func (h *RBACHandler) GetAllPermissions(c *gin.Context) {
 	perms, err := h.service.GetAllPermissions()
 	if err != nil {

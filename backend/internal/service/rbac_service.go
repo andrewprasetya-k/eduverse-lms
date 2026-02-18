@@ -17,6 +17,7 @@ type RBACService interface {
 	SetRolePermissions(roleID string, permissionIDs []string) error
 
 	// Permission management
+	CreatePermission(permission *domain.Permission) error
 	GetAllPermissions() ([]*domain.Permission, error)
 
 	// User-Role management
@@ -98,6 +99,17 @@ func (s *rbacService) SetRolePermissions(roleID string, permissionIDs []string) 
 		return err
 	}
 	return s.repo.SetRolePermissions(roleID, perms)
+}
+
+func (s *rbacService) CreatePermission(permission *domain.Permission) error {
+	permission.Key = strings.ToUpper(strings.TrimSpace(permission.Key))
+	permission.Description = strings.TrimSpace(permission.Description)
+
+	if permission.Key == "" {
+		return fmt.Errorf("permission key cannot be empty")
+	}
+
+	return s.repo.CreatePermission(permission)
 }
 
 func (s *rbacService) GetAllPermissions() ([]*domain.Permission, error) {

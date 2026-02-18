@@ -15,6 +15,7 @@ type RBACRepository interface {
 	CheckDuplicateRoleName(schoolID string, name string, excludeID string) (bool, error)
 
 	// Permission operations
+	CreatePermission(permission *domain.Permission) error
 	GetAllPermissions() ([]*domain.Permission, error)
 	GetPermissionsByIDs(ids []string) ([]domain.Permission, error)
 
@@ -87,6 +88,10 @@ func (r *rbacRepository) CheckDuplicateRoleName(schoolID string, name string, ex
 	}
 	err := query.Count(&count).Error
 	return count > 0, err
+}
+
+func (r *rbacRepository) CreatePermission(permission *domain.Permission) error {
+	return r.db.Create(permission).Error
 }
 
 func (r *rbacRepository) GetAllPermissions() ([]*domain.Permission, error) {
