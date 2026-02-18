@@ -1,5 +1,7 @@
 # 🎓 Eduverse LMS - Development Progress
 
+1. buat header yg diambil dari response json. endpoint yang berupa get by school atau get by selain id harus ada header sekolahnya
+
 ## 🚀 Next Priorities (Future Tasks)
 
 - [ ] **Authentication Middleware**: Implement JWT/Session protection for all routes.
