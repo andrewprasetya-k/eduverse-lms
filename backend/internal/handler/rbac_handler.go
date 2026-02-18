@@ -146,6 +146,21 @@ func (h *RBACHandler) CreatePermission(c *gin.Context) {
 	})
 }
 
+func (h *RBACHandler) GetPermissionByID(c *gin.Context) {
+	id := c.Param("id")
+	perm, err := h.service.GetPermissionByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Permission not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.PermissionResponseDTO{
+		ID:          perm.ID,
+		Key:         perm.Key,
+		Description: perm.Description,
+	})
+}
+
 func (h *RBACHandler) GetAllPermissions(c *gin.Context) {
 	perms, err := h.service.GetAllPermissions()
 	if err != nil {
@@ -163,6 +178,48 @@ func (h *RBACHandler) GetAllPermissions(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *RBACHandler) UpdatePermission(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.UpdatePermissionDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	perm, err := h.service.GetPermissionByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Permission not found"})
+		return
+	}
+
+	if input.Key != nil {
+		perm.Key = *input.Key
+	}
+	if input.Description != nil {
+		perm.Description = *input.Description
+	}
+
+	if err := h.service.UpdatePermission(perm); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.PermissionResponseDTO{
+		ID:          perm.ID,
+		Key:         perm.Key,
+		Description: perm.Description,
+	})
+}
+
+func (h *RBACHandler) DeletePermission(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.DeletePermission(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Permission deleted successfully"})
 }
 
 // User-Role Handlers

@@ -16,8 +16,11 @@ type RBACRepository interface {
 
 	// Permission operations
 	CreatePermission(permission *domain.Permission) error
+	GetPermissionByID(id string) (*domain.Permission, error)
 	GetAllPermissions() ([]*domain.Permission, error)
 	GetPermissionsByIDs(ids []string) ([]domain.Permission, error)
+	UpdatePermission(permission *domain.Permission) error
+	DeletePermission(id string) error
 
 	// Role-Permission association
 	SetRolePermissions(roleID string, permissions []domain.Permission) error
@@ -95,6 +98,12 @@ func (r *rbacRepository) CreatePermission(permission *domain.Permission) error {
 	return r.db.Create(permission).Error
 }
 
+func (r *rbacRepository) GetPermissionByID(id string) (*domain.Permission, error) {
+	var perm domain.Permission
+	err := r.db.Where("prm_id = ?", id).First(&perm).Error
+	return &perm, err
+}
+
 func (r *rbacRepository) GetAllPermissions() ([]*domain.Permission, error) {
 	var perms []*domain.Permission
 	err := r.db.Find(&perms).Error
@@ -105,6 +114,20 @@ func (r *rbacRepository) GetPermissionsByIDs(ids []string) ([]domain.Permission,
 	var perms []domain.Permission
 	err := r.db.Where("prm_id IN ?", ids).Find(&perms).Error
 	return perms, err
+}
+
+func (r *rbacRepository) UpdatePermission(permission *domain.Permission) error {
+	return r.db.Model(permission).Updates(permission).Error
+}
+
+func (r *rbacRepository) DeletePermission(id string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Delete associations first
+		if err := tx.Exec("DELETE FROM edv.role_permissions WHERE rp_prm_id = ?", id).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&domain.Permission{}, "prm_id = ?", id).Error
+	})
 }
 
 func (r *rbacRepository) SetRolePermissions(roleID string, permissions []domain.Permission) error {

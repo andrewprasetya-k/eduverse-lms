@@ -18,7 +18,10 @@ type RBACService interface {
 
 	// Permission management
 	CreatePermission(permission *domain.Permission) error
+	GetPermissionByID(id string) (*domain.Permission, error)
 	GetAllPermissions() ([]*domain.Permission, error)
+	UpdatePermission(permission *domain.Permission) error
+	DeletePermission(id string) error
 
 	// User-Role management
 	AssignRoleToUser(schoolUserID string, roleID string) error
@@ -113,8 +116,24 @@ func (s *rbacService) CreatePermission(permission *domain.Permission) error {
 	return s.repo.CreatePermission(permission)
 }
 
+func (s *rbacService) GetPermissionByID(id string) (*domain.Permission, error) {
+	return s.repo.GetPermissionByID(id)
+}
+
 func (s *rbacService) GetAllPermissions() ([]*domain.Permission, error) {
 	return s.repo.GetAllPermissions()
+}
+
+func (s *rbacService) UpdatePermission(permission *domain.Permission) error {
+	if permission.Key != "" {
+		permission.Key = strings.ToUpper(strings.TrimSpace(permission.Key))
+	}
+	permission.Description = strings.TrimSpace(permission.Description)
+	return s.repo.UpdatePermission(permission)
+}
+
+func (s *rbacService) DeletePermission(id string) error {
+	return s.repo.DeletePermission(id)
 }
 
 func (s *rbacService) AssignRoleToUser(schoolUserID string, roleID string) error {

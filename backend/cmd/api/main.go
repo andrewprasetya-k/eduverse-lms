@@ -187,12 +187,15 @@ func main() {
 			// Permissions
 			rbacAPI.POST("/permissions", rbacHandler.CreatePermission)
 			rbacAPI.GET("/permissions", rbacHandler.GetAllPermissions)
+			rbacAPI.GET("/permissions/:id", rbacHandler.GetPermissionByID)
+			rbacAPI.PATCH("/permissions/:id", rbacHandler.UpdatePermission)
+			rbacAPI.DELETE("/permissions/:id", rbacHandler.DeletePermission)
 
 			// User Roles (Assignments)
 			rbacAPI.POST("/user-roles", rbacHandler.AssignRole)
 			rbacAPI.DELETE("/user-roles", rbacHandler.RemoveRole)
-			rbacAPI.GET("/user-roles/user/:schoolUserId", rbacHandler.GetUserRoles)
-			rbacAPI.PATCH("/user-roles/user/:schoolUserId", rbacHandler.UpdateUserRoles)
+			rbacAPI.GET("/user-roles/:schoolUserId", rbacHandler.GetUserRoles)
+			rbacAPI.PATCH("/user-roles/:schoolUserId", rbacHandler.UpdateUserRoles)
 		}
 
 		classAPI := api.Group("/classes")

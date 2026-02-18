@@ -69,6 +69,25 @@ Retrieve global permission keys.
 - **URL:** `/permissions`
 - **Method:** `GET`
 
+### Get Permission by ID
+- **URL:** `/permissions/:id`
+- **Method:** `GET`
+
+### Update Permission
+- **URL:** `/permissions/:id`
+- **Method:** `PATCH`
+- **Body:**
+```json
+{
+  "permissionKey": "COURSE_EDIT",
+  "permissionDesc": "Updated description"
+}
+```
+
+### Delete Permission
+- **URL:** `/permissions/:id`
+- **Method:** `DELETE`
+
 ---
 
 ## 3. User Role Management (Assignments)
