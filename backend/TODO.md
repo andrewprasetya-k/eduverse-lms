@@ -1,6 +1,7 @@
 # 🎓 Eduverse LMS - Development Progress
 
 1. buat header yg diambil dari response json. endpoint yang berupa get by school atau get by selain id harus ada header sekolahnya
+2. cek bagaimana cara mencari permissions yang diperbolehkan sebelum melakukan operasi
 
 ## 🚀 Next Priorities (Future Tasks)
 
