@@ -50,6 +50,6 @@ func (s *schoolUserService) GetSchoolsByUser(userID string) ([]*domain.SchoolUse
 	return s.repo.GetByUser(userID)
 }
 
-func (s *schoolUserService) Unenroll(id string) error {
-	return s.repo.Delete(id)
+func (s *schoolUserService) Unenroll(userId string) error {
+	return s.repo.Delete(userId)
 }

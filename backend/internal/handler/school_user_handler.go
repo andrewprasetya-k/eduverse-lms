@@ -111,8 +111,8 @@ func (h *SchoolUserHandler) GetSchoolsByUser(c *gin.Context) {
 }
 
 func (h *SchoolUserHandler) Unenroll(c *gin.Context) {
-	id := c.Param("id")
-	if err := h.service.Unenroll(id); err != nil {
+	userId := c.Param("userId")
+	if err := h.service.Unenroll(userId); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

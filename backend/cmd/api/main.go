@@ -160,7 +160,7 @@ func main() {
 			schoolUserAPI.POST("/enroll", schoolUserHandler.Enroll)
 			schoolUserAPI.GET("/school/:schoolCode", schoolUserHandler.GetMembersBySchool)
 			schoolUserAPI.GET("/user/:userId", schoolUserHandler.GetSchoolsByUser)
-			schoolUserAPI.DELETE("/:id", schoolUserHandler.Unenroll)
+			schoolUserAPI.DELETE("/:userId", schoolUserHandler.Unenroll)
 		}
 
 		subjectAPI := api.Group("/subjects")

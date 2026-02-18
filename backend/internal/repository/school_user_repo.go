@@ -2,6 +2,7 @@ package repository
 
 import (
 	"backend/internal/domain"
+
 	"gorm.io/gorm"
 )
 
@@ -37,8 +38,8 @@ func (r *schoolUserRepository) GetByUser(userID string) ([]*domain.SchoolUser, e
 	return schools, err
 }
 
-func (r *schoolUserRepository) Delete(id string) error {
-	result := r.db.Delete(&domain.SchoolUser{}, "scu_id = ?", id)
+func (r *schoolUserRepository) Delete(userId string) error {
+	result := r.db.Delete(&domain.SchoolUser{}, "scu_usr_id = ?", userId)
 	if result.Error != nil {
 		return result.Error
 	}
