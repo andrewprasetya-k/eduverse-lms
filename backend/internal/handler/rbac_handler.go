@@ -35,6 +35,12 @@ func (h *RBACHandler) CreateRole(c *gin.Context) {
 		return
 	}
 
+	// Ambil ulang data role lengkap dengan permissions agar response konsisten
+	fullRole, err := h.service.GetRoleByID(role.ID)
+	if err == nil {
+		role = *fullRole
+	}
+
 	c.JSON(http.StatusCreated, h.mapRoleToResponse(&role))
 }
 

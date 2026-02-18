@@ -37,7 +37,7 @@ func NewRBACRepository(db *gorm.DB) RBACRepository {
 }
 
 func (r *rbacRepository) CreateRole(role *domain.Role) error {
-	return r.db.Create(role).Error
+	return r.db.Omit("Permissions.*").Create(role).Error
 }
 
 func (r *rbacRepository) GetRoleByID(id string) (*domain.Role, error) {
