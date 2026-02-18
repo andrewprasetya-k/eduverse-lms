@@ -5,7 +5,7 @@ type CreateClassDTO struct {
 	TermID      string `json:"termId" binding:"required,uuid"`
 	Code        string `json:"classCode" binding:"required"`
 	Title       string `json:"classTitle" binding:"required"`
-	Description string `json:"classDescription"`
+	Description string `json:"classDesc"`
 	CreatedBy   string `json:"createdBy" binding:"required,uuid"`
 }
 
