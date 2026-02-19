@@ -102,6 +102,10 @@ func (s *materialService) Update(mat *domain.Material, mediaIDs []string) error 
 }
 
 func (s *materialService) Delete(id string) error {
+	// 1. Unlink all attachments associated with this material
+	s.attService.UnlinkBySource(string(domain.SourceMaterial), id)
+
+	// 2. Delete the material
 	return s.repo.Delete(id)
 }
 

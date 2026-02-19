@@ -9,6 +9,7 @@ type AttachmentService interface {
 	Link(att *domain.Attachment) error
 	GetBySource(sourceType string, sourceID string) ([]*domain.Attachment, error)
 	Unlink(id string) error
+	UnlinkBySource(sourceType string, sourceID string) error
 }
 
 type attachmentService struct {
@@ -29,4 +30,8 @@ func (s *attachmentService) GetBySource(sourceType string, sourceID string) ([]*
 
 func (s *attachmentService) Unlink(id string) error {
 	return s.repo.Delete(id)
+}
+
+func (s *attachmentService) UnlinkBySource(sourceType string, sourceID string) error {
+	return s.repo.DeleteBySource(domain.SourceType(sourceType), sourceID)
 }
