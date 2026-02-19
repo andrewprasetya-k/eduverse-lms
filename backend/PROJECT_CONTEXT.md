@@ -34,7 +34,8 @@ Eduverse is a Learning Management System (LMS) built with **Go (Gin Framework)**
 ## 🔐 Security
 
 - Passwords are hashed using **Bcrypt**.
-- RBAC system is implemented: `User` -> `SchoolUser` -> `UserRole` -> `Role` -> `Permission`.
+- RBAC system is implemented: `User` -> `SchoolUser` -> `UserRole` -> `Role` (Global Roles).
+- Permissions have been removed in favor of Pure RBAC (Role-based access checks).
 - _Note: Auth middleware (JWT) is NOT yet implemented._
 
 ## 📂 Documentation
