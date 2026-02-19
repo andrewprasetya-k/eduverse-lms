@@ -1,6 +1,7 @@
 # 🎓 Eduverse LMS - Development Progress
 
 1. buat header yg diambil dari response json. endpoint yang berupa get by school atau get by selain id harus ada header sekolahnya
+2. buat endpoint untuk liat users/members yang ada di enrollment tertentu (jangan lupa header)
 3. ubah error binding (ga ada foreign key, dan lain lain) jadi lebih tersirat biar ga tampilin nama kolom pure di UI
 4. kenapa ga kasih kolom role juga di subject_class sama kayak di tabel enrollments buat tandain siapa guru dan siapa murid?
 
