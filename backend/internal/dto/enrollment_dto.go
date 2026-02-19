@@ -18,3 +18,8 @@ type EnrollmentResponseDTO struct {
 	Role         string `json:"role"`
 	JoinedAt     string `json:"joinedAt"`
 }
+
+type ClassWithMembersDTO struct {
+	School  SchoolHeaderDTO         `json:"school"`
+	Members []EnrollmentResponseDTO `json:"members"`
+}

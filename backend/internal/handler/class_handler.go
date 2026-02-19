@@ -11,11 +11,15 @@ import (
 )
 
 type ClassHandler struct {
-	service service.ClassService
+	service       service.ClassService
+	schoolService service.SchoolService
 }
 
-func NewClassHandler(service service.ClassService) *ClassHandler {
-	return &ClassHandler{service: service}
+func NewClassHandler(service service.ClassService, schoolService service.SchoolService) *ClassHandler {
+	return &ClassHandler{
+		service:       service,
+		schoolService: schoolService,
+	}
 }
 
 func (h *ClassHandler) Create(c *gin.Context) {
@@ -55,20 +59,34 @@ func (h *ClassHandler) FindAll(c *gin.Context) {
 		return
 	}
 
-	var response []dto.ClassResponseDTO
+	var data []dto.ClassResponseDTO
 	for _, cls := range classes {
-		response = append(response, h.mapToResponse(cls))
+		data = append(data, h.mapToResponse(cls))
 	}
 
 	totalPages := (total + int64(limit) - 1) / int64(limit)
 
 	paginatedResponse := dto.PaginatedResponse{
-		Data:       response,
+		Data:       data,
 		TotalItems: total,
 		Page:       page,
 		Limit:      limit,
 		TotalPages: int(totalPages),
 	}
+
+	// If schoolCode is provided, wrap with school header
+	if schoolCode != "" {
+		school, err := h.schoolService.GetSchoolByCode(schoolCode)
+		if err == nil {
+			response := dto.ClassListWithSchoolDTO{
+				School: h.mapSchoolToHeader(school),
+				Data:   paginatedResponse,
+			}
+			c.JSON(http.StatusOK, response)
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, paginatedResponse)
 }
 
@@ -139,5 +157,14 @@ func (h *ClassHandler) mapToResponse(c *domain.Class) dto.ClassResponseDTO {
 		IsActive:         c.IsActive,
 		CreatedAt:        c.CreatedAt.Format("02-01-2006 15:04:05"),
 		UpdatedAt:        c.UpdatedAt.Format("02-01-2006 15:04:05"),
+	}
+}
+
+func (h *ClassHandler) mapSchoolToHeader(s *domain.School) dto.SchoolHeaderDTO {
+	return dto.SchoolHeaderDTO{
+		ID:     s.ID,
+		Name:   s.Name,
+		Code:   s.Code,
+		LogoID: s.LogoID,
 	}
 }

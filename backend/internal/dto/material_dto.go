@@ -29,6 +29,11 @@ type MaterialResponseDTO struct {
 	Attachments []MediaResponseDTO `json:"attachments,omitempty"`
 }
 
+type MaterialListWithSchoolDTO struct {
+	School SchoolHeaderDTO    `json:"school,omitempty"`
+	Data   PaginatedResponse `json:"data"`
+}
+
 type UpdateProgressDTO struct {
 	UserID     string `json:"userId" binding:"required,uuid"`
 	MaterialID string `json:"materialId" binding:"required,uuid"`

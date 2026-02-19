@@ -11,11 +11,15 @@ import (
 )
 
 type AcademicYearHandler struct {
-	service service.AcademicYearService
+	service       service.AcademicYearService
+	schoolService service.SchoolService
 }
 
-func NewAcademicYearHandler(service service.AcademicYearService) *AcademicYearHandler {
-	return &AcademicYearHandler{service: service}
+func NewAcademicYearHandler(service service.AcademicYearService, schoolService service.SchoolService) *AcademicYearHandler {
+	return &AcademicYearHandler{
+		service:       service,
+		schoolService: schoolService,
+	}
 }
 
 func (h *AcademicYearHandler) Create(c *gin.Context) {
@@ -68,15 +72,28 @@ func (h *AcademicYearHandler) FindAll(c *gin.Context) {
 
 func (h *AcademicYearHandler) GetBySchool(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")
+	
+	// Get school header
+	school, err := h.schoolService.GetSchoolByCode(schoolCode)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		return
+	}
+
 	years, err := h.service.GetBySchool(schoolCode)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	var response []dto.AcademicYearResponseDTO
+	var data []dto.AcademicYearResponseDTO
 	for _, y := range years {
-		response = append(response, h.mapToResponse(y))
+		data = append(data, h.mapToResponse(y))
+	}
+
+	response := dto.AcademicYearWithSchoolDTO{
+		School: h.mapSchoolToHeader(school),
+		Data:   data,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -154,5 +171,14 @@ func (h *AcademicYearHandler) mapToResponse(acy *domain.AcademicYear) dto.Academ
 		Name:       acy.Name,
 		IsActive:   acy.IsActive,
 		CreatedAt:  acy.CreatedAt.Format("02-01-2006 15:04:05"),
+	}
+}
+
+func (h *AcademicYearHandler) mapSchoolToHeader(s *domain.School) dto.SchoolHeaderDTO {
+	return dto.SchoolHeaderDTO{
+		ID:     s.ID,
+		Name:   s.Name,
+		Code:   s.Code,
+		LogoID: s.LogoID,
 	}
 }

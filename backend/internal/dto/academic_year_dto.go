@@ -18,3 +18,8 @@ type AcademicYearResponseDTO struct {
 	IsActive   bool   `json:"isActive"`
 	CreatedAt  string `json:"createdAt"`
 }
+
+type AcademicYearWithSchoolDTO struct {
+	School SchoolHeaderDTO           `json:"school"`
+	Data   []AcademicYearResponseDTO `json:"data"`
+}

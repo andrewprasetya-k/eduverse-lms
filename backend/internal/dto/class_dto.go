@@ -31,3 +31,8 @@ type ClassResponseDTO struct {
 	CreatedAt        string `json:"createdAt"`
 	UpdatedAt        string `json:"updatedAt"`
 }
+
+type ClassListWithSchoolDTO struct {
+	School SchoolHeaderDTO    `json:"school,omitempty"`
+	Data   PaginatedResponse `json:"data"`
+}

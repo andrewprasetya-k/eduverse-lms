@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"backend/internal/domain"
 	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
@@ -9,11 +10,15 @@ import (
 )
 
 type EnrollmentHandler struct {
-	service service.EnrollmentService
+	service       service.EnrollmentService
+	schoolService service.SchoolService
 }
 
-func NewEnrollmentHandler(service service.EnrollmentService) *EnrollmentHandler {
-	return &EnrollmentHandler{service: service}
+func NewEnrollmentHandler(service service.EnrollmentService, schoolService service.SchoolService) *EnrollmentHandler {
+	return &EnrollmentHandler{
+		service:       service,
+		schoolService: schoolService,
+	}
 }
 
 func (h *EnrollmentHandler) Enroll(c *gin.Context) {
@@ -39,9 +44,13 @@ func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 		return
 	}
 
-	var response []dto.EnrollmentResponseDTO
+	var membersDTO []dto.EnrollmentResponseDTO
+	var schoolID string
 	for _, r := range results {
-		response = append(response, dto.EnrollmentResponseDTO{
+		if schoolID == "" {
+			schoolID = r.SchoolID
+		}
+		membersDTO = append(membersDTO, dto.EnrollmentResponseDTO{
 			ID:           r.ID,
 			SchoolID:     r.SchoolID,
 			SchoolUserID: r.SchoolUserID,
@@ -51,6 +60,20 @@ func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 			Role:         r.Role,
 			JoinedAt:     r.JoinedAt.Format("02-01-2006 15:04:05"),
 		})
+	}
+
+	// Get school header
+	var schoolHeader dto.SchoolHeaderDTO
+	if schoolID != "" {
+		school, err := h.schoolService.GetSchoolByID(schoolID)
+		if err == nil {
+			schoolHeader = h.mapSchoolToHeader(school)
+		}
+	}
+
+	response := dto.ClassWithMembersDTO{
+		School:  schoolHeader,
+		Members: membersDTO,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -87,4 +110,13 @@ func (h *EnrollmentHandler) Unenroll(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Enrollment removed successfully"})
+}
+
+func (h *EnrollmentHandler) mapSchoolToHeader(s *domain.School) dto.SchoolHeaderDTO {
+	return dto.SchoolHeaderDTO{
+		ID:     s.ID,
+		Name:   s.Name,
+		Code:   s.Code,
+		LogoID: s.LogoID,
+	}
 }

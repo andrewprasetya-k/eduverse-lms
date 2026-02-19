@@ -36,7 +36,7 @@ func main() {
 
 	academicYearRepo := repository.NewAcademicYearRepository(db)
 	academicYearService := service.NewAcademicYearService(academicYearRepo, schoolService)
-	academicYearHandler := handler.NewAcademicYearHandler(academicYearService)
+	academicYearHandler := handler.NewAcademicYearHandler(academicYearService, schoolService)
 
 	termRepo := repository.NewTermRepository(db)
 	termService := service.NewTermService(termRepo)
@@ -60,7 +60,7 @@ func main() {
 
 	classRepo := repository.NewClassRepository(db)
 	classService := service.NewClassService(classRepo, schoolService)
-	classHandler := handler.NewClassHandler(classService)
+	classHandler := handler.NewClassHandler(classService, schoolService)
 
 	subjectClassRepo := repository.NewSubjectClassRepository(db)
 	subjectClassService := service.NewSubjectClassService(subjectClassRepo)
@@ -68,7 +68,7 @@ func main() {
 
 	enrollmentRepo := repository.NewEnrollmentRepository(db)
 	enrollmentService := service.NewEnrollmentService(enrollmentRepo)
-	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentService)
+	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentService, schoolService)
 
 	mediaRepo := repository.NewMediaRepository(db)
 	mediaService := service.NewMediaService(mediaRepo)
