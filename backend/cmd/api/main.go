@@ -68,7 +68,7 @@ func main() {
 
 	enrollmentRepo := repository.NewEnrollmentRepository(db)
 	enrollmentService := service.NewEnrollmentService(enrollmentRepo)
-	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentService, schoolService)
+	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentService, classService)
 
 	mediaRepo := repository.NewMediaRepository(db)
 	mediaService := service.NewMediaService(mediaRepo)

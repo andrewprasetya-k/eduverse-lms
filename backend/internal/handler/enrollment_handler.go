@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"backend/internal/domain"
 	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
@@ -10,14 +9,14 @@ import (
 )
 
 type EnrollmentHandler struct {
-	service       service.EnrollmentService
-	schoolService service.SchoolService
+	service      service.EnrollmentService
+	classService service.ClassService
 }
 
-func NewEnrollmentHandler(service service.EnrollmentService, schoolService service.SchoolService) *EnrollmentHandler {
+func NewEnrollmentHandler(service service.EnrollmentService, classService service.ClassService) *EnrollmentHandler {
 	return &EnrollmentHandler{
-		service:       service,
-		schoolService: schoolService,
+		service:      service,
+		classService: classService,
 	}
 }
 
@@ -38,6 +37,15 @@ func (h *EnrollmentHandler) Enroll(c *gin.Context) {
 
 func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 	classID := c.Param("classId")
+
+	// 1. Get Class Header
+	class, err := h.classService.GetByID(classID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Class not found"})
+		return
+	}
+
+	// 2. Get Members
 	results, err := h.service.GetByClass(classID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -45,11 +53,7 @@ func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 	}
 
 	var membersDTO []dto.EnrollmentResponseDTO
-	var schoolID string
 	for _, r := range results {
-		if schoolID == "" {
-			schoolID = r.SchoolID
-		}
 		membersDTO = append(membersDTO, dto.EnrollmentResponseDTO{
 			ID:           r.ID,
 			SchoolID:     r.SchoolID,
@@ -62,17 +66,12 @@ func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 		})
 	}
 
-	// Get school header
-	var schoolHeader dto.SchoolHeaderDTO
-	if schoolID != "" {
-		school, err := h.schoolService.GetSchoolByID(schoolID)
-		if err == nil {
-			schoolHeader = h.mapSchoolToHeader(school)
-		}
-	}
-
 	response := dto.ClassWithMembersDTO{
-		School:  schoolHeader,
+		Class: dto.ClassHeaderDTO{
+			ID:    class.ID,
+			Title: class.Title,
+			Code:  class.Code,
+		},
 		Members: membersDTO,
 	}
 
@@ -110,13 +109,4 @@ func (h *EnrollmentHandler) Unenroll(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Enrollment removed successfully"})
-}
-
-func (h *EnrollmentHandler) mapSchoolToHeader(s *domain.School) dto.SchoolHeaderDTO {
-	return dto.SchoolHeaderDTO{
-		ID:     s.ID,
-		Name:   s.Name,
-		Code:   s.Code,
-		LogoID: s.LogoID,
-	}
 }
