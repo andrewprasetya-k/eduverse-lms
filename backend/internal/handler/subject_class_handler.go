@@ -36,20 +36,6 @@ func (h *SubjectClassHandler) Assign(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Subject and teacher assigned to class successfully"})
-
-	// id := c.Param("id")
-	// var input dto.SetRolePermissionsDTO
-	// if err := c.ShouldBindJSON(&input); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
-	// if err := h.service.SetRolePermissions(id, input.PermissionIDs); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
-	// c.JSON(http.StatusOK, gin.H{"message": "Role permissions updated successfully"})
 }
 
 func (h *SubjectClassHandler) GetByClass(c *gin.Context) {
