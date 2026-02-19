@@ -33,7 +33,28 @@ Create a new learning material for a class with optional attachments.
 
 ---
 
-## 4. Update Progress
+## 4. Update Material
+Update material details and its attachments.
+
+- **URL:** `/:id`
+- **Method:** `PATCH`
+- **Body:**
+| Field | Type | Note |
+| :--- | :--- | :--- |
+| `materialTitle`| string | Optional |
+| `materialDescription` | string | Optional |
+| `materialType`| string | `video`, `pdf`, `ppt`, `other` (Optional) |
+| `mediaIds` | uuid[] | New list of Media IDs (Will replace existing) |
+
+---
+
+## 5. Delete Material
+- **URL:** `/:id`
+- **Method:** `DELETE`
+
+---
+
+## 6. Update Progress
 Mark a material as completed for a user.
 
 - **URL:** `/progress`

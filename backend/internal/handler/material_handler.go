@@ -96,6 +96,47 @@ func (h *MaterialHandler) UpdateProgress(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Progress updated"})
 }
 
+func (h *MaterialHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.UpdateMaterialDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	mat, err := h.service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Material not found"})
+		return
+	}
+
+	if input.Title != nil {
+		mat.Title = *input.Title
+	}
+	if input.Description != nil {
+		mat.Description = *input.Description
+	}
+	if input.Type != nil {
+		mat.Type = domain.MaterialType(*input.Type)
+	}
+
+	if err := h.service.Update(mat, input.MediaIDs); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Material updated successfully"})
+}
+
+func (h *MaterialHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.Delete(id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Material deleted successfully"})
+}
+
 func (h *MaterialHandler) mapToResponse(m *domain.Material) dto.MaterialResponseDTO {
 	var atts []dto.MediaResponseDTO
 	for _, a := range m.Attachments {

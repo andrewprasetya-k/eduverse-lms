@@ -227,6 +227,8 @@ func main() {
 			materialAPI.POST("/", materialHandler.Create)
 			materialAPI.GET("/", materialHandler.FindAll)
 			materialAPI.GET("/:id", materialHandler.GetByID)
+			materialAPI.PATCH("/:id", materialHandler.Update)
+			materialAPI.DELETE("/:id", materialHandler.Delete)
 			materialAPI.POST("/progress", materialHandler.UpdateProgress)
 		}
 

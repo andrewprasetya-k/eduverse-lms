@@ -11,7 +11,7 @@ type MaterialService interface {
 	Create(mat *domain.Material, mediaIDs []string) error
 	FindAll(search string, classID string, page int, limit int) ([]*domain.Material, int64, error)
 	GetByID(id string) (*domain.Material, error)
-	Update(mat *domain.Material) error
+	Update(mat *domain.Material, mediaIDs []string) error
 	Delete(id string) error
 
 	// Progress
@@ -75,9 +75,30 @@ func (s *materialService) GetByID(id string) (*domain.Material, error) {
 	return mat, nil
 }
 
-func (s *materialService) Update(mat *domain.Material) error {
+func (s *materialService) Update(mat *domain.Material, mediaIDs []string) error {
 	mat.Title = strings.TrimSpace(mat.Title)
-	return s.repo.Update(mat)
+	err := s.repo.Update(mat)
+	if err != nil {
+		return err
+	}
+
+	if mediaIDs != nil {
+		// 1. Unlink existing attachments for this material
+		s.attService.UnlinkBySource(string(domain.SourceMaterial), mat.ID)
+
+		// 2. Link new attachments
+		for _, mID := range mediaIDs {
+			att := &domain.Attachment{
+				SchoolID:   mat.SchoolID,
+				SourceID:   mat.ID,
+				SourceType: domain.SourceMaterial,
+				MediaID:    mID,
+			}
+			s.attService.Link(att)
+		}
+	}
+
+	return nil
 }
 
 func (s *materialService) Delete(id string) error {

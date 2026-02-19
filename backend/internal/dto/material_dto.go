@@ -11,8 +11,10 @@ type CreateMaterialDTO struct {
 }
 
 type UpdateMaterialDTO struct {
-	Title       *string `json:"materialTitle"`
-	Description *string `json:"materialDescription"`
+	Title       *string  `json:"materialTitle"`
+	Description *string  `json:"materialDescription"`
+	Type        *string  `json:"materialType" binding:"omitempty,oneof=video pdf ppt other"`
+	MediaIDs    []string `json:"mediaIds"`
 }
 
 type MaterialResponseDTO struct {
