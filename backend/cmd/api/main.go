@@ -209,7 +209,7 @@ func main() {
 
 		enrollmentAPI := api.Group("/enrollments")
 		{
-			enrollmentAPI.POST("/enroll", enrollmentHandler.Enroll)
+			enrollmentAPI.POST("/", enrollmentHandler.Enroll)
 			enrollmentAPI.GET("/class/:classId", enrollmentHandler.GetByClass)
 			enrollmentAPI.GET("/member/:schoolUserId", enrollmentHandler.GetByMember)
 			enrollmentAPI.DELETE("/:id", enrollmentHandler.Unenroll)
