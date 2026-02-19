@@ -15,10 +15,6 @@ type RoleResponseDTO struct {
 	CreatedAt string `json:"createdAt"`
 }
 
-type RoleWithUsersDTO struct {
-	Name  string       `json:"roleName"`
-}
-
 // Assignment DTOs
 type AssignRoleDTO struct {
 	SchoolUserID string `json:"schoolUserId" binding:"required,uuid"`

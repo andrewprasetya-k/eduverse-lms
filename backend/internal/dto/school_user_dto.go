@@ -13,7 +13,7 @@ type SchoolUserResponseDTO struct {
 	SchoolID   string            `json:"schoolId"`
 	SchoolName string            `json:"schoolName,omitempty"`
 	SchoolCode string            `json:"schoolCode,omitempty"`
-	Roles      []RoleWithUsersDTO `json:"roles,omitempty"`
+	Roles      []string          `json:"roles,omitempty"`
 	CreatedAt  string            `json:"createdAt"`
 }
 
