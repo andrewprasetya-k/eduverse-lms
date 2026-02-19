@@ -2,9 +2,7 @@ package dto
 
 // Role DTOs
 type CreateRoleDTO struct {
-	SchoolID string   `json:"schoolId" binding:"required,uuid"`
-	Name     string   `json:"roleName" binding:"required"`
-	PermissionIDs []string `json:"permissionIds"` // Optional initial permissions
+	Name string `json:"roleName" binding:"required"`
 }
 
 type UpdateRoleDTO struct {
@@ -12,27 +10,9 @@ type UpdateRoleDTO struct {
 }
 
 type RoleResponseDTO struct {
-	ID          string                  `json:"roleId"`
-	Name        string                  `json:"roleName"`
-	Permissions []PermissionResponseDTO `json:"permissions,omitempty"`
-	CreatedAt   string                  `json:"createdAt"`
-}
-
-// Permission DTOs
-type CreatePermissionDTO struct {
-	Key         string `json:"permissionKey" binding:"required"`
-	Description string `json:"permissionDesc" binding:"required"`
-}
-
-type UpdatePermissionDTO struct {
-	Key         *string `json:"permissionKey"`
-	Description *string `json:"permissionDesc"`
-}
-
-type PermissionResponseDTO struct {
-	ID          string `json:"permissionId"`
-	Key         string `json:"permissionKey"`
-	Description string `json:"description"`
+	ID        string `json:"roleId"`
+	Name      string `json:"roleName"`
+	CreatedAt string `json:"createdAt"`
 }
 
 // Assignment DTOs
@@ -43,8 +23,4 @@ type AssignRoleDTO struct {
 
 type SyncUserRolesDTO struct {
 	RoleIDs []string `json:"roleIds" binding:"required"`
-}
-
-type SetRolePermissionsDTO struct {
-	PermissionIDs []string `json:"permissionIds" binding:"required"`
 }

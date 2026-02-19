@@ -55,7 +55,7 @@ func main() {
 	subjectHandler := handler.NewSubjectHandler(subjectService, schoolService)
 
 	rbacRepo := repository.NewRBACRepository(db)
-	rbacService := service.NewRBACService(rbacRepo, schoolService)
+	rbacService := service.NewRBACService(rbacRepo)
 	rbacHandler := handler.NewRBACHandler(rbacService)
 
 	classRepo := repository.NewClassRepository(db)
@@ -178,18 +178,10 @@ func main() {
 		{
 			// Roles
 			rbacAPI.POST("/roles", rbacHandler.CreateRole)
-			rbacAPI.GET("/roles/school/:schoolCode", rbacHandler.GetRolesBySchool)
+			rbacAPI.GET("/roles", rbacHandler.GetAllRoles)
 			rbacAPI.GET("/roles/:id", rbacHandler.GetRoleByID)
 			rbacAPI.PATCH("/roles/:id", rbacHandler.UpdateRole)
 			rbacAPI.DELETE("/roles/:id", rbacHandler.DeleteRole)
-			rbacAPI.POST("/roles/permissions/:id", rbacHandler.SetRolePermissions)
-
-			// Permissions
-			rbacAPI.POST("/permissions", rbacHandler.CreatePermission)
-			rbacAPI.GET("/permissions", rbacHandler.GetAllPermissions)
-			rbacAPI.GET("/permissions/:id", rbacHandler.GetPermissionByID)
-			rbacAPI.PATCH("/permissions/:id", rbacHandler.UpdatePermission)
-			rbacAPI.DELETE("/permissions/:id", rbacHandler.DeletePermission)
 
 			// User Roles (Assignments)
 			rbacAPI.POST("/user-roles", rbacHandler.AssignRole)

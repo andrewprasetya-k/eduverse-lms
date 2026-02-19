@@ -62,19 +62,10 @@ func (h *SchoolUserHandler) GetMembersBySchool(c *gin.Context) {
 	for _, m := range members {
 		var rolesDTO []dto.RoleResponseDTO
 		for _, ur := range m.Roles {
-			var permsDTO []dto.PermissionResponseDTO
-			for _, p := range ur.Role.Permissions {
-				permsDTO = append(permsDTO, dto.PermissionResponseDTO{
-					ID:          p.ID,
-					Key:         p.Key,
-					Description: p.Description,
-				})
-			}
 			rolesDTO = append(rolesDTO, dto.RoleResponseDTO{
-				ID:          ur.Role.ID,
-				Name:        ur.Role.Name,
-				Permissions: permsDTO,
-				CreatedAt:   ur.Role.CreatedAt.Format("02-01-2006 15:04:05"),
+				ID:        ur.Role.ID,
+				Name:      ur.Role.Name,
+				CreatedAt: ur.Role.CreatedAt.Format("02-01-2006 15:04:05"),
 			})
 		}
 

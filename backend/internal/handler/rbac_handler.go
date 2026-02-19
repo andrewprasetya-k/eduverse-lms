@@ -26,27 +26,19 @@ func (h *RBACHandler) CreateRole(c *gin.Context) {
 	}
 
 	role := domain.Role{
-		SchoolID: input.SchoolID,
-		Name:     input.Name,
+		Name: input.Name,
 	}
 
-	if err := h.service.CreateRole(&role, input.PermissionIDs); err != nil {
+	if err := h.service.CreateRole(&role); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
-	}
-
-	// Ambil ulang data role lengkap dengan permissions agar response konsisten
-	fullRole, err := h.service.GetRoleByID(role.ID)
-	if err == nil {
-		role = *fullRole
 	}
 
 	c.JSON(http.StatusCreated, h.mapRoleToResponse(&role))
 }
 
-func (h *RBACHandler) GetRolesBySchool(c *gin.Context) {
-	schoolCode := c.Param("schoolCode")
-	roles, err := h.service.GetRolesBySchool(schoolCode)
+func (h *RBACHandler) GetAllRoles(c *gin.Context) {
+	roles, err := h.service.GetAllRoles()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -96,22 +88,6 @@ func (h *RBACHandler) UpdateRole(c *gin.Context) {
 	c.JSON(http.StatusOK, h.mapRoleToResponse(role))
 }
 
-func (h *RBACHandler) SetRolePermissions(c *gin.Context) {
-	id := c.Param("id")
-	var input dto.SetRolePermissionsDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := h.service.SetRolePermissions(id, input.PermissionIDs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Role permissions updated successfully"})
-}
-
 func (h *RBACHandler) DeleteRole(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.DeleteRole(id); err != nil {
@@ -119,107 +95,6 @@ func (h *RBACHandler) DeleteRole(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Role deleted successfully"})
-}
-
-// Permission Handlers
-func (h *RBACHandler) CreatePermission(c *gin.Context) {
-	var input dto.CreatePermissionDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	permission := domain.Permission{
-		Key:         input.Key,
-		Description: input.Description,
-	}
-
-	if err := h.service.CreatePermission(&permission); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, dto.PermissionResponseDTO{
-		ID:          permission.ID,
-		Key:         permission.Key,
-		Description: permission.Description,
-	})
-}
-
-func (h *RBACHandler) GetPermissionByID(c *gin.Context) {
-	id := c.Param("id")
-	perm, err := h.service.GetPermissionByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Permission not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, dto.PermissionResponseDTO{
-		ID:          perm.ID,
-		Key:         perm.Key,
-		Description: perm.Description,
-	})
-}
-
-func (h *RBACHandler) GetAllPermissions(c *gin.Context) {
-	perms, err := h.service.GetAllPermissions()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	var response []dto.PermissionResponseDTO
-	for _, p := range perms {
-		response = append(response, dto.PermissionResponseDTO{
-			ID:          p.ID,
-			Key:         p.Key,
-			Description: p.Description,
-		})
-	}
-
-	c.JSON(http.StatusOK, response)
-}
-
-func (h *RBACHandler) UpdatePermission(c *gin.Context) {
-	id := c.Param("id")
-	var input dto.UpdatePermissionDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	perm, err := h.service.GetPermissionByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Permission not found"})
-		return
-	}
-
-	if input.Key != nil {
-		perm.Key = *input.Key
-	}
-	if input.Description != nil {
-		perm.Description = *input.Description
-	}
-
-	if err := h.service.UpdatePermission(perm); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, dto.PermissionResponseDTO{
-		ID:          perm.ID,
-		Key:         perm.Key,
-		Description: perm.Description,
-	})
-}
-
-func (h *RBACHandler) DeletePermission(c *gin.Context) {
-	id := c.Param("id")
-	if err := h.service.DeletePermission(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "Permission deleted successfully"})
 }
 
 // User-Role Handlers
@@ -284,28 +159,9 @@ func (h *RBACHandler) UpdateUserRoles(c *gin.Context) {
 
 // Helpers
 func (h *RBACHandler) mapRoleToResponse(role *domain.Role) dto.RoleResponseDTO {
-	var perms []dto.PermissionResponseDTO
-	for _, p := range role.Permissions {
-		perms = append(perms, dto.PermissionResponseDTO{
-			ID:          p.ID,
-			Key:         p.Key,
-			Description: p.Description,
-		})
-	}
-
 	return dto.RoleResponseDTO{
-		ID:          role.ID,
-		Name:        role.Name,
-		Permissions: perms,
-		CreatedAt:   role.CreatedAt.Format("02-01-2006 15:04:05"),
-	}
-}
-
-func (h *RBACHandler) mapSchoolToHeader(s *domain.School) dto.SchoolHeaderDTO {
-	return dto.SchoolHeaderDTO{
-		ID:     s.ID,
-		Name:   s.Name,
-		Code:   s.Code,
-		LogoID: s.LogoID,
+		ID:        role.ID,
+		Name:      role.Name,
+		CreatedAt: role.CreatedAt.Format("02-01-2006 15:04:05"),
 	}
 }
