@@ -64,6 +64,35 @@ func (h *SubjectClassHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, h.mapToResponse(result))
 }
 
+func (h *SubjectClassHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.UpdateSubjectClassDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	scl, err := h.service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Subject class assignment not found"})
+		return
+	}
+
+	if input.SubjectID != nil {
+		scl.SubjectID = *input.SubjectID
+	}
+	if input.SchoolUserID != nil {
+		scl.SchoolUserID = *input.SchoolUserID
+	}
+
+	if err := h.service.Update(scl); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Assignment updated successfully"})
+}
+
 func (h *SubjectClassHandler) Unassign(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Unassign(id); err != nil {

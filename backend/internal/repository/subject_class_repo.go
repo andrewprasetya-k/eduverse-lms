@@ -9,6 +9,7 @@ type SubjectClassRepository interface {
 	Create(scl *domain.SubjectClass) error
 	GetByClass(classID string) ([]*domain.SubjectClass, error)
 	GetByID(id string) (*domain.SubjectClass, error)
+	Update(scl *domain.SubjectClass) error
 	Delete(id string) error
 	CheckExists(classID, subjectID, schoolUserID string) (bool, error)
 }
@@ -37,6 +38,17 @@ func (r *subjectClassRepository) GetByID(id string) (*domain.SubjectClass, error
 	err := r.db.Preload("Subject").Preload("Teacher.User").Preload("Class").
 		Where("scl_id = ?", id).First(&scl).Error
 	return &scl, err
+}
+
+func (r *subjectClassRepository) Update(scl *domain.SubjectClass) error {
+	result := r.db.Save(scl)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 func (r *subjectClassRepository) Delete(id string) error {

@@ -6,6 +6,11 @@ type CreateSubjectClassDTO struct {
 	SchoolUserID string `json:"teacherId" binding:"required,uuid"`
 }
 
+type UpdateSubjectClassDTO struct {
+	SubjectID    *string `json:"subjectId" binding:"omitempty,uuid"`
+	SchoolUserID *string `json:"teacherId" binding:"omitempty,uuid"`
+}
+
 type SubjectClassResponseDTO struct {
 	ID           string `json:"subjectClassId"`
 	ClassID      string `json:"classId"`

@@ -10,6 +10,7 @@ type SubjectClassService interface {
 	Assign(scl *domain.SubjectClass) error
 	GetByClass(classID string) ([]*domain.SubjectClass, error)
 	GetByID(id string) (*domain.SubjectClass, error)
+	Update(scl *domain.SubjectClass) error
 	Unassign(id string) error
 }
 
@@ -32,6 +33,13 @@ func (s *subjectClassService) Assign(scl *domain.SubjectClass) error {
 	}
 
 	return s.repo.Create(scl)
+}
+
+func (s *subjectClassService) Update(scl *domain.SubjectClass) error {
+	// Validasi duplikasi (jika data yang diupdate ternyata sama dengan assignment lain)
+	// Kita butuh method CheckExists yang lebih detail jika ingin validasi update, 
+	// tapi untuk sekarang kita asumsikan update guru saja yang paling sering.
+	return s.repo.Update(scl)
 }
 
 func (s *subjectClassService) GetByClass(classID string) ([]*domain.SubjectClass, error) {

@@ -204,6 +204,7 @@ func main() {
 			subjectClassAPI.POST("/assign", subjectClassHandler.Assign)
 			subjectClassAPI.GET("/class/:classId", subjectClassHandler.GetByClass)
 			subjectClassAPI.GET("/:id", subjectClassHandler.GetByID)
+			subjectClassAPI.PATCH("/:id", subjectClassHandler.Update)
 			subjectClassAPI.DELETE("/:id", subjectClassHandler.Unassign)
 		}
 
