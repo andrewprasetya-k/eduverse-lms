@@ -253,8 +253,8 @@ func main() {
 			assignmentAPI.GET("/categories/school/:schoolCode", assignmentHandler.GetCategoriesBySchool)
 			assignmentAPI.POST("/", assignmentHandler.CreateAssignment)
 			assignmentAPI.GET("/subject-class/:subjectClassId", assignmentHandler.GetBySubjectClass)
-			assignmentAPI.POST("/submit", assignmentHandler.Submit)
-			assignmentAPI.POST("/assess", assignmentHandler.Assess)
+			assignmentAPI.POST("/submit/:assignmentId", assignmentHandler.Submit)
+			assignmentAPI.POST("/assess/:submissionId", assignmentHandler.Assess)
 		}
 
 				logAPI := api.Group("/logs")

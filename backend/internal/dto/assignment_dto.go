@@ -47,7 +47,6 @@ type AssignmentResponseDTO struct {
 // Submission
 type CreateSubmissionDTO struct {
 	SchoolID     string   `json:"schoolId" binding:"required,uuid"`
-	AssignmentID string   `json:"assignmentId" binding:"required,uuid"`
 	UserID       string   `json:"userId" binding:"required,uuid"`
 	MediaIDs     []string `json:"mediaIds"`
 }
@@ -62,7 +61,6 @@ type SubmissionResponseDTO struct {
 
 // Assessment
 type CreateAssessmentDTO struct {
-	SubmissionID string  `json:"submissionId" binding:"required,uuid"`
 	Score        float64 `json:"score" binding:"required"`
 	Feedback     string  `json:"feedback"`
 	AssessedBy   string  `json:"assessedBy" binding:"required,uuid"`

@@ -138,6 +138,7 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 
 func (h *AssignmentHandler) Submit(c *gin.Context) {
 	var input dto.CreateSubmissionDTO
+	var assignmentId = c.Param("assignmentId")
 	if err := c.ShouldBindJSON(&input); err != nil {
 		HandleBindingError(c, err)
 		return
@@ -145,7 +146,7 @@ func (h *AssignmentHandler) Submit(c *gin.Context) {
 
 	sbm := domain.Submission{
 		SchoolID:     input.SchoolID,
-		AssignmentID: input.AssignmentID,
+		AssignmentID: assignmentId,
 		UserID:       input.UserID,
 	}
 
@@ -159,13 +160,14 @@ func (h *AssignmentHandler) Submit(c *gin.Context) {
 
 func (h *AssignmentHandler) Assess(c *gin.Context) {
 	var input dto.CreateAssessmentDTO
+	var submissionId = c.Param("submissionId")
 	if err := c.ShouldBindJSON(&input); err != nil {
 		HandleBindingError(c, err)
 		return
 	}
 
 	asm := domain.Assessment{
-		SubmissionID: input.SubmissionID,
+		SubmissionID: submissionId,
 		Score:        input.Score,
 		Feedback:     input.Feedback,
 		AssessedBy:   input.AssessedBy,
