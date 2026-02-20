@@ -9,35 +9,67 @@ Base URL: `/api/assignments`
 
 ---
 
-## 2. Create Assignment
+## 2. Get Categories by School
+- **URL:** `/categories/school/:schoolCode`
+- **Method:** `GET`
+- **Response:** `SchoolWithAssignmentCategoriesDTO`
+
+---
+
+## 3. Create Assignment
 - **URL:** `/`
 - **Method:** `POST`
 - **Body:**
 | Field | Type | Required | Note |
 | :--- | :--- | :--- | :--- |
 | `schoolId` | uuid | Yes | |
-| `classId` | uuid | Yes | |
+| `subjectClassId` | uuid | Yes | Link to subject, class, and teacher |
 | `categoryId` | uuid | Yes | |
 | `assignmentTitle`| string | Yes | |
-| `deadline` | datetime | No | ISO format |
+| `assignmentDescription`| string | No | |
+| `deadline` | datetime | No | ISO format (e.g. 2026-03-01T23:59:59Z) |
+| `createdBy` | uuid | Yes | Teacher/Admin ID |
 | `mediaIds` | uuid[] | No | Attachments |
 
 ---
 
-## 3. List Class Assignments
-- **URL:** `/class/:classId`
+## 4. List Subject-Class Assignments
+- **URL:** `/subject-class/:subjectClassId`
 - **Method:** `GET`
 
 ---
 
-## 4. Submit Assignment
-- **URL:** `/submit`
-- **Method:** `POST`
-- **Body:** `{"schoolId": "uuid", "assignmentId": "uuid", "userId": "uuid", "mediaIds": ["uuid"]}`
+## 5. Get Assignment Submissions (Monitoring)
+- **URL:** `/:id/submissions`
+- **Method:** `GET`
+- **Response:** `AssignmentWithSubmissionsDTO` (Includes header and list of submissions with assessments)
 
 ---
 
-## 5. Record Assessment (Grade)
-- **URL:** `/assess`
+## 6. Submit Assignment (Upsert)
+- **URL:** `/submit/:assignmentId`
 - **Method:** `POST`
-- **Body:** `{"submissionId": "uuid", "score": 90.5, "feedback": "Good job", "assessedBy": "uuid"}`
+- **Body:** 
+```json
+{
+  "schoolId": "uuid",
+  "userId": "uuid",
+  "mediaIds": ["uuid"]
+}
+```
+*Note: If a student submits again, the existing record will be updated (Upsert).*
+
+---
+
+## 7. Record Assessment (Grade)
+- **URL:** `/assess/:submissionId`
+- **Method:** `POST`
+- **Body:**
+```json
+{
+  "score": 90.5,
+  "feedback": "Good job",
+  "assessedBy": "uuid"
+}
+```
+*Note: Existing assessment will be updated if already graded.*

@@ -21,21 +21,7 @@ Retrieve all subjects and their teachers for a specific class.
 
 - **URL:** `/class/:classId`
 - **Method:** `GET`
-
-**Response Example:**
-```json
-[
-  {
-    "subjectClassId": "uuid",
-    "classId": "uuid",
-    "subjectId": "uuid",
-    "subjectName": "Matematika",
-    "subjectCode": "MTK",
-    "teacherId": "uuid",
-    "teacherName": "Budi Santoso"
-  }
-]
-```
+- **Response:** `SubjectPerClassDTO` (Includes class header and list of subject assignments)
 
 ---
 
@@ -45,6 +31,19 @@ Retrieve all subjects and their teachers for a specific class.
 
 ---
 
-## 4. Remove Assignment (Unassign)
+## 4. Update Assignment
+Update teacher or subject for an existing assignment.
+
+- **URL:** `/:id`
+- **Method:** `PATCH`
+- **Body:**
+| Field | Type | Required | Note |
+| :--- | :--- | :--- | :--- |
+| `subjectId` | uuid | No | |
+| `teacherId` | uuid | No | |
+
+---
+
+## 5. Remove Assignment (Unassign)
 - **URL:** `/:id`
 - **Method:** `DELETE`

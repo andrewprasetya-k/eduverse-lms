@@ -11,7 +11,7 @@ Create a new learning material for a class with optional attachments.
 | Field | Type | Required | Note |
 | :--- | :--- | :--- | :--- |
 | `schoolId` | uuid | Yes | |
-| `classId` | uuid | Yes | |
+| `subjectClassId` | uuid | Yes | Link to subject, class, and teacher |
 | `materialTitle`| string | Yes | |
 | `materialDescription` | string | No | |
 | `materialType`| string | Yes | `video`, `pdf`, `ppt`, `other` |
@@ -23,7 +23,8 @@ Create a new learning material for a class with optional attachments.
 ## 2. List Materials
 - **URL:** `/`
 - **Method:** `GET`
-- **Query Params:** `page`, `limit`, `search`, `classId`.
+- **Query Params:** `page`, `limit`, `search`, `subjectClassId`.
+- **Note:** If `subjectClassId` is provided, response will be wrapped in `MaterialListWithSubjectDTO`.
 
 ---
 
