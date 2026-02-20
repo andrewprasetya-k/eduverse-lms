@@ -91,10 +91,13 @@ func (s *assignmentService) GetAssignmentByID(id string) (*domain.Assignment, er
 }
 
 func (s *assignmentService) Submit(sbm *domain.Submission, mediaIDs []string) error {
-	err := s.repo.CreateSubmission(sbm)
+	err := s.repo.UpsertSubmission(sbm)
 	if err != nil {
 		return err
 	}
+
+	// Unlink existing attachments for this submission if updating
+	s.attService.UnlinkBySource(string(domain.SourceSubmission), sbm.ID)
 
 	for _, mID := range mediaIDs {
 		att := &domain.Attachment{

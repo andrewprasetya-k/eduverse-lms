@@ -2,6 +2,7 @@ package repository
 
 import (
 	"backend/internal/domain"
+	"errors"
 	"gorm.io/gorm"
 )
 
@@ -16,7 +17,7 @@ type AssignmentRepository interface {
 	GetAssignmentByID(id string) (*domain.Assignment, error)
 
 	// Submission
-	CreateSubmission(sbm *domain.Submission) error
+	UpsertSubmission(sbm *domain.Submission) error
 	GetSubmissionsByAssignment(asgID string) ([]*domain.Submission, error)
 	GetSubmissionByID(id string) (*domain.Submission, error)
 
@@ -66,8 +67,22 @@ func (r *assignmentRepository) GetAssignmentByID(id string) (*domain.Assignment,
 	return &asg, err
 }
 
-func (r *assignmentRepository) CreateSubmission(sbm *domain.Submission) error {
-	return r.db.Create(sbm).Error
+func (r *assignmentRepository) UpsertSubmission(sbm *domain.Submission) error {
+	var existing domain.Submission
+	// Check if user already submitted for this assignment
+	err := r.db.Where("sbm_asg_id = ? AND sbm_usr_id = ?", sbm.AssignmentID, sbm.UserID).First(&existing).Error
+	
+	if err == nil {
+		// Update existing submission ID to ensure GORM performs an Update instead of Create
+		sbm.ID = existing.ID
+		return r.db.Save(sbm).Error
+	}
+	
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return r.db.Create(sbm).Error
+	}
+	
+	return err
 }
 
 func (r *assignmentRepository) GetSubmissionsByAssignment(asgID string) ([]*domain.Submission, error) {
