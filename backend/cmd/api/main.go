@@ -90,7 +90,7 @@ func main() {
 
 	assignmentRepo := repository.NewAssignmentRepository(db)
 	assignmentService := service.NewAssignmentService(assignmentRepo, attachmentService)
-	assignmentHandler := handler.NewAssignmentHandler(assignmentService, schoolService)
+	assignmentHandler := handler.NewAssignmentHandler(assignmentService, schoolService, subjectClassService)
 
 	logRepo := repository.NewLogRepository(db)
 	logService := service.NewLogService(logRepo)
@@ -252,17 +252,18 @@ func main() {
 			assignmentAPI.POST("/categories", assignmentHandler.CreateCategory)
 			assignmentAPI.GET("/categories/school/:schoolCode", assignmentHandler.GetCategoriesBySchool)
 			assignmentAPI.POST("/", assignmentHandler.CreateAssignment)
-			assignmentAPI.GET("/class/:classId", assignmentHandler.GetByClass)
+			assignmentAPI.GET("/subject-class/:subjectClassId", assignmentHandler.GetBySubjectClass)
 			assignmentAPI.POST("/submit", assignmentHandler.Submit)
 			assignmentAPI.POST("/assess", assignmentHandler.Assess)
 		}
 
-		logAPI := api.Group("/logs")
-		{
-			logAPI.GET("/school/:schoolId", logHandler.GetBySchool)
+				logAPI := api.Group("/logs")
+				{
+					logAPI.GET("/school/:schoolId", logHandler.GetBySchool)
+				}
+			}
+		
+			//run server
+			r.Run(":8080")
 		}
-	}
-
-	//run server
-	r.Run(":8080")
-}
+		

@@ -10,14 +10,16 @@ import (
 )
 
 type AssignmentHandler struct {
-	service       service.AssignmentService
-	schoolService service.SchoolService
+	service             service.AssignmentService
+	schoolService       service.SchoolService
+	subjectClassService service.SubjectClassService
 }
 
-func NewAssignmentHandler(service service.AssignmentService, schoolService service.SchoolService) *AssignmentHandler {
+func NewAssignmentHandler(service service.AssignmentService, schoolService service.SchoolService, subjectClassService service.SubjectClassService) *AssignmentHandler {
 	return &AssignmentHandler{
-		service:       service,
-		schoolService: schoolService,
+		service:             service,
+		schoolService:       schoolService,
+		subjectClassService: subjectClassService,
 	}
 }
 
@@ -87,13 +89,13 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 	}
 
 	asg := domain.Assignment{
-		SchoolID:    input.SchoolID,
-		ClassID:     input.ClassID,
-		CategoryID:  input.CategoryID,
-		Title:       input.Title,
-		Description: input.Description,
-		Deadline:    input.Deadline,
-		CreatedBy:   input.CreatedBy,
+		SchoolID:       input.SchoolID,
+		SubjectClassID: input.SubjectClassID,
+		CategoryID:     input.CategoryID,
+		Title:          input.Title,
+		Description:    input.Description,
+		Deadline:       input.Deadline,
+		CreatedBy:      input.CreatedBy,
 	}
 
 	if err := h.service.CreateAssignment(&asg, input.MediaIDs); err != nil {
@@ -104,9 +106,18 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Assignment created"})
 }
 
-func (h *AssignmentHandler) GetByClass(c *gin.Context) {
-	classID := c.Param("classId")
-	results, err := h.service.GetAssignmentsByClass(classID)
+func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
+	subjectClassID := c.Param("subjectClassId")
+
+	// 1. Get SubjectClass Header (Subject Name & Class Name)
+	_, err := h.subjectClassService.GetByID(subjectClassID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	// 2. Get Assignments
+	results, err := h.service.GetAssignmentsBySubjectClass(subjectClassID)
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -117,6 +128,11 @@ func (h *AssignmentHandler) GetByClass(c *gin.Context) {
 		response = append(response, h.mapAsgToResponse(r))
 	}
 
+	// Add manual header if needed, but for now just list
+	// Ideally we could wrap this in a DTO with header like MaterialListWithSubjectDTO
+	// For now, let's keep list to match frontend expectation or wrap if needed.
+	// Since user asked for change similar to Material, let's return list but enriched DTOs are fine.
+	
 	c.JSON(http.StatusOK, response)
 }
 
@@ -175,12 +191,14 @@ func (h *AssignmentHandler) mapAsgToResponse(a *domain.Assignment) dto.Assignmen
 	}
 
 	return dto.AssignmentResponseDTO{
-		ID:           a.ID,
-		Title:        a.Title,
-		Description:  a.Description,
-		CategoryName: a.Category.Name,
-		Deadline:     a.Deadline,
-		CreatedAt:    a.CreatedAt.Format("02-01-2006 15:04:05"),
-		Attachments:  atts,
+		ID:             a.ID,
+		SubjectClassID: a.SubjectClassID,
+		SubjectName:    a.SubjectClass.Subject.Name,
+		Title:          a.Title,
+		Description:    a.Description,
+		CategoryName:   a.Category.Name,
+		Deadline:       a.Deadline,
+		CreatedAt:      a.CreatedAt.Format("02-01-2006 15:04:05"),
+		Attachments:    atts,
 	}
 }

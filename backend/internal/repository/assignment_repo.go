@@ -12,7 +12,7 @@ type AssignmentRepository interface {
 
 	// Assignment
 	CreateAssignment(asg *domain.Assignment) error
-	GetAssignmentsByClass(classID string) ([]*domain.Assignment, error)
+	GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error)
 	GetAssignmentByID(id string) (*domain.Assignment, error)
 
 	// Submission
@@ -51,15 +51,18 @@ func (r *assignmentRepository) CreateAssignment(asg *domain.Assignment) error {
 	return r.db.Create(asg).Error
 }
 
-func (r *assignmentRepository) GetAssignmentsByClass(classID string) ([]*domain.Assignment, error) {
+func (r *assignmentRepository) GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error) {
 	var results []*domain.Assignment
-	err := r.db.Preload("Category").Where("asg_cls_id = ?", classID).Order("created_at desc").Find(&results).Error
+	err := r.db.Preload("Category").Preload("SubjectClass.Subject").
+		Where("asg_scl_id = ?", subjectClassID).
+		Order("created_at desc").Find(&results).Error
 	return results, err
 }
 
 func (r *assignmentRepository) GetAssignmentByID(id string) (*domain.Assignment, error) {
 	var asg domain.Assignment
-	err := r.db.Preload("Category").Preload("Class").Where("asg_id = ?", id).First(&asg).Error
+	err := r.db.Preload("Category").Preload("SubjectClass.Subject").
+		Where("asg_id = ?", id).First(&asg).Error
 	return &asg, err
 }
 

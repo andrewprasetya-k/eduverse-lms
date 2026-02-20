@@ -19,21 +19,21 @@ func (AssignmentCategory) TableName() string {
 }
 
 type Assignment struct {
-	ID          string             `gorm:"primaryKey;column:asg_id;default:gen_random_uuid()" json:"assignmentId"`
-	SchoolID    string             `gorm:"column:asg_sch_id;type:uuid" json:"schoolId"`
-	ClassID     string             `gorm:"column:asg_cls_id;type:uuid" json:"classId"`
-	Class       Class              `gorm:"foreignKey:ClassID;references:ID" json:"class,omitempty"`
-	CategoryID  string             `gorm:"column:asg_asc_id;type:uuid" json:"categoryId"`
-	Category    AssignmentCategory `gorm:"foreignKey:CategoryID;references:ID" json:"category,omitempty"`
-	Title       string             `gorm:"column:asg_title" json:"assignmentTitle"`
-	Description string             `gorm:"column:asg_desc" json:"assignmentDescription"`
-	Deadline    *time.Time         `gorm:"column:asg_deadline" json:"deadline"`
-	CreatedBy   string             `gorm:"column:created_by;type:uuid" json:"createdBy"`
-	Creator     User               `gorm:"foreignKey:CreatedBy;references:ID" json:"creator,omitempty"`
-	CreatedAt   time.Time          `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt   time.Time          `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	DeletedAt   gorm.DeletedAt     `gorm:"column:deleted_at;index" json:"-"`
-	Attachments []Attachment       `gorm:"-" json:"attachments,omitempty"`
+	ID             string             `gorm:"primaryKey;column:asg_id;default:gen_random_uuid()" json:"assignmentId"`
+	SchoolID       string             `gorm:"column:asg_sch_id;type:uuid" json:"schoolId"`
+	SubjectClassID string             `gorm:"column:asg_scl_id;type:uuid" json:"subjectClassId"`
+	SubjectClass   SubjectClass       `gorm:"foreignKey:SubjectClassID;references:ID" json:"subjectClass,omitempty"`
+	CategoryID     string             `gorm:"column:asg_asc_id;type:uuid" json:"categoryId"`
+	Category       AssignmentCategory `gorm:"foreignKey:CategoryID;references:ID" json:"category,omitempty"`
+	Title          string             `gorm:"column:asg_title" json:"assignmentTitle"`
+	Description    string             `gorm:"column:asg_desc" json:"assignmentDescription"`
+	Deadline       *time.Time         `gorm:"column:asg_deadline" json:"deadline"`
+	CreatedBy      string             `gorm:"column:created_by;type:uuid" json:"createdBy"`
+	Creator        User               `gorm:"foreignKey:CreatedBy;references:ID" json:"creator,omitempty"`
+	CreatedAt      time.Time          `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt      time.Time          `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	DeletedAt      gorm.DeletedAt     `gorm:"column:deleted_at;index" json:"-"`
+	Attachments    []Attachment       `gorm:"-" json:"attachments,omitempty"`
 }
 
 func (Assignment) TableName() string {

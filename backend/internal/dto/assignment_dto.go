@@ -22,24 +22,26 @@ type SchoolWithAssignmentCategoriesDTO struct {
 
 // Assignment
 type CreateAssignmentDTO struct {
-	SchoolID    string     `json:"schoolId" binding:"required,uuid"`
-	ClassID     string     `json:"classId" binding:"required,uuid"`
-	CategoryID  string     `json:"categoryId" binding:"required,uuid"`
-	Title       string     `json:"assignmentTitle" binding:"required"`
-	Description string     `json:"assignmentDescription"`
-	Deadline    *time.Time `json:"deadline"`
-	CreatedBy   string     `json:"createdBy" binding:"required,uuid"`
-	MediaIDs    []string   `json:"mediaIds"`
+	SchoolID       string     `json:"schoolId" binding:"required,uuid"`
+	SubjectClassID string     `json:"subjectClassId" binding:"required,uuid"`
+	CategoryID     string     `json:"categoryId" binding:"required,uuid"`
+	Title          string     `json:"assignmentTitle" binding:"required"`
+	Description    string     `json:"assignmentDescription"`
+	Deadline       *time.Time `json:"deadline"`
+	CreatedBy      string     `json:"createdBy" binding:"required,uuid"`
+	MediaIDs       []string   `json:"mediaIds"`
 }
 
 type AssignmentResponseDTO struct {
-	ID           string             `json:"assignmentId"`
-	Title        string             `json:"assignmentTitle"`
-	Description  string             `json:"assignmentDescription"`
-	CategoryName string             `json:"categoryName"`
-	Deadline     *time.Time         `json:"deadline,omitempty"`
-	CreatedAt    string             `json:"createdAt"`
-	Attachments  []MediaResponseDTO `json:"attachments,omitempty"`
+	ID             string             `json:"assignmentId"`
+	SubjectClassID string             `json:"subjectClassId"`
+	SubjectName    string             `json:"subjectName,omitempty"`
+	Title          string             `json:"assignmentTitle"`
+	Description    string             `json:"assignmentDescription"`
+	CategoryName   string             `json:"categoryName"`
+	Deadline       *time.Time         `json:"deadline,omitempty"`
+	CreatedAt      string             `json:"createdAt"`
+	Attachments    []MediaResponseDTO `json:"attachments,omitempty"`
 }
 
 // Submission

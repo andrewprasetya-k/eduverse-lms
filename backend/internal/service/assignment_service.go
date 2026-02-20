@@ -12,7 +12,7 @@ type AssignmentService interface {
 
 	// Assignment
 	CreateAssignment(asg *domain.Assignment, mediaIDs []string) error
-	GetAssignmentsByClass(classID string) ([]*domain.Assignment, error)
+	GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error)
 	GetAssignmentByID(id string) (*domain.Assignment, error)
 
 	// Submission
@@ -62,8 +62,8 @@ func (s *assignmentService) CreateAssignment(asg *domain.Assignment, mediaIDs []
 	return nil
 }
 
-func (s *assignmentService) GetAssignmentsByClass(classID string) ([]*domain.Assignment, error) {
-	results, err := s.repo.GetAssignmentsByClass(classID)
+func (s *assignmentService) GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error) {
+	results, err := s.repo.GetAssignmentsBySubjectClass(subjectClassID)
 	if err != nil {
 		return nil, err
 	}
