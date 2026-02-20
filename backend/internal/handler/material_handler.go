@@ -21,21 +21,21 @@ func NewMaterialHandler(service service.MaterialService) *MaterialHandler {
 func (h *MaterialHandler) Create(c *gin.Context) {
 	var input dto.CreateMaterialDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	mat := domain.Material{
-		SchoolID:    input.SchoolID,
-		ClassID:     input.ClassID,
-		Title:       input.Title,
-		Description: input.Description,
-		Type:        domain.MaterialType(input.Type),
-		CreatedBy:   input.CreatedBy,
+		SchoolID:       input.SchoolID,
+		SubjectClassID: input.SubjectClassID,
+		Title:          input.Title,
+		Description:    input.Description,
+		Type:           domain.MaterialType(input.Type),
+		CreatedBy:      input.CreatedBy,
 	}
 
 	if err := h.service.Create(&mat, input.MediaIDs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -46,11 +46,11 @@ func (h *MaterialHandler) FindAll(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	search := c.Query("search")
-	classID := c.Query("classId")
+	subjectClassID := c.Query("subjectClassId")
 
-	materials, total, err := h.service.FindAll(search, classID, page, limit)
+	materials, total, err := h.service.FindAll(search, subjectClassID, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -68,6 +68,20 @@ func (h *MaterialHandler) FindAll(c *gin.Context) {
 		Limit:      limit,
 		TotalPages: int(totalPages),
 	}
+
+	// If subjectClassID is provided, wrap with subject header
+	if subjectClassID != "" && len(materials) > 0 {
+		subjectName := materials[0].SubjectClass.Subject.Name
+		classTitle := materials[0].SubjectClass.Class.Title
+		
+		c.JSON(http.StatusOK, dto.MaterialListWithSubjectDTO{
+			SubjectName: subjectName,
+			ClassTitle:  classTitle,
+			Data:        paginatedResponse,
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, paginatedResponse)
 }
 
@@ -75,7 +89,7 @@ func (h *MaterialHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	mat, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Material not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapToResponse(mat))
@@ -84,12 +98,12 @@ func (h *MaterialHandler) GetByID(c *gin.Context) {
 func (h *MaterialHandler) UpdateProgress(c *gin.Context) {
 	var input dto.UpdateProgressDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	if err := h.service.UpdateProgress(input.UserID, input.MaterialID, input.Status); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -100,13 +114,13 @@ func (h *MaterialHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.UpdateMaterialDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	mat, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Material not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -121,7 +135,7 @@ func (h *MaterialHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.service.Update(mat, input.MediaIDs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -131,7 +145,7 @@ func (h *MaterialHandler) Update(c *gin.Context) {
 func (h *MaterialHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Material deleted successfully"})
@@ -150,14 +164,14 @@ func (h *MaterialHandler) mapToResponse(m *domain.Material) dto.MaterialResponse
 	}
 
 	return dto.MaterialResponseDTO{
-		ID:          m.ID,
-		ClassID:     m.ClassID,
-		ClassTitle:  m.Class.Title,
-		Title:       m.Title,
-		Description: m.Description,
-		Type:        string(m.Type),
-		CreatorName: m.Creator.FullName,
-		CreatedAt:   m.CreatedAt.Format("02-01-2006 15:04:05"),
-		Attachments: atts,
+		ID:             m.ID,
+		SubjectClassID: m.SubjectClassID,
+		SubjectName:    m.SubjectClass.Subject.Name,
+		Title:          m.Title,
+		Description:    m.Description,
+		Type:           string(m.Type),
+		CreatorName:    m.Creator.FullName,
+		CreatedAt:      m.CreatedAt.Format("02-01-2006 15:04:05"),
+		Attachments:    atts,
 	}
 }

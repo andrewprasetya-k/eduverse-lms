@@ -16,20 +16,20 @@ const (
 )
 
 type Material struct {
-	ID          string         `gorm:"primaryKey;column:mat_id;default:gen_random_uuid()" json:"materialId"`
-	SchoolID    string         `gorm:"column:mat_sch_id;type:uuid" json:"schoolId"`
-	School      School         `gorm:"foreignKey:SchoolID;references:ID" json:"school,omitempty"`
-	ClassID     string         `gorm:"column:mat_cls_id;type:uuid" json:"classId"`
-	Class       Class          `gorm:"foreignKey:ClassID;references:ID" json:"class,omitempty"`
-	Title       string         `gorm:"column:mat_title" json:"materialTitle"`
-	Description string         `gorm:"column:mat_desc" json:"materialDescription"`
-	Type        MaterialType   `gorm:"column:mat_types;type:material_type" json:"materialType"`
-	CreatedBy   string         `gorm:"column:created_by;type:uuid" json:"createdBy"`
-	Creator     User           `gorm:"foreignKey:CreatedBy;references:ID" json:"creator,omitempty"`
-	CreatedAt   time.Time      `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
-	UpdatedAt   time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
-	DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
-	Attachments []Attachment   `gorm:"-" json:"attachments,omitempty"` // Loaded manually or via logic
+	ID             string         `gorm:"primaryKey;column:mat_id;default:gen_random_uuid()" json:"materialId"`
+	SchoolID       string         `gorm:"column:mat_sch_id;type:uuid" json:"schoolId"`
+	School         School         `gorm:"foreignKey:SchoolID;references:ID" json:"school,omitempty"`
+	SubjectClassID string         `gorm:"column:mat_scl_id;type:uuid" json:"subjectClassId"`
+	SubjectClass   SubjectClass   `gorm:"foreignKey:SubjectClassID;references:ID" json:"subjectClass,omitempty"`
+	Title          string         `gorm:"column:mat_title" json:"materialTitle"`
+	Description    string         `gorm:"column:mat_desc" json:"materialDescription"`
+	Type           MaterialType   `gorm:"column:mat_types;type:material_type" json:"materialType"`
+	CreatedBy      string         `gorm:"column:created_by;type:uuid" json:"createdBy"`
+	Creator        User           `gorm:"foreignKey:CreatedBy;references:ID" json:"creator,omitempty"`
+	CreatedAt      time.Time      `gorm:"column:created_at;autoCreateTime" json:"createdAt"`
+	UpdatedAt      time.Time      `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
+	DeletedAt      gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
+	Attachments    []Attachment   `gorm:"-" json:"attachments,omitempty"` // Loaded manually or via logic
 }
 
 func (Material) TableName() string {

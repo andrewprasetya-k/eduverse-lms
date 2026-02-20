@@ -9,7 +9,7 @@ import (
 
 type MaterialService interface {
 	Create(mat *domain.Material, mediaIDs []string) error
-	FindAll(search string, classID string, page int, limit int) ([]*domain.Material, int64, error)
+	FindAll(search string, subjectClassID string, page int, limit int) ([]*domain.Material, int64, error)
 	GetByID(id string) (*domain.Material, error)
 	Update(mat *domain.Material, mediaIDs []string) error
 	Delete(id string) error
@@ -55,8 +55,8 @@ func (s *materialService) Create(mat *domain.Material, mediaIDs []string) error 
 	return nil
 }
 
-func (s *materialService) FindAll(search string, classID string, page int, limit int) ([]*domain.Material, int64, error) {
-	return s.repo.FindAll(search, classID, page, limit)
+func (s *materialService) FindAll(search string, subjectClassID string, page int, limit int) ([]*domain.Material, int64, error) {
+	return s.repo.FindAll(search, subjectClassID, page, limit)
 }
 
 func (s *materialService) GetByID(id string) (*domain.Material, error) {

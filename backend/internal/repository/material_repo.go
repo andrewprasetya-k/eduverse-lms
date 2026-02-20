@@ -7,7 +7,7 @@ import (
 
 type MaterialRepository interface {
 	Create(mat *domain.Material) error
-	FindAll(search string, classID string, page int, limit int) ([]*domain.Material, int64, error)
+	FindAll(search string, subjectClassID string, page int, limit int) ([]*domain.Material, int64, error)
 	GetByID(id string) (*domain.Material, error)
 	Update(mat *domain.Material) error
 	Delete(id string) error
@@ -29,16 +29,17 @@ func (r *materialRepository) Create(mat *domain.Material) error {
 	return r.db.Create(mat).Error
 }
 
-func (r *materialRepository) FindAll(search string, classID string, page int, limit int) ([]*domain.Material, int64, error) {
+func (r *materialRepository) FindAll(search string, subjectClassID string, page int, limit int) ([]*domain.Material, int64, error) {
 	var materials []*domain.Material
 	var total int64
 
 	query := r.db.Model(&domain.Material{}).
-		Preload("Class").
+		Preload("SubjectClass.Subject").
+		Preload("SubjectClass.Class").
 		Preload("Creator")
 
-	if classID != "" {
-		query = query.Where("mat_cls_id = ?", classID)
+	if subjectClassID != "" {
+		query = query.Where("mat_scl_id = ?", subjectClassID)
 	}
 	if search != "" {
 		searchTerm := "%" + search + "%"
@@ -56,7 +57,9 @@ func (r *materialRepository) FindAll(search string, classID string, page int, li
 
 func (r *materialRepository) GetByID(id string) (*domain.Material, error) {
 	var mat domain.Material
-	err := r.db.Preload("Class").Preload("Creator").
+	err := r.db.Preload("SubjectClass.Subject").
+		Preload("SubjectClass.Class").
+		Preload("Creator").
 		Where("mat_id = ?", id).First(&mat).Error
 	return &mat, err
 }

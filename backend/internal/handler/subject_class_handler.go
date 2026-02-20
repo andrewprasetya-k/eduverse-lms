@@ -21,7 +21,7 @@ func NewSubjectClassHandler(service service.SubjectClassService, classService se
 func (h *SubjectClassHandler) Assign(c *gin.Context) {
 	var input dto.CreateSubjectClassDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -32,7 +32,7 @@ func (h *SubjectClassHandler) Assign(c *gin.Context) {
 	}
 
 	if err := h.service.Assign(&scl); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -44,7 +44,7 @@ func (h *SubjectClassHandler) GetByClass(c *gin.Context) {
 	//get subject classes
 	results, err := h.service.GetByClass(classID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -56,7 +56,7 @@ func (h *SubjectClassHandler) GetByClass(c *gin.Context) {
 	//get class info
 	classInfo, err := h.classService.GetByID(classID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *SubjectClassHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	result, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Subject class assignment not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapToResponse(result))
@@ -86,13 +86,13 @@ func (h *SubjectClassHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.UpdateSubjectClassDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	scl, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Subject class assignment not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *SubjectClassHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.service.Update(scl); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (h *SubjectClassHandler) Update(c *gin.Context) {
 func (h *SubjectClassHandler) Unassign(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Unassign(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Assignment removed successfully"})

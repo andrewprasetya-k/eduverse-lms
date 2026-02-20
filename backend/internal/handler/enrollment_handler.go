@@ -23,12 +23,12 @@ func NewEnrollmentHandler(service service.EnrollmentService, classService servic
 func (h *EnrollmentHandler) Enroll(c *gin.Context) {
 	var input dto.CreateEnrollmentDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	if err := h.service.Enroll(input.SchoolID, input.ClassID, input.SchoolUserIDs, input.Role); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -41,14 +41,14 @@ func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 	// 1. Get Class Header
 	class, err := h.classService.GetByID(classID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Class not found"})
+		HandleError(c, err)
 		return
 	}
 
 	// 2. Get Members
 	results, err := h.service.GetByClass(classID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -82,7 +82,7 @@ func (h *EnrollmentHandler) GetByMember(c *gin.Context) {
 	schoolUserID := c.Param("schoolUserId")
 	results, err := h.service.GetByMember(schoolUserID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *EnrollmentHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	r, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Enrollment not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (h *EnrollmentHandler) GetByID(c *gin.Context) {
 func (h *EnrollmentHandler) Unenroll(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Unenroll(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Enrollment removed successfully"})
