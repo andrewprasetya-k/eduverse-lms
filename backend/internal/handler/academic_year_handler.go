@@ -25,7 +25,7 @@ func NewAcademicYearHandler(service service.AcademicYearService, schoolService s
 func (h *AcademicYearHandler) Create(c *gin.Context) {
 	var input dto.CreateAcademicYearDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -35,7 +35,7 @@ func (h *AcademicYearHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&acy); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (h *AcademicYearHandler) FindAll(c *gin.Context) {
 
 	years, total, err := h.service.FindAll(search, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -76,13 +76,13 @@ func (h *AcademicYearHandler) GetBySchool(c *gin.Context) {
 	// Get school header
 	school, err := h.schoolService.GetSchoolByCode(schoolCode)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		HandleError(c, err)
 		return
 	}
 
 	years, err := h.service.GetBySchool(schoolCode)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -103,7 +103,7 @@ func (h *AcademicYearHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	acy, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Academic year not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapToResponse(acy))
@@ -113,13 +113,13 @@ func (h *AcademicYearHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.UpdateAcademicYearDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	acy, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Academic year not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func (h *AcademicYearHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.service.Update(acy); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -138,7 +138,7 @@ func (h *AcademicYearHandler) Update(c *gin.Context) {
 func (h *AcademicYearHandler) Activate(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Activate(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Academic year activated successfully"})
@@ -147,7 +147,7 @@ func (h *AcademicYearHandler) Activate(c *gin.Context) {
 func (h *AcademicYearHandler) Deactivate(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Deactivate(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Academic year deactivated successfully"})
@@ -156,7 +156,7 @@ func (h *AcademicYearHandler) Deactivate(c *gin.Context) {
 func (h *AcademicYearHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Academic year deleted successfully"})

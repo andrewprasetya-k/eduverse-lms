@@ -24,7 +24,7 @@ func (h *LogHandler) GetBySchool(c *gin.Context) {
 
 	logs, total, err := h.service.GetBySchool(schoolID, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 

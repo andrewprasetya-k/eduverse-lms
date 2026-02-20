@@ -21,7 +21,7 @@ func NewTermHandler(service service.TermService) *TermHandler {
 func (h *TermHandler) Create(c *gin.Context) {
 	var input dto.CreateTermDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -31,7 +31,7 @@ func (h *TermHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&term); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h *TermHandler) FindAll(c *gin.Context) {
 
 	terms, total, err := h.service.FindAll(search, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -70,7 +70,7 @@ func (h *TermHandler) GetByAcademicYear(c *gin.Context) {
 	acyID := c.Param("academicYearId")
 	terms, err := h.service.GetByAcademicYear(acyID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (h *TermHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	term, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Term not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapToResponse(term))
@@ -96,13 +96,13 @@ func (h *TermHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.UpdateTermDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	term, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Term not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -111,7 +111,7 @@ func (h *TermHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.service.Update(term); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -121,7 +121,7 @@ func (h *TermHandler) Update(c *gin.Context) {
 func (h *TermHandler) Activate(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Activate(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Term activated successfully"})
@@ -130,7 +130,7 @@ func (h *TermHandler) Activate(c *gin.Context) {
 func (h *TermHandler) Deactivate(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Deactivate(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Term deactivated successfully"})
@@ -139,7 +139,7 @@ func (h *TermHandler) Deactivate(c *gin.Context) {
 func (h *TermHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Term deleted successfully"})

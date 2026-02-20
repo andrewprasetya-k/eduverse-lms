@@ -25,7 +25,7 @@ func NewClassHandler(service service.ClassService, schoolService service.SchoolS
 func (h *ClassHandler) Create(c *gin.Context) {
 	var input dto.CreateClassDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -39,7 +39,7 @@ func (h *ClassHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&class); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -55,7 +55,7 @@ func (h *ClassHandler) FindAll(c *gin.Context) {
 
 	classes, total, err := h.service.FindAll(search, schoolCode, termID, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -94,7 +94,7 @@ func (h *ClassHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	class, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Class not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapToResponse(class))
@@ -104,13 +104,13 @@ func (h *ClassHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.UpdateClassDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	class, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Class not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -125,7 +125,7 @@ func (h *ClassHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.service.Update(class); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -135,7 +135,7 @@ func (h *ClassHandler) Update(c *gin.Context) {
 func (h *ClassHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Class deleted successfully"})

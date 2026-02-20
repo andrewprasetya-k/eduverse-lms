@@ -25,7 +25,7 @@ func NewSubjectHandler(service service.SubjectService, schoolService service.Sch
 func (h *SubjectHandler) Create(c *gin.Context) {
 	var input dto.CreateSubjectDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -36,7 +36,7 @@ func (h *SubjectHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&subject); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *SubjectHandler) FindAll(c *gin.Context) {
 
 	subjects, total, err := h.service.FindAll(search, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -77,14 +77,14 @@ func (h *SubjectHandler) GetBySchool(c *gin.Context) {
 	// 1. Ambil data sekolah (untuk header)
 	school, err := h.schoolService.GetSchoolByCode(schoolCode)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		HandleError(c, err)
 		return
 	}
 
 	// 2. Ambil daftar mata pelajaran
 	subjects, err := h.service.GetBySchool(schoolCode)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (h *SubjectHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	subject, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Subject not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapToResponse(subject))
@@ -126,7 +126,7 @@ func (h *SubjectHandler) GetByCode(c *gin.Context) {
 
 	subject, err := h.service.GetByCode(schoolCode, subjectCode)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Subject not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapToResponse(subject))
@@ -136,13 +136,13 @@ func (h *SubjectHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.UpdateSubjectDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	subject, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Subject not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -154,7 +154,7 @@ func (h *SubjectHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.service.Update(subject); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -164,7 +164,7 @@ func (h *SubjectHandler) Update(c *gin.Context) {
 func (h *SubjectHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Subject deleted successfully"})

@@ -20,7 +20,7 @@ func NewCommentHandler(service service.CommentService) *CommentHandler {
 func (h *CommentHandler) Create(c *gin.Context) {
 	var input dto.CreateCommentDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -33,7 +33,7 @@ func (h *CommentHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&comment); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -46,7 +46,7 @@ func (h *CommentHandler) GetBySource(c *gin.Context) {
 
 	comments, err := h.service.GetBySource(sourceType, sourceID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -66,7 +66,7 @@ func (h *CommentHandler) GetBySource(c *gin.Context) {
 func (h *CommentHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Comment deleted"})

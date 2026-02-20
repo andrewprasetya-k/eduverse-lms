@@ -21,7 +21,7 @@ func NewUserHandler(service service.UserService) *UserHandler {
 func (h *UserHandler) Create(c *gin.Context) {
 	var input dto.CreateUserDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -32,7 +32,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -46,7 +46,7 @@ func (h *UserHandler) FindAll(c *gin.Context) {
 
 	users, total, err := h.service.FindAll(search, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -71,7 +71,7 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	user, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapToResponse(user))
@@ -81,13 +81,13 @@ func (h *UserHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.UpdateUserDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	user, err := h.service.GetByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 	}
 
 	if err := h.service.Update(user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -109,7 +109,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 func (h *UserHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
@@ -119,12 +119,12 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.ChangePasswordDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	if err := h.service.ChangePassword(id, input.OldPassword, input.NewPassword); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 

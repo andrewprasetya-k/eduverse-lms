@@ -8,6 +8,18 @@ type CreateAssignmentCategoryDTO struct {
 	Name     string `json:"categoryName" binding:"required"`
 }
 
+type AssignmentCategoryResponseDTO struct {
+	ID        string `json:"categoryId"`
+	SchoolID  string `json:"schoolId"`
+	Name      string `json:"categoryName"`
+	CreatedAt string `json:"createdAt"`
+}
+
+type SchoolWithAssignmentCategoriesDTO struct {
+	School     SchoolHeaderDTO                 `json:"school"`
+	Categories []AssignmentCategoryResponseDTO `json:"categories"`
+}
+
 // Assignment
 type CreateAssignmentDTO struct {
 	SchoolID    string     `json:"schoolId" binding:"required,uuid"`

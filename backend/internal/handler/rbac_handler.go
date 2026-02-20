@@ -21,7 +21,7 @@ func NewRBACHandler(service service.RBACService) *RBACHandler {
 func (h *RBACHandler) CreateRole(c *gin.Context) {
 	var input dto.CreateRoleDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -30,7 +30,7 @@ func (h *RBACHandler) CreateRole(c *gin.Context) {
 	}
 
 	if err := h.service.CreateRole(&role); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -40,7 +40,7 @@ func (h *RBACHandler) CreateRole(c *gin.Context) {
 func (h *RBACHandler) GetAllRoles(c *gin.Context) {
 	roles, err := h.service.GetAllRoles()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -56,7 +56,7 @@ func (h *RBACHandler) GetRoleByID(c *gin.Context) {
 	id := c.Param("id")
 	role, err := h.service.GetRoleByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Role not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapRoleToResponse(role))
@@ -66,13 +66,13 @@ func (h *RBACHandler) UpdateRole(c *gin.Context) {
 	id := c.Param("id")
 	var input dto.UpdateRoleDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	role, err := h.service.GetRoleByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Role not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -81,7 +81,7 @@ func (h *RBACHandler) UpdateRole(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateRole(role); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -91,7 +91,7 @@ func (h *RBACHandler) UpdateRole(c *gin.Context) {
 func (h *RBACHandler) DeleteRole(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.DeleteRole(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Role deleted successfully"})
@@ -101,12 +101,12 @@ func (h *RBACHandler) DeleteRole(c *gin.Context) {
 func (h *RBACHandler) AssignRole(c *gin.Context) {
 	var input dto.AssignRoleDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	if err := h.service.AssignRoleToUser(input.SchoolUserID, input.RoleID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -118,7 +118,7 @@ func (h *RBACHandler) RemoveRole(c *gin.Context) {
 	roleID := c.Query("roleId")
 
 	if err := h.service.RemoveRoleFromUser(schoolUserID, roleID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -129,7 +129,7 @@ func (h *RBACHandler) GetUserRoles(c *gin.Context) {
 	schoolUserID := c.Param("schoolUserId")
 	userRoles, err := h.service.GetUserRoles(schoolUserID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -145,12 +145,12 @@ func (h *RBACHandler) UpdateUserRoles(c *gin.Context) {
 	schoolUserID := c.Param("schoolUserId")
 	var input dto.SyncUserRolesDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	if err := h.service.SyncUserRoles(schoolUserID, input.RoleIDs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 

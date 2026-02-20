@@ -22,7 +22,7 @@ func NewSchoolHandler(service service.SchoolService) *SchoolHandler {
 func (h *SchoolHandler) CreateSchool(c *gin.Context) {
     var input dto.CreateSchoolDTO
     if err := c.ShouldBindJSON(&input); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        HandleBindingError(c, err)
         return
     }
 
@@ -37,7 +37,7 @@ func (h *SchoolHandler) CreateSchool(c *gin.Context) {
     }
 
     if err := h.service.CreateSchool(&school); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        HandleError(c, err)
         return
     }
 
@@ -55,7 +55,7 @@ func (h *SchoolHandler) GetSchools(c *gin.Context) {
 
 	schools, total, err := h.service.GetSchools(search, status, page, limit, sortBy, order)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *SchoolHandler) GetSchools(c *gin.Context) {
 func (h *SchoolHandler) GetSchoolSummary(c *gin.Context) {
 	summary, err := h.service.GetSchoolSummary()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, summary)
@@ -91,7 +91,7 @@ func (h *SchoolHandler) CheckCodeAvailability(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")
 	available, err := h.service.CheckCodeAvailability(schoolCode)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -105,7 +105,7 @@ func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")
 	school, err := h.service.GetSchoolByCode(schoolCode)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, h.mapToResponse(school))
@@ -115,14 +115,14 @@ func (h *SchoolHandler) GetSchoolByCode(c *gin.Context) {
 func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 	var input dto.UpdateSchoolDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
 	schoolCode := c.Param("schoolCode")
 	school, err := h.service.GetSchoolByCode(schoolCode)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		HandleError(c, err)
 		return
 	}
 
@@ -149,7 +149,7 @@ func (h *SchoolHandler) UpdateSchool(c *gin.Context) {
 	}
 
 	if err := h.service.UpdateSchool(school); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -178,7 +178,7 @@ func (h *SchoolHandler) mapToResponse(s *domain.School) dto.SchoolResponseDTO {
 func (h *SchoolHandler) RestoreDeletedSchool(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")
 	if err := h.service.RestoreDeletedSchool(schoolCode); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "School restored successfully"})
@@ -188,7 +188,7 @@ func (h *SchoolHandler) RestoreDeletedSchool(c *gin.Context) {
 func (h *SchoolHandler) DeleteSchool(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")
 	if err := h.service.DeleteSchool(schoolCode); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "School deleted successfully"})
@@ -198,7 +198,7 @@ func (h *SchoolHandler) DeleteSchool(c *gin.Context) {
 func (h *SchoolHandler) HardDeleteSchool(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")
 	if err := h.service.HardDeleteSchool(schoolCode); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "School permanently deleted successfully"})

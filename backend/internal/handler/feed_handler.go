@@ -25,7 +25,7 @@ func NewFeedHandler(service service.FeedService, commentService service.CommentS
 func (h *FeedHandler) Create(c *gin.Context) {
 	var input dto.CreateFeedDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -37,7 +37,7 @@ func (h *FeedHandler) Create(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&feed, input.MediaIDs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -51,7 +51,7 @@ func (h *FeedHandler) GetByClass(c *gin.Context) {
 
 	feeds, total, err := h.service.GetByClass(classID, page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 

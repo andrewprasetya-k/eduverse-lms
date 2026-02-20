@@ -24,7 +24,7 @@ func NewSchoolUserHandler(service service.SchoolUserService, schoolService servi
 func (h *SchoolUserHandler) Enroll(c *gin.Context) {
 	var input dto.AddSchoolUserDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -34,7 +34,7 @@ func (h *SchoolUserHandler) Enroll(c *gin.Context) {
 	}
 
 	if err := h.service.Enroll(&scu); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -47,14 +47,14 @@ func (h *SchoolUserHandler) GetMembersBySchool(c *gin.Context) {
 	// 1. Ambil data sekolah (untuk header) menggunakan code
 	school, err := h.schoolService.GetSchoolByCode(schoolCode)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		HandleError(c, err)
 		return
 	}
 
 	// 2. Ambil daftar anggota menggunakan code (akan dikonversi di service)
 	members, err := h.service.GetMembersBySchool(schoolCode)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (h *SchoolUserHandler) GetSchoolsByUser(c *gin.Context) {
 	userID := c.Param("userId")
 	schools, err := h.service.GetSchoolsByUser(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -119,7 +119,7 @@ func (h *SchoolUserHandler) GetSchoolsByUser(c *gin.Context) {
 func (h *SchoolUserHandler) Unenroll(c *gin.Context) {
 	userId := c.Param("userId")
 	if err := h.service.Unenroll(userId); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "User unenrolled from school successfully"})

@@ -10,17 +10,21 @@ import (
 )
 
 type AssignmentHandler struct {
-	service service.AssignmentService
+	service       service.AssignmentService
+	schoolService service.SchoolService
 }
 
-func NewAssignmentHandler(service service.AssignmentService) *AssignmentHandler {
-	return &AssignmentHandler{service: service}
+func NewAssignmentHandler(service service.AssignmentService, schoolService service.SchoolService) *AssignmentHandler {
+	return &AssignmentHandler{
+		service:       service,
+		schoolService: schoolService,
+	}
 }
 
 func (h *AssignmentHandler) CreateCategory(c *gin.Context) {
 	var input dto.CreateAssignmentCategoryDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -30,17 +34,55 @@ func (h *AssignmentHandler) CreateCategory(c *gin.Context) {
 	}
 
 	if err := h.service.CreateCategory(&cat); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Category created"})
 }
 
+func (h *AssignmentHandler) GetCategoriesBySchool(c *gin.Context) {
+	schoolCode := c.Param("schoolCode")
+
+	// 1. Get School Header
+	school, err := h.schoolService.GetSchoolByCode(schoolCode)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	// 2. Get Categories
+	cats, err := h.service.GetCategoriesBySchool(school.ID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	var response []dto.AssignmentCategoryResponseDTO
+	for _, cat := range cats {
+		response = append(response, dto.AssignmentCategoryResponseDTO{
+			ID:        cat.ID,
+			SchoolID:  cat.SchoolID,
+			Name:      cat.Name,
+			CreatedAt: cat.CreatedAt.Format("02-01-2006 15:04:05"),
+		})
+	}
+
+	c.JSON(http.StatusOK, dto.SchoolWithAssignmentCategoriesDTO{
+		School: dto.SchoolHeaderDTO{
+			ID:     school.ID,
+			Name:   school.Name,
+			Code:   school.Code,
+			LogoID: school.LogoID,
+		},
+		Categories: response,
+	})
+}
+
 func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 	var input dto.CreateAssignmentDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -55,7 +97,7 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 	}
 
 	if err := h.service.CreateAssignment(&asg, input.MediaIDs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -66,7 +108,7 @@ func (h *AssignmentHandler) GetByClass(c *gin.Context) {
 	classID := c.Param("classId")
 	results, err := h.service.GetAssignmentsByClass(classID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -81,7 +123,7 @@ func (h *AssignmentHandler) GetByClass(c *gin.Context) {
 func (h *AssignmentHandler) Submit(c *gin.Context) {
 	var input dto.CreateSubmissionDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -92,7 +134,7 @@ func (h *AssignmentHandler) Submit(c *gin.Context) {
 	}
 
 	if err := h.service.Submit(&sbm, input.MediaIDs); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 
@@ -102,7 +144,7 @@ func (h *AssignmentHandler) Submit(c *gin.Context) {
 func (h *AssignmentHandler) Assess(c *gin.Context) {
 	var input dto.CreateAssessmentDTO
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		HandleBindingError(c, err)
 		return
 	}
 
@@ -114,7 +156,7 @@ func (h *AssignmentHandler) Assess(c *gin.Context) {
 	}
 
 	if err := h.service.Assess(&asm); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(c, err)
 		return
 	}
 

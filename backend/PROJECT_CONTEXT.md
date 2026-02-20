@@ -22,14 +22,18 @@ Eduverse is a Learning Management System (LMS) built with **Go (Gin Framework)**
       - List by parent: `/school/:schoolCode`.
       - Detail by code: `/school/:schoolCode/:subjectCode`.
 
-3.  **Data Integrity**:
+3.  **Data Integrity & Error Handling**:
     - Repositories **MUST** check `RowsAffected == 0` on Update/Delete/Patch and return `gorm.ErrRecordNotFound` if no row was modified.
-    - Services **MUST** handle these errors and return user-friendly messages.
+    - **Standardized Error Masking**: All handlers **MUST** use `HandleError(c, err)` for service/DB errors and `HandleBindingError(c, err)` for JSON binding/validation. This prevents leaking raw database details (like column names or constraint names) to the client.
+    - Centralized error logic is located in `internal/handler/error_handler.go`.
 
 4.  **API Standards**:
-    - Standardized `SchoolHeaderDTO` (ID, Name, Code, Logo) used across all modules when returning school context.
+    - Standardized `SchoolHeaderDTO` (ID, Name, Code, Logo) or `ClassHeaderDTO` used across all modules when returning school/class context in list responses.
     - Use `Preload` in Repositories to ensure related data (like Creator names or School info) is included in responses.
     - All activation/deactivation actions use the `PATCH` method.
+
+5.  **Material Integration**:
+    - `Material` belongs to `SubjectClass` (`mat_scl_id`), not directly to `Class`. This allows materials to be linked to a specific subject and teacher within a class.
 
 ## 🔐 Security
 
