@@ -49,7 +49,7 @@ type CreateSubmissionDTO struct {
 	SchoolID     string   `json:"schoolId" binding:"required,uuid"`
 	AssignmentID string   `json:"assignmentId" binding:"required,uuid"`
 	UserID       string   `json:"userId" binding:"required,uuid"`
-	MediaIDs     []string `json:"mediaIds" binding:"required"`
+	MediaIDs     []string `json:"mediaIds"`
 }
 
 type SubmissionResponseDTO struct {
