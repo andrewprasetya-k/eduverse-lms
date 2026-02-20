@@ -13,10 +13,14 @@ type UpdateSubjectClassDTO struct {
 
 type SubjectClassResponseDTO struct {
 	ID           string `json:"subjectClassId"`
-	ClassID      string `json:"classId"`
 	SubjectID    string `json:"subjectId"`
 	SubjectName  string `json:"subjectName,omitempty"`
 	SubjectCode  string `json:"subjectCode,omitempty"`
 	TeacherID    string `json:"teacherId"`
 	TeacherName  string `json:"teacherName,omitempty"`
+}
+
+type SubjectPerClassDTO struct {
+	Class   ClassHeaderDTO          `json:"class"`
+	Subjects []SubjectClassResponseDTO `json:"subjects"`
 }

@@ -37,7 +37,7 @@ func (s *subjectClassService) Assign(scl *domain.SubjectClass) error {
 
 func (s *subjectClassService) Update(scl *domain.SubjectClass) error {
 	// Validasi duplikasi (jika data yang diupdate ternyata sama dengan assignment lain)
-	// Kita butuh method CheckExists yang lebih detail jika ingin validasi update, 
+	// Kita butuh method CheckExists yang lebih detail jika ingin validasi update,
 	// tapi untuk sekarang kita asumsikan update guru saja yang paling sering.
 	return s.repo.Update(scl)
 }

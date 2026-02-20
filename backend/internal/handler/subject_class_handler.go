@@ -11,10 +11,11 @@ import (
 
 type SubjectClassHandler struct {
 	service service.SubjectClassService
+	classService service.ClassService
 }
 
-func NewSubjectClassHandler(service service.SubjectClassService) *SubjectClassHandler {
-	return &SubjectClassHandler{service: service}
+func NewSubjectClassHandler(service service.SubjectClassService, classService service.ClassService) *SubjectClassHandler {
+	return &SubjectClassHandler{service: service, classService: classService}
 }
 
 func (h *SubjectClassHandler) Assign(c *gin.Context) {
@@ -40,6 +41,7 @@ func (h *SubjectClassHandler) Assign(c *gin.Context) {
 
 func (h *SubjectClassHandler) GetByClass(c *gin.Context) {
 	classID := c.Param("classId")
+	//get subject classes
 	results, err := h.service.GetByClass(classID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -51,7 +53,23 @@ func (h *SubjectClassHandler) GetByClass(c *gin.Context) {
 		response = append(response, h.mapToResponse(r))
 	}
 
-	c.JSON(http.StatusOK, response)
+	//get class info
+	classInfo, err := h.classService.GetByID(classID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	response2 := dto.SubjectPerClassDTO{
+		Class: dto.ClassHeaderDTO{
+			ID:  classInfo.ID,
+			Title: classInfo.Title,
+			Code:  classInfo.Code,
+		},
+		Subjects: response,
+	}
+
+	c.JSON(http.StatusOK, response2)
 }
 
 func (h *SubjectClassHandler) GetByID(c *gin.Context) {
@@ -105,7 +123,6 @@ func (h *SubjectClassHandler) Unassign(c *gin.Context) {
 func (h *SubjectClassHandler) mapToResponse(scl *domain.SubjectClass) dto.SubjectClassResponseDTO {
 	return dto.SubjectClassResponseDTO{
 		ID:          scl.ID,
-		ClassID:     scl.ClassID,
 		SubjectID:   scl.SubjectID,
 		SubjectName: scl.Subject.Name,
 		SubjectCode: scl.Subject.Code,

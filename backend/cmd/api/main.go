@@ -64,7 +64,7 @@ func main() {
 
 	subjectClassRepo := repository.NewSubjectClassRepository(db)
 	subjectClassService := service.NewSubjectClassService(subjectClassRepo)
-	subjectClassHandler := handler.NewSubjectClassHandler(subjectClassService)
+	subjectClassHandler := handler.NewSubjectClassHandler(subjectClassService, classService)
 
 	enrollmentRepo := repository.NewEnrollmentRepository(db)
 	enrollmentService := service.NewEnrollmentService(enrollmentRepo)
