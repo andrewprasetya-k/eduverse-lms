@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -14,6 +15,9 @@ func HandleError(c *gin.Context, err error) {
 	if err == nil {
 		return
 	}
+
+	// Print raw error to server logs for debugging
+	fmt.Printf("[Error Log] %s\n", err.Error())
 
 	// 1. Check for GORM Record Not Found
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -43,6 +47,9 @@ func HandleError(c *gin.Context, err error) {
 
 // HandleBindingError masks raw validation errors from Gin/Validator
 func HandleBindingError(c *gin.Context, err error) {
+	// Print raw binding error to server logs for debugging
+	fmt.Printf("[Binding Error Log] %s\n", err.Error())
+
 	errStr := err.Error()
 
 	if strings.Contains(errStr, "failed on the 'required' tag") {
@@ -55,6 +62,12 @@ func HandleBindingError(c *gin.Context, err error) {
 	}
 	if strings.Contains(errStr, "failed on the 'email' tag") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email format"})
+		return
+	}
+	
+	// Type mismatch errors (e.g. sending string instead of number)
+	if strings.Contains(errStr, "unmarshal") || strings.Contains(errStr, "type mismatch") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Data type mismatch. Please check your input values"})
 		return
 	}
 
