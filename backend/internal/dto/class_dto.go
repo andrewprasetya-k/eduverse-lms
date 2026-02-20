@@ -36,3 +36,9 @@ type ClassListWithSchoolDTO struct {
 	School SchoolHeaderDTO    `json:"school,omitempty"`
 	Data   PaginatedResponse `json:"data"`
 }
+
+type ClassHeaderDTO struct {
+	ID    string `json:"classId"`
+	Title string `json:"classTitle"`
+	Code  string `json:"classCode"`
+}

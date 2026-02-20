@@ -19,12 +19,6 @@ type EnrollmentResponseDTO struct {
 	JoinedAt     string `json:"joinedAt"`
 }
 
-type ClassHeaderDTO struct {
-	ID    string `json:"classId"`
-	Title string `json:"classTitle"`
-	Code  string `json:"classCode"`
-}
-
 type ClassWithMembersDTO struct {
 	Class   ClassHeaderDTO          `json:"class"`
 	Members []EnrollmentResponseDTO `json:"members"`

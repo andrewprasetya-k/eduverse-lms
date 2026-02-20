@@ -7,6 +7,7 @@ import (
 
 type EnrollmentService interface {
 	Enroll(schoolID string, classID string, schoolUserIDs []string, role string) error
+	GetByID(id string) (*domain.Enrollment, error)
 	GetByClass(classID string) ([]*domain.Enrollment, error)
 	GetByMember(schoolUserID string) ([]*domain.Enrollment, error)
 	Unenroll(id string) error
@@ -43,6 +44,10 @@ func (s *enrollmentService) Enroll(schoolID string, classID string, schoolUserID
 		}
 	}
 	return nil
+}
+
+func (s *enrollmentService) GetByID(id string) (*domain.Enrollment, error) {
+	return s.repo.GetByID(id)
 }
 
 func (s *enrollmentService) GetByClass(classID string) ([]*domain.Enrollment, error) {

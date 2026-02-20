@@ -213,6 +213,7 @@ func main() {
 			enrollmentAPI.POST("/", enrollmentHandler.Enroll)
 			enrollmentAPI.GET("/class/:classId", enrollmentHandler.GetByClass)
 			enrollmentAPI.GET("/member/:schoolUserId", enrollmentHandler.GetByMember)
+			enrollmentAPI.GET("/:id", enrollmentHandler.GetByID)
 			enrollmentAPI.DELETE("/:id", enrollmentHandler.Unenroll)
 		}
 

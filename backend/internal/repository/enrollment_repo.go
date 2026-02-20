@@ -7,6 +7,7 @@ import (
 
 type EnrollmentRepository interface {
 	Create(enr *domain.Enrollment) error
+	GetByID(id string) (*domain.Enrollment, error)
 	GetByClass(classID string) ([]*domain.Enrollment, error)
 	GetByMember(schoolUserID string) ([]*domain.Enrollment, error)
 	Delete(id string) error
@@ -23,6 +24,13 @@ func NewEnrollmentRepository(db *gorm.DB) EnrollmentRepository {
 
 func (r *enrollmentRepository) Create(enr *domain.Enrollment) error {
 	return r.db.Create(enr).Error
+}
+
+func (r *enrollmentRepository) GetByID(id string) (*domain.Enrollment, error) {
+	var enr domain.Enrollment
+	err := r.db.Preload("SchoolUser.User").Preload("Class").
+		Where("enr_id = ?", id).First(&enr).Error
+	return &enr, err
 }
 
 func (r *enrollmentRepository) GetByClass(classID string) ([]*domain.Enrollment, error) {

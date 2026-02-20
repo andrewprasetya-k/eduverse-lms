@@ -102,6 +102,29 @@ func (h *EnrollmentHandler) GetByMember(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *EnrollmentHandler) GetByID(c *gin.Context) {
+	id := c.Param("id")
+	r, err := h.service.GetByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Enrollment not found"})
+		return
+	}
+
+	response := dto.EnrollmentResponseDTO{
+		ID:           r.ID,
+		SchoolID:     r.SchoolID,
+		SchoolUserID: r.SchoolUserID,
+		UserFullName: r.SchoolUser.User.FullName,
+		UserEmail:    r.SchoolUser.User.Email,
+		ClassID:      r.ClassID,
+		ClassTitle:   r.Class.Title,
+		Role:         r.Role,
+		JoinedAt:     r.JoinedAt.Format("02-01-2006 15:04:05"),
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func (h *EnrollmentHandler) Unenroll(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Unenroll(id); err != nil {
