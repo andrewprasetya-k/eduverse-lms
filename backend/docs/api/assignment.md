@@ -43,7 +43,34 @@ Base URL: `/api/assignments`
   - `page` (optional): Page number, default 1
   - `limit` (optional): Items per page, default 20
   - `search` (optional): Search by assignment title or description
-- **Response:** `AssignmentPerSubjectClassResponseDTO` (with subject class header and paginated assignments)
+- **Response:** `AssignmentPerSubjectClassResponseDTO`
+
+**Response Example:**
+```json
+{
+  "subjectClass": {
+    "subjectClassId": "uuid",
+    "subjectCode": "MTK",
+    "subjectName": "Matematika",
+    "teacherId": "uuid",
+    "teacherName": "John Doe"
+  },
+  "data": {
+    "data": [
+      {
+        "assignmentId": "uuid",
+        "assignmentTitle": "Quiz Chapter 1",
+        "deadline": "2026-03-01T23:59:59Z",
+        "allowLateSubmission": false
+      }
+    ],
+    "totalItems": 25,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 2
+  }
+}
+```
 
 ### 5. Get Assignment with Submissions
 - **URL:** `/:id`

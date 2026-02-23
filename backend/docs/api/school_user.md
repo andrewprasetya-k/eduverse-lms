@@ -33,7 +33,7 @@ Retrieve all users who belong to a specific school, including school details.
     "schoolName": "Eduverse Academy",
     "schoolCode": "SD-ANGKASA"
   },
-  "data": {
+  "members": {
     "data": [
       {
         "schoolUserId": "uuid",

@@ -23,7 +23,34 @@ Base URL: `/api/enrollments`
   - `page` (optional): Page number, default 1
   - `limit` (optional): Items per page, default 20
   - `search` (optional): Search by user name or email
-- **Response:** `ClassWithMembersDTO` (with class header and paginated member list)
+- **Response:** `ClassWithMembersDTO`
+
+**Response Example:**
+```json
+{
+  "class": {
+    "classId": "uuid",
+    "classTitle": "12 IPA 1",
+    "classCode": "12IPA1"
+  },
+  "members": {
+    "data": [
+      {
+        "enrollmentId": "uuid",
+        "schoolUserId": "uuid",
+        "userFullName": "John Doe",
+        "userEmail": "john@example.com",
+        "role": "student",
+        "joinedAt": "23-02-2026 10:00:00"
+      }
+    ],
+    "totalItems": 40,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 2
+  }
+}
+```
 
 ## 3. Get Enrollments by Member
 - **URL:** `/member/:schoolUserId`
