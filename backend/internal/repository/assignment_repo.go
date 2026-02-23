@@ -22,6 +22,8 @@ type AssignmentRepository interface {
 	UpsertSubmission(sbm *domain.Submission) error
 	GetSubmissionsByAssignment(asgID string) ([]*domain.Submission, error)
 	GetSubmissionByID(id string) (*domain.Submission, error)
+	UpdateSubmission(sbm *domain.Submission) error
+	DeleteSubmission(id string) error
 
 	// Assessment
 	UpsertAssessment(asm *domain.Assessment) error
@@ -107,6 +109,29 @@ func (r *assignmentRepository) GetSubmissionByID(id string) (*domain.Submission,
 	var sbm domain.Submission
 	err := r.db.Preload("User").Where("sbm_id = ?", id).First(&sbm).Error
 	return &sbm, err
+}
+
+func (r *assignmentRepository) UpdateSubmission(sbm *domain.Submission) error {
+	result := r.db.Model(&domain.Submission{}).Where("sbm_id = ?", sbm.ID).Updates(sbm)
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
+}
+
+func (r *assignmentRepository) DeleteSubmission(id string) error {
+    // Gunakan gorm.Expr agar "now()" dianggap sebagai fungsi SQL, bukan string biasa
+    result := r.db.Model(&domain.Submission{}).
+        Where("sbm_id = ?", id).
+        Update("deleted_at", gorm.Expr("now()"))
+    
+    if result.Error != nil {
+        return result.Error
+    }
+    if result.RowsAffected == 0 {
+        return gorm.ErrRecordNotFound
+    }
+    return nil
 }
 
 func (r *assignmentRepository) UpsertAssessment(asm *domain.Assessment) error {

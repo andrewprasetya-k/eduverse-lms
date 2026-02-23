@@ -249,12 +249,21 @@ func main() {
 
 		assignmentAPI := api.Group("/assignments")
 		{
+			// Categories
 			assignmentAPI.POST("/categories", assignmentHandler.CreateCategory)
 			assignmentAPI.GET("/categories/school/:schoolCode", assignmentHandler.GetCategoriesBySchool)
+			
+			// Assignments
 			assignmentAPI.POST("/", assignmentHandler.CreateAssignment)
 			assignmentAPI.GET("/subject-class/:subjectClassId", assignmentHandler.GetBySubjectClass)
-			assignmentAPI.GET("/:id", assignmentHandler.GetSubmissionsByAssignment)
+			assignmentAPI.GET("/:submissionId", assignmentHandler.GetSubmissionsByAssignment)
+			
+			// Submissions
 			assignmentAPI.POST("/submit/:assignmentId", assignmentHandler.Submit)
+			assignmentAPI.PATCH("/:submissionId", assignmentHandler.UpdateSubmission)
+			assignmentAPI.DELETE("submission/:submissionId", assignmentHandler.DeleteSubmission)
+			
+			// Assessments
 			assignmentAPI.POST("/assess/:submissionId", assignmentHandler.Assess)
 		}
 

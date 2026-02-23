@@ -123,6 +123,8 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 		return
 	}
 
+	
+
 	var response []dto.AssignmentResponseDTO
 	for _, r := range results {
 		response = append(response, h.mapAsgToResponse(r))
@@ -137,7 +139,7 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 }
 
 func (h *AssignmentHandler) GetSubmissionsByAssignment(c *gin.Context) {
-	id := c.Param("id")
+	id := c.Param("submissionId")
 	asg, err := h.service.GetAssignmentWithSubmissions(id)
 	if err != nil {
 		HandleError(c, err)
@@ -213,6 +215,33 @@ func (h *AssignmentHandler) Submit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Submission received"})
+}
+
+func (h *AssignmentHandler) UpdateSubmission(c *gin.Context) {
+	var input dto.CreateSubmissionDTO
+	submissionId := c.Param("submissionId")
+	if err := c.ShouldBindJSON(&input); err != nil {
+		HandleBindingError(c, err)
+		return
+	}
+
+	if err := h.service.UpdateSubmission(submissionId, input.MediaIDs); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Submission updated"})
+}
+
+func (h *AssignmentHandler) DeleteSubmission(c *gin.Context) {
+	submissionId := c.Param("submissionId")
+
+	if err := h.service.DeleteSubmission(submissionId); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Submission deleted"})
 }
 
 func (h *AssignmentHandler) Assess(c *gin.Context) {

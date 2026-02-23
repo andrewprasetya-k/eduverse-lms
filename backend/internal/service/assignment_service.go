@@ -22,6 +22,8 @@ type AssignmentService interface {
 	Submit(sbm *domain.Submission, mediaIDs []string) error
 	GetSubmissions(asgID string) ([]*domain.Submission, error)
 	GetSubmissionByID(id string) (*domain.Submission, error)
+	UpdateSubmission(id string, mediaIDs []string) error
+	DeleteSubmission(id string) error
 
 	// Assessment
 	Assess(asm *domain.Assessment) error
@@ -167,4 +169,34 @@ func (s *assignmentService) GetSubmissionByID(id string) (*domain.Submission, er
 
 func (s *assignmentService) Assess(asm *domain.Assessment) error {
 	return s.repo.UpsertAssessment(asm)
+}
+
+func (s *assignmentService) UpdateSubmission(id string, mediaIDs []string) error {
+	sbm, err := s.repo.GetSubmissionByID(id)
+	if err != nil {
+		return err
+	}
+
+	sbm.SubmittedAt = time.Now()
+	err = s.repo.UpdateSubmission(sbm)
+	if err != nil {
+		return err
+	}
+
+	s.attService.UnlinkBySource(string(domain.SourceSubmission), id)
+	for _, mID := range mediaIDs {
+		att := &domain.Attachment{
+			SchoolID:   sbm.SchoolID,
+			SourceID:   id,
+			SourceType: domain.SourceSubmission,
+			MediaID:    mID,
+		}
+		s.attService.Link(att)
+	}
+	return nil
+}
+
+func (s *assignmentService) DeleteSubmission(id string) error {
+	s.attService.UnlinkBySource(string(domain.SourceSubmission), id)
+	return s.repo.DeleteSubmission(id)
 }
