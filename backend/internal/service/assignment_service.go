@@ -3,6 +3,8 @@ package service
 import (
 	"backend/internal/domain"
 	"backend/internal/repository"
+	"fmt"
+	"time"
 )
 
 type AssignmentService interface {
@@ -109,9 +111,15 @@ func (s *assignmentService) GetAssignmentWithSubmissions(id string) (*domain.Ass
 }
 
 func (s *assignmentService) Submit(sbm *domain.Submission, mediaIDs []string) error {
+	sbm.SubmittedAt = time.Now() // Set submitted time to now
 	err := s.repo.UpsertSubmission(sbm)
 	if err != nil {
 		return err
+	}
+
+	assignmentDeadline,_ := s.repo.GetAssignmentByID(sbm.AssignmentID)
+	if assignmentDeadline.Deadline.Before(sbm.SubmittedAt) {
+		return fmt.Errorf("Submission past due")
 	}
 
 	// Unlink existing attachments for this submission if updating

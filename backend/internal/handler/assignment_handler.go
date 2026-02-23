@@ -204,6 +204,10 @@ func (h *AssignmentHandler) Submit(c *gin.Context) {
 	}
 
 	if err := h.service.Submit(&sbm, input.MediaIDs); err != nil {
+		if err.Error() == "Submission past due"{
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
 		HandleError(c, err)
 		return
 	}
