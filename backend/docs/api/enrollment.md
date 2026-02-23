@@ -1,45 +1,57 @@
-# 🎓 Enrollment (Pendaftaran Siswa) Module API Documentation
+# 👥 Enrollment Module API Documentation
 
 Base URL: `/api/enrollments`
 
-## 1. Enroll Users to Class
-Register one or more school members (students or teachers) into a specific class.
-
+## 1. Enroll Members to Class
 - **URL:** `/`
 - **Method:** `POST`
 - **Body:**
-| Field | Type | Required | Note |
-| :--- | :--- | :--- | :--- |
-| `schoolId` | uuid | Yes | |
-| `schoolUserIds`| uuid[] | Yes | List of references to school_users |
-| `classId` | uuid | Yes | |
-| `role` | string | Yes | `teacher` or `student` |
+```json
+{
+  "schoolId": "uuid",
+  "schoolUserIds": ["uuid1", "uuid2"],
+  "classId": "uuid",
+  "role": "teacher|student"
+}
+```
+- **Note:** Bulk enrollment supported
 
----
-
-## 2. List Participants in Class
-Retrieve all members enrolled in a specific class.
-
+## 2. Get Enrollments by Class
 - **URL:** `/class/:classId`
 - **Method:** `GET`
-- **Response:** `ClassWithMembersDTO` (Includes class header and list of members)
+- **Response:** `ClassWithMembersDTO` (with class header and member list)
 
----
-
-## 3. Get Enrollment Detail
-- **URL:** `/:id`
-- **Method:** `GET`
-
----
-
-## 4. List Classes by Member
-Retrieve all classes a specific school member is enrolled in.
-
+## 3. Get Enrollments by Member
 - **URL:** `/member/:schoolUserId`
 - **Method:** `GET`
+- **Response:** List of classes the member is enrolled in
+
+## 4. Get Enrollment by ID
+- **URL:** `/:id`
+- **Method:** `GET`
+- **Response:** Single enrollment with user and class details
+
+## 5. Update Enrollment Role
+- **URL:** `/:id`
+- **Method:** `PATCH`
+- **Body:**
+```json
+{
+  "role": "teacher|student"
+}
+```
+- **Use Case:** Change member role (e.g., promote student to teacher assistant)
+
+## 6. Unenroll Member
+- **URL:** `/:id`
+- **Method:** `DELETE`
+- **Note:** Removes member from class
 
 ---
 
-## 5. Remove Enrollment (Unenroll)
-- **URL:** `/:id`
-- **Method:** `DELETE`
+## Features
+
+- **Bulk Enrollment:** Multiple users can be enrolled at once
+- **Role Management:** Support for teacher and student roles
+- **Bidirectional Queries:** Get by class or by member
+- **Class Context:** Enrollment list includes class header

@@ -1,24 +1,53 @@
-# 📣 Classroom Feed Module API Documentation
+# 📰 Feed Module API Documentation
 
 Base URL: `/api/feeds`
 
-## 1. Post to Feed
-Post an announcement or discussion to a class.
-
+## 1. Create Feed
 - **URL:** `/`
 - **Method:** `POST`
 - **Body:**
-| Field | Type | Required | Note |
-| :--- | :--- | :--- | :--- |
-| `schoolId` | uuid | Yes | |
-| `classId` | uuid | Yes | |
-| `content` | string | Yes | Markdown supported |
-| `createdBy` | uuid | Yes | |
-| `mediaIds` | uuid[] | No | Attachments |
+```json
+{
+  "schoolId": "uuid",
+  "classId": "uuid",
+  "content": "Announcement text",
+  "createdBy": "uuid",
+  "mediaIds": ["uuid"]
+}
+```
+
+## 2. Get Feeds by Class
+- **URL:** `/class/:classId`
+- **Method:** `GET`
+- **Query Params:** `?page=1&limit=10`
+- **Response:** `ClassWithFeedsDTO` (with class header and paginated feeds)
+
+## 3. Get Feed by ID
+- **URL:** `/:id`
+- **Method:** `GET`
+- **Response:** Includes attachments and comment count
+
+## 4. Update Feed
+- **URL:** `/:id`
+- **Method:** `PATCH`
+- **Body:** (all fields optional)
+```json
+{
+  "content": "Updated announcement",
+  "mediaIds": ["uuid"]
+}
+```
+
+## 5. Delete Feed
+- **URL:** `/:id`
+- **Method:** `DELETE`
+- **Note:** Soft delete
 
 ---
 
-## 2. List Class Feeds
-- **URL:** `/class/:classId`
-- **Method:** `GET`
-- **Query Params:** `page`, `limit`.
+## Features
+
+- **Pagination:** Supports page and limit query params
+- **Attachments:** Multiple media files per feed
+- **Comment Count:** Automatically included in response
+- **Class Context:** Feed list includes class header
