@@ -143,8 +143,8 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 }
 
 func (h *AssignmentHandler) GetSubmissionsByAssignment(c *gin.Context) {
-	id := c.Param("submissionId")
-	asg, err := h.service.GetAssignmentWithSubmissions(id)
+	submissionId := c.Param("submissionId")
+	asg, err := h.service.GetAssignmentWithSubmissions(submissionId)
 	if err != nil {
 		HandleError(c, err)
 		return
