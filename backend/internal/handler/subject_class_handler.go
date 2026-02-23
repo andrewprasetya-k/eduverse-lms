@@ -32,6 +32,10 @@ func (h *SubjectClassHandler) Assign(c *gin.Context) {
 	}
 
 	if err := h.service.Assign(&scl); err != nil {
+		if err.Error() == "this subject is already assigned to the class with the same teacher" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		HandleError(c, err)
 		return
 	}

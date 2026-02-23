@@ -29,7 +29,7 @@ func (s *subjectClassService) Assign(scl *domain.SubjectClass) error {
 		return err
 	}
 	if already {
-		return fmt.Errorf("mata pelajaran dan guru ini sudah terdaftar di kelas tersebut")
+		return fmt.Errorf("this subject is already assigned to the class with the same teacher")
 	}
 
 	return s.repo.Create(scl)
