@@ -260,6 +260,18 @@ func (h *AssignmentHandler) GetSubmissionsByAssignment(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *AssignmentHandler) GetAssignmentStatus(c *gin.Context) {
+	id := c.Param("id")
+	
+	status, err := h.service.GetAssignmentStatus(id)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, status)
+}
+
 func (h *AssignmentHandler) Submit(c *gin.Context) {
 	var input dto.CreateSubmissionDTO
 	var assignmentId = c.Param("assignmentId")

@@ -1,14 +1,80 @@
 # 🎓 Eduverse LMS - Development Progress
 
-1. ✅ buat header yg diambil dari response json. endpoint yang berupa get by school atau get by selain id harus ada header sekolahnya (atau kelasnya untuk module terkait)
-2. ✅ buat endpoint untuk liat users/members yang ada di enrollment tertentu (jangan lupa header)
-3. ✅ ubah error binding (ga ada foreign key, dan lain lain) jadi lebih tersirat biar ga tampilin nama kolom pure di UI (Menggunakan HandleError & HandleBindingError)
-4. ✅ sambungin materials ke class (di db udah berubah, cek schema), lalu kasih headernya itu berupa nama subjectnya (Sekarang menggunakan SubjectClassID)
+## ✅ Completed Features
 
-## 🚀 Next Priorities (Future Tasks)
+1. ✅ Header pattern untuk bulk list responses (School, Class, SubjectClass)
+2. ✅ Endpoint untuk members/enrollments dengan header
+3. ✅ Error handling yang user-friendly (tidak expose database details)
+4. ✅ Materials connected to SubjectClass dengan header
+5. ✅ Complete CRUD operations untuk semua modules
+6. ✅ Pagination & search untuk list endpoints yang besar
+7. ✅ Assignment status tracking (submission statistics)
 
-- [ ] **Authentication Middleware**: Implement JWT/Session protection for all routes.
-- [ ] **File Upload Integration**: Connect `medias` module to actual S3/Supabase storage.
-- [ ] **Advanced Grading**: Implementation of Assessment Weights logic.
-- [ ] **Frontend Integration**: Start building the UI based on `docs/api/`.
-- [ ] **Email Service**: Implement actual email sending for confirmation and password reset.
+## 🚀 High Priority (Critical for Production)
+
+- [ ] **Authentication & Authorization**: JWT middleware + role-based access control
+- [ ] **File Upload Integration**: S3/Supabase storage untuk media files
+- [ ] **Notification System**: Real-time notifications untuk assignments, grades, feeds
+
+## 📊 Analytics & Reporting (Medium Priority)
+
+- [ ] **Dashboard Statistics**:
+  - Student: pending assignments, average scores, upcoming deadlines
+  - Teacher: pending reviews, submission rates, class performance
+  - Admin: school statistics, enrollment trends
+  
+- [ ] **Grade Report / Transcript**:
+  - Calculate weighted grades using assessment_weights table
+  - Generate report cards per student per term
+  - Export to PDF/Excel
+
+- [ ] **Activity Feed / Timeline**:
+  - Recent assignments, submissions, grades, comments
+  - Per class or per user feed
+
+## 🎓 Academic Features (Medium Priority)
+
+- [ ] **Class Schedule / Timetable**:
+  - Weekly schedule per class
+  - Teacher schedule view
+  - Room management
+
+- [ ] **Material Progress Analytics**:
+  - Track completion rates
+  - Most viewed materials
+  - Student engagement metrics
+
+- [ ] **Assessment Weights Implementation**:
+  - Configure category weights per subject
+  - Auto-calculate final grades
+
+## 🔧 Enhancement Features (Low Priority)
+
+- [ ] **Bulk Operations**:
+  - Bulk grade assignments
+  - Bulk enroll students
+  - Bulk delete submissions
+
+- [ ] **Export Functionality**:
+  - Export grades to Excel/PDF
+  - Export class rosters
+  - Export submission reports
+
+- [ ] **Leaderboard / Rankings**:
+  - Top students per class/subject
+  - Most active students
+  - Gamification elements
+
+- [ ] **Notification Preferences**:
+  - User settings for notification types
+  - Email vs in-app preferences
+
+## 🔮 Future Enhancements
+
+- [ ] **Attendance System**: Track student attendance per session
+- [ ] **Quiz/Exam Module**: Multiple choice, auto-grading, time limits
+- [ ] **Discussion Forum**: Thread-based discussions per class
+- [ ] **Parent Portal**: Parent accounts to view child's progress
+- [ ] **Real-time Features**: WebSocket for live updates
+- [ ] **Email Service**: Password reset, notifications via email
+- [ ] **Advanced Search**: Full-text search across materials and assignments

@@ -17,6 +17,7 @@ type AssignmentRepository interface {
 	GetAssignmentsBySubjectClass(subjectClassID string, search string, page int, limit int) ([]*domain.Assignment, int64, error)
 	GetAssignmentByID(id string) (*domain.Assignment, error)
 	GetAssignmentWithSubmissions(id string) (*domain.Assignment, error)
+	CountStudentsInClass(classID string) (int, error)
 	UpdateAssignment(asg *domain.Assignment) error
 	DeleteAssignment(id string) error
 
@@ -94,10 +95,19 @@ func (r *assignmentRepository) GetAssignmentWithSubmissions(id string) (*domain.
 	var asg domain.Assignment
 	err := r.db.Preload("Category").
 		Preload("SubjectClass.Subject").
+		Preload("SubjectClass.Class").
 		Preload("Submissions.User").
 		Preload("Submissions.Assessment.Assessor").
 		Where("asg_id = ?", id).First(&asg).Error
 	return &asg, err
+}
+
+func (r *assignmentRepository) CountStudentsInClass(classID string) (int, error) {
+	var count int64
+	err := r.db.Model(&domain.Enrollment{}).
+		Where("enr_cls_id = ? AND enr_role = ?", classID, "student").
+		Count(&count).Error
+	return int(count), err
 }
 
 func (r *assignmentRepository) UpdateAssignment(asg *domain.Assignment) error {

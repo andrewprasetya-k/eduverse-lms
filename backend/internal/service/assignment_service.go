@@ -17,6 +17,7 @@ type AssignmentService interface {
 	GetAssignmentsBySubjectClass(subjectClassID string, search string, page int, limit int) ([]*domain.Assignment, int64, error)
 	GetAssignmentByID(id string) (*domain.Assignment, error)
 	GetAssignmentWithSubmissions(id string) (*domain.Assignment, error)
+	GetAssignmentStatus(assignmentID string) (map[string]interface{}, error)
 	UpdateAssignment(id string, asg *domain.Assignment, mediaIDs []string) error
 	DeleteAssignment(id string) error
 
@@ -114,6 +115,51 @@ func (s *assignmentService) GetAssignmentWithSubmissions(id string) (*domain.Ass
 	}
 
 	return asg, nil
+}
+
+func (s *assignmentService) GetAssignmentStatus(assignmentID string) (map[string]interface{}, error) {
+	// Get assignment with submissions
+	asg, err := s.repo.GetAssignmentWithSubmissions(assignmentID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get total enrolled students in the class
+	totalStudents, err := s.repo.CountStudentsInClass(asg.SubjectClass.ClassID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate statistics
+	submitted := len(asg.Submissions)
+	notSubmitted := totalStudents - submitted
+	
+	graded := 0
+	lateSubmissions := 0
+	for _, sub := range asg.Submissions {
+		if sub.Assessment != nil {
+			graded++
+		}
+		if asg.Deadline != nil && sub.SubmittedAt.After(*asg.Deadline) {
+			lateSubmissions++
+		}
+	}
+	ungraded := submitted - graded
+
+	submissionRate := 0.0
+	if totalStudents > 0 {
+		submissionRate = float64(submitted) / float64(totalStudents) * 100
+	}
+
+	return map[string]interface{}{
+		"totalStudents":    totalStudents,
+		"submitted":        submitted,
+		"notSubmitted":     notSubmitted,
+		"graded":           graded,
+		"ungraded":         ungraded,
+		"lateSubmissions":  lateSubmissions,
+		"submissionRate":   submissionRate,
+	}, nil
 }
 
 func (s *assignmentService) UpdateAssignment(id string, asg *domain.Assignment, mediaIDs []string) error {
