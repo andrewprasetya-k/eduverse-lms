@@ -257,8 +257,8 @@ func main() {
 			assignmentAPI.POST("/", assignmentHandler.CreateAssignment)
 			assignmentAPI.GET("/subject-class/:subjectClassId", assignmentHandler.GetBySubjectClass)
 			assignmentAPI.GET("/:submissionId", assignmentHandler.GetSubmissionsByAssignment)
-			assignmentAPI.PATCH("/:submissionId", assignmentHandler.UpdateAssignment)
-			assignmentAPI.DELETE("/:submissionId", assignmentHandler.DeleteAssignment)
+			assignmentAPI.PATCH("/:id", assignmentHandler.UpdateAssignment)
+			assignmentAPI.DELETE("/:id", assignmentHandler.DeleteAssignment)
 			
 			// Submissions
 			assignmentAPI.POST("/submit/:assignmentId", assignmentHandler.Submit)
@@ -268,6 +268,8 @@ func main() {
 			
 			// Assessments
 			assignmentAPI.POST("/assess/:submissionId", assignmentHandler.Assess)
+			assignmentAPI.PATCH("/assess/:submissionId", assignmentHandler.UpdateAssessment)
+			assignmentAPI.DELETE("/assess/:submissionId", assignmentHandler.DeleteAssessment)
 		}
 
 				logAPI := api.Group("/logs")

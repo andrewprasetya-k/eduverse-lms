@@ -372,6 +372,44 @@ func (h *AssignmentHandler) Assess(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Assessment recorded"})
 }
 
+func (h *AssignmentHandler) UpdateAssessment(c *gin.Context) {
+	submissionId := c.Param("submissionId")
+	var input dto.UpdateAssessmentDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		HandleBindingError(c, err)
+		return
+	}
+
+	asm := &domain.Assessment{
+		SubmissionID: submissionId,
+	}
+
+	if input.Score != nil {
+		asm.Score = *input.Score
+	}
+	if input.Feedback != nil {
+		asm.Feedback = *input.Feedback
+	}
+
+	if err := h.service.UpdateAssessment(submissionId, asm); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Assessment updated"})
+}
+
+func (h *AssignmentHandler) DeleteAssessment(c *gin.Context) {
+	submissionId := c.Param("submissionId")
+
+	if err := h.service.DeleteAssessment(submissionId); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Assessment deleted"})
+}
+
 func (h *AssignmentHandler) mapAsgToResponse(a *domain.Assignment) dto.AssignmentResponseDTO {
 	var atts []dto.MediaResponseDTO
 	for _, att := range a.Attachments {

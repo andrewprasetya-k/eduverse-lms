@@ -29,6 +29,8 @@ type AssignmentService interface {
 
 	// Assessment
 	Assess(asm *domain.Assessment) error
+	UpdateAssessment(submissionID string, asm *domain.Assessment) error
+	DeleteAssessment(submissionID string) error
 }
 
 type assignmentService struct {
@@ -233,4 +235,13 @@ func (s *assignmentService) UpdateSubmission(id string, mediaIDs []string) error
 func (s *assignmentService) DeleteSubmission(id string) error {
 	s.attService.UnlinkBySource(string(domain.SourceSubmission), id)
 	return s.repo.DeleteSubmission(id)
+}
+
+func (s *assignmentService) UpdateAssessment(submissionID string, asm *domain.Assessment) error {
+	asm.SubmissionID = submissionID
+	return s.repo.UpdateAssessment(asm)
+}
+
+func (s *assignmentService) DeleteAssessment(submissionID string) error {
+	return s.repo.DeleteAssessment(submissionID)
 }

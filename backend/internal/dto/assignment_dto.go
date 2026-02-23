@@ -89,9 +89,14 @@ type SubmissionResponseDTO struct {
 
 // Assessment
 type CreateAssessmentDTO struct {
-	Score        float64 `json:"score" binding:"required"`
-	Feedback     string  `json:"feedback"`
-	AssessedBy   string  `json:"assessedBy" binding:"required,uuid"`
+	Score      float64 `json:"score" binding:"required"`
+	Feedback   string  `json:"feedback"`
+	AssessedBy string  `json:"assessedBy" binding:"required,uuid"`
+}
+
+type UpdateAssessmentDTO struct {
+	Score    *float64 `json:"score"`
+	Feedback *string  `json:"feedback"`
 }
 
 type AssessmentResponseDTO struct {

@@ -30,6 +30,8 @@ type AssignmentRepository interface {
 	// Assessment
 	UpsertAssessment(asm *domain.Assessment) error
 	GetAssessmentBySubmission(sbmID string) (*domain.Assessment, error)
+	UpdateAssessment(asm *domain.Assessment) error
+	DeleteAssessment(submissionID string) error
 
 	// Weights
 	SetWeight(weight *domain.AssessmentWeight) error
@@ -160,6 +162,22 @@ func (r *assignmentRepository) GetAssessmentBySubmission(sbmID string) (*domain.
 	var asm domain.Assessment
 	err := r.db.Preload("Assessor").Where("asm_sbm_id = ?", sbmID).First(&asm).Error
 	return &asm, err
+}
+
+func (r *assignmentRepository) UpdateAssessment(asm *domain.Assessment) error {
+	result := r.db.Model(&domain.Assessment{}).Where("asm_sbm_id = ?", asm.SubmissionID).Updates(asm)
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
+}
+
+func (r *assignmentRepository) DeleteAssessment(submissionID string) error {
+	result := r.db.Where("asm_sbm_id = ?", submissionID).Delete(&domain.Assessment{})
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
 }
 
 func (r *assignmentRepository) SetWeight(weight *domain.AssessmentWeight) error {
