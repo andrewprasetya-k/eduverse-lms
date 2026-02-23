@@ -125,7 +125,7 @@ func (r *assignmentRepository) GetSubmissionsByAssignment(asgID string) ([]*doma
 
 func (r *assignmentRepository) GetSubmissionByID(id string) (*domain.Submission, error) {
 	var sbm domain.Submission
-	err := r.db.Preload("User").Where("sbm_id = ?", id).First(&sbm).Error
+	err := r.db.Preload("User").Preload("Assessment.Assessor").Where("sbm_id = ?", id).First(&sbm).Error
 	return &sbm, err
 }
 
