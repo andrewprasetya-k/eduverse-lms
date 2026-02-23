@@ -32,8 +32,9 @@ Eduverse is a Learning Management System (LMS) built with **Go (Gin Framework)**
     - Use `Preload` in Repositories to ensure related data (like Creator names or School info) is included in responses.
     - All activation/deactivation actions use the `PATCH` method.
 
-5.  **Material Integration**:
-    - `Material` belongs to `SubjectClass` (`mat_scl_id`), not directly to `Class`. This allows materials to be linked to a specific subject and teacher within a class.
+5.  **Material & Assignment Integration**:
+    - Both `Material` and `Assignment` belong to `SubjectClass` (using `mat_scl_id` and `asg_scl_id`), not directly to `Class`. This ensures they are linked to a specific subject and teacher within a class.
+    - **Upsert Logic**: Submissions and Assessments **MUST** use upsert logic (update if existing for the same user/assignment) to prevent duplicate record accumulation.
 
 ## 🔐 Security
 
