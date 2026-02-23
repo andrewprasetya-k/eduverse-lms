@@ -20,6 +20,10 @@ Retrieve all users who belong to a specific school, including school details.
 
 - **URL:** `/school/:schoolCode`
 - **Method:** `GET`
+- **Query Params:** `?page=1&limit=20&search=john`
+  - `page` (optional): Page number, default 1
+  - `limit` (optional): Items per page, default 20
+  - `search` (optional): Search by user name or email
 
 **Response Example:**
 ```json
@@ -27,18 +31,24 @@ Retrieve all users who belong to a specific school, including school details.
   "school": {
     "schoolId": "uuid",
     "schoolName": "Eduverse Academy",
-    "schoolCode": "SD-ANGKASA",
-    ...
+    "schoolCode": "SD-ANGKASA"
   },
-  "members": [
-    {
-      "schoolUserId": "uuid",
-      "userId": "uuid",
-      "fullName": "John Doe",
-      "email": "john@doe.com",
-      "createdAt": "13-02-2026 14:00:00"
-    }
-  ]
+  "data": {
+    "data": [
+      {
+        "schoolUserId": "uuid",
+        "userId": "uuid",
+        "fullName": "John Doe",
+        "email": "john@doe.com",
+        "roles": ["Teacher", "Admin"],
+        "createdAt": "13-02-2026 14:00:00"
+      }
+    ],
+    "totalItems": 150,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 8
+  }
 }
 ```
 

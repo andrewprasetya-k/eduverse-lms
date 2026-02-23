@@ -19,7 +19,11 @@ Base URL: `/api/enrollments`
 ## 2. Get Enrollments by Class
 - **URL:** `/class/:classId`
 - **Method:** `GET`
-- **Response:** `ClassWithMembersDTO` (with class header and member list)
+- **Query Params:** `?page=1&limit=20&search=john`
+  - `page` (optional): Page number, default 1
+  - `limit` (optional): Items per page, default 20
+  - `search` (optional): Search by user name or email
+- **Response:** `ClassWithMembersDTO` (with class header and paginated member list)
 
 ## 3. Get Enrollments by Member
 - **URL:** `/member/:schoolUserId`

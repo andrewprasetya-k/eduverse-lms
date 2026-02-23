@@ -39,7 +39,11 @@ Base URL: `/api/assignments`
 ### 4. List Assignments by Subject Class
 - **URL:** `/subject-class/:subjectClassId`
 - **Method:** `GET`
-- **Response:** `AssignmentPerSubjectClassResponseDTO` (with subject class header)
+- **Query Params:** `?page=1&limit=20&search=quiz`
+  - `page` (optional): Page number, default 1
+  - `limit` (optional): Items per page, default 20
+  - `search` (optional): Search by assignment title or description
+- **Response:** `AssignmentPerSubjectClassResponseDTO` (with subject class header and paginated assignments)
 
 ### 5. Get Assignment with Submissions
 - **URL:** `/:id`
