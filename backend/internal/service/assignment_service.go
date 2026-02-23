@@ -113,15 +113,21 @@ func (s *assignmentService) GetAssignmentWithSubmissions(id string) (*domain.Ass
 }
 
 func (s *assignmentService) Submit(sbm *domain.Submission, mediaIDs []string) error {
-	sbm.SubmittedAt = time.Now() // Set submitted time to now
-	err := s.repo.UpsertSubmission(sbm)
+	sbm.SubmittedAt = time.Now()
+	
+	// Check deadline before submitting
+	assignment, err := s.repo.GetAssignmentByID(sbm.AssignmentID)
 	if err != nil {
 		return err
 	}
+	
+	if !assignment.AllowLateSubmission && assignment.Deadline != nil && assignment.Deadline.Before(sbm.SubmittedAt) {
+		return fmt.Errorf("submission past due")
+	}
 
-	assignmentDeadline,_ := s.repo.GetAssignmentByID(sbm.AssignmentID)
-	if assignmentDeadline.Deadline.Before(sbm.SubmittedAt) {
-		return fmt.Errorf("Submission past due")
+	err = s.repo.UpsertSubmission(sbm)
+	if err != nil {
+		return err
 	}
 
 	// Unlink existing attachments for this submission if updating

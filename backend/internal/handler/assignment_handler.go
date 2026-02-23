@@ -89,13 +89,14 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 	}
 
 	asg := domain.Assignment{
-		SchoolID:       input.SchoolID,
-		SubjectClassID: input.SubjectClassID,
-		CategoryID:     input.CategoryID,
-		Title:          input.Title,
-		Description:    input.Description,
-		Deadline:       input.Deadline,
-		CreatedBy:      input.CreatedBy,
+		SchoolID:            input.SchoolID,
+		SubjectClassID:      input.SubjectClassID,
+		CategoryID:          input.CategoryID,
+		Title:               input.Title,
+		Description:         input.Description,
+		Deadline:            input.Deadline,
+		AllowLateSubmission: input.AllowLateSubmission,
+		CreatedBy:           input.CreatedBy,
 	}
 
 	if err := h.service.CreateAssignment(&asg, input.MediaIDs); err != nil {
@@ -176,6 +177,7 @@ func (h *AssignmentHandler) GetSubmissionsByAssignment(c *gin.Context) {
 			ID:          s.ID,
 			UserName:    s.User.FullName,
 			SubmittedAt: s.SubmittedAt.Format("02-01-2006 15:04:05"),
+			IsLate:      asg.Deadline != nil && s.SubmittedAt.After(*asg.Deadline),
 			Attachments: atts,
 			Assessment:  assessmentDTO,
 		})
@@ -210,8 +212,8 @@ func (h *AssignmentHandler) Submit(c *gin.Context) {
 	}
 
 	if err := h.service.Submit(&sbm, input.MediaIDs); err != nil {
-		if err.Error() == "Submission past due"{
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		if err.Error() == "submission past due" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot submit past deadline"})
 			return
 		}
 		HandleError(c, err)
