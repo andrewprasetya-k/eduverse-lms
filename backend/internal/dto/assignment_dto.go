@@ -35,8 +35,6 @@ type CreateAssignmentDTO struct {
 
 type AssignmentResponseDTO struct {
 	ID                  string             `json:"assignmentId"`
-	SubjectClassID      string             `json:"subjectClassId"`
-	SubjectName         string             `json:"subjectName,omitempty"`
 	Title               string             `json:"assignmentTitle"`
 	Description         string             `json:"assignmentDescription"`
 	CategoryName        string             `json:"categoryName"`
@@ -47,15 +45,8 @@ type AssignmentResponseDTO struct {
 }
 
 type AssignmentPerSubjectClassResponseDTO struct {
-	SubjectClass  SubjectClassResponseDTO `json:"subjectClass"`
-	ID                  string             `json:"assignmentId"`
-	Title               string             `json:"assignmentTitle"`
-	Description         string             `json:"assignmentDescription"`
-	CategoryName        string             `json:"categoryName"`
-	Deadline            *time.Time         `json:"deadline,omitempty"`
-	AllowLateSubmission bool               `json:"allowLateSubmission"`
-	CreatedAt           string             `json:"createdAt"`
-	Attachments         []MediaResponseDTO `json:"attachments,omitempty"`
+	SubjectClass  SubjectClassHeaderDTO `json:"subjectClass"`
+	Assignments   []AssignmentResponseDTO `json:"assignments"`
 }
 
 type AssignmentHeaderDTO struct {

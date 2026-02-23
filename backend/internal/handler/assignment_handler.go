@@ -109,8 +109,8 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 	subjectClassID := c.Param("subjectClassId")
 
-	// 1. Get SubjectClass Header (Subject Name & Class Name)
-	_, err := h.subjectClassService.GetByID(subjectClassID)
+	// 1. Get SubjectClass Header
+	subjectClassHeader, err := h.subjectClassService.GetByID(subjectClassID)
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -123,18 +123,22 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 		return
 	}
 
-	
-
-	var response []dto.AssignmentResponseDTO
+	var assignments []dto.AssignmentResponseDTO
 	for _, r := range results {
-		response = append(response, h.mapAsgToResponse(r))
+		assignments = append(assignments, h.mapAsgToResponse(r))
 	}
 
-	// Add manual header if needed, but for now just list
-	// Ideally we could wrap this in a DTO with header like MaterialListWithSubjectDTO
-	// For now, let's keep list to match frontend expectation or wrap if needed.
-	// Since user asked for change similar to Material, let's return list but enriched DTOs are fine.
-	
+	response := dto.AssignmentPerSubjectClassResponseDTO{
+		SubjectClass: dto.SubjectClassHeaderDTO{
+			ID:          subjectClassHeader.ID,
+			SubjectCode: subjectClassHeader.Subject.Code,
+			SubjectName: subjectClassHeader.Subject.Name,
+			TeacherID:   subjectClassHeader.Teacher.ID,
+			TeacherName: subjectClassHeader.Teacher.User.FullName,
+		},
+		Assignments: assignments,
+	}
+
 	c.JSON(http.StatusOK, response)
 }
 
@@ -280,8 +284,6 @@ func (h *AssignmentHandler) mapAsgToResponse(a *domain.Assignment) dto.Assignmen
 
 	return dto.AssignmentResponseDTO{
 		ID:                  a.ID,
-		SubjectClassID:      a.SubjectClassID,
-		SubjectName:         a.SubjectClass.Subject.Name,
 		Title:               a.Title,
 		Description:         a.Description,
 		CategoryName:        a.Category.Name,
