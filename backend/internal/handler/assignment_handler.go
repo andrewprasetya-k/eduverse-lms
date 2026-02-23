@@ -136,6 +136,59 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *AssignmentHandler) GetSubmissionsByAssignment(c *gin.Context) {
+	id := c.Param("id")
+	asg, err := h.service.GetAssignmentWithSubmissions(id)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	var submissionsDTO []dto.SubmissionResponseDTO
+	for _, s := range asg.Submissions {
+		var assessmentDTO *dto.AssessmentResponseDTO
+		if s.Assessment != nil {
+			assessmentDTO = &dto.AssessmentResponseDTO{
+				Score:      s.Assessment.Score,
+				Feedback:   s.Assessment.Feedback,
+				Assessor:   s.Assessment.Assessor.FullName,
+				AssessedAt: s.Assessment.AssessedAt.Format("02-01-2006 15:04:05"),
+			}
+		}
+
+		var atts []dto.MediaResponseDTO
+		for _, a := range s.Attachments {
+			atts = append(atts, dto.MediaResponseDTO{
+				ID:       a.Media.ID,
+				Name:     a.Media.Name,
+				FileURL:  a.Media.FileURL,
+				MimeType: a.Media.MimeType,
+			})
+		}
+
+		submissionsDTO = append(submissionsDTO, dto.SubmissionResponseDTO{
+			ID:          s.ID,
+			UserName:    s.User.FullName,
+			SubmittedAt: s.SubmittedAt.Format("02-01-2006 15:04:05"),
+			Attachments: atts,
+			Assessment:  assessmentDTO,
+		})
+	}
+
+	response := dto.AssignmentWithSubmissionsDTO{
+		Assignment: dto.AssignmentHeaderDTO{
+			ID:           asg.ID,
+			Title:        asg.Title,
+			SubjectName:  asg.SubjectClass.Subject.Name,
+			CategoryName: asg.Category.Name,
+			Deadline:     asg.Deadline,
+		},
+		Submissions: submissionsDTO,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func (h *AssignmentHandler) Submit(c *gin.Context) {
 	var input dto.CreateSubmissionDTO
 	var assignmentId = c.Param("assignmentId")

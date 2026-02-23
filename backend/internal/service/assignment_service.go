@@ -14,6 +14,7 @@ type AssignmentService interface {
 	CreateAssignment(asg *domain.Assignment, mediaIDs []string) error
 	GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error)
 	GetAssignmentByID(id string) (*domain.Assignment, error)
+	GetAssignmentWithSubmissions(id string) (*domain.Assignment, error)
 
 	// Submission
 	Submit(sbm *domain.Submission, mediaIDs []string) error
@@ -87,6 +88,23 @@ func (s *assignmentService) GetAssignmentByID(id string) (*domain.Assignment, er
 	for _, a := range atts {
 		asg.Attachments = append(asg.Attachments, *a)
 	}
+	return asg, nil
+}
+
+func (s *assignmentService) GetAssignmentWithSubmissions(id string) (*domain.Assignment, error) {
+	asg, err := s.repo.GetAssignmentWithSubmissions(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load attachments for each submission
+	for i := range asg.Submissions {
+		atts, _ := s.attService.GetBySource(string(domain.SourceSubmission), asg.Submissions[i].ID)
+		for _, a := range atts {
+			asg.Submissions[i].Attachments = append(asg.Submissions[i].Attachments, *a)
+		}
+	}
+
 	return asg, nil
 }
 

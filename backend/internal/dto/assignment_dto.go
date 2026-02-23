@@ -44,6 +44,19 @@ type AssignmentResponseDTO struct {
 	Attachments    []MediaResponseDTO `json:"attachments,omitempty"`
 }
 
+type AssignmentHeaderDTO struct {
+	ID           string     `json:"assignmentId"`
+	Title        string     `json:"assignmentTitle"`
+	SubjectName  string     `json:"subjectName"`
+	CategoryName string     `json:"categoryName"`
+	Deadline     *time.Time `json:"deadline,omitempty"`
+}
+
+type AssignmentWithSubmissionsDTO struct {
+	Assignment  AssignmentHeaderDTO     `json:"assignment"`
+	Submissions []SubmissionResponseDTO `json:"submissions"`
+}
+
 // Submission
 type CreateSubmissionDTO struct {
 	SchoolID     string   `json:"schoolId" binding:"required,uuid"`

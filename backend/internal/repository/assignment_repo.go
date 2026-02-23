@@ -3,6 +3,7 @@ package repository
 import (
 	"backend/internal/domain"
 	"errors"
+
 	"gorm.io/gorm"
 )
 
@@ -15,6 +16,7 @@ type AssignmentRepository interface {
 	CreateAssignment(asg *domain.Assignment) error
 	GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error)
 	GetAssignmentByID(id string) (*domain.Assignment, error)
+	GetAssignmentWithSubmissions(id string) (*domain.Assignment, error)
 
 	// Submission
 	UpsertSubmission(sbm *domain.Submission) error
@@ -63,6 +65,16 @@ func (r *assignmentRepository) GetAssignmentsBySubjectClass(subjectClassID strin
 func (r *assignmentRepository) GetAssignmentByID(id string) (*domain.Assignment, error) {
 	var asg domain.Assignment
 	err := r.db.Preload("Category").Preload("SubjectClass.Subject").
+		Where("asg_id = ?", id).First(&asg).Error
+	return &asg, err
+}
+
+func (r *assignmentRepository) GetAssignmentWithSubmissions(id string) (*domain.Assignment, error) {
+	var asg domain.Assignment
+	err := r.db.Preload("Category").
+		Preload("SubjectClass.Subject").
+		Preload("Submissions.User").
+		Preload("Submissions.Assessment.Assessor").
 		Where("asg_id = ?", id).First(&asg).Error
 	return &asg, err
 }

@@ -34,6 +34,7 @@ type Assignment struct {
 	UpdatedAt      time.Time          `gorm:"column:updated_at;autoUpdateTime" json:"updatedAt"`
 	DeletedAt      gorm.DeletedAt     `gorm:"column:deleted_at;index" json:"-"`
 	Attachments    []Attachment       `gorm:"-" json:"attachments,omitempty"`
+	Submissions    []Submission       `gorm:"foreignKey:AssignmentID" json:"submissions,omitempty"`
 }
 
 func (Assignment) TableName() string {
@@ -41,14 +42,15 @@ func (Assignment) TableName() string {
 }
 
 type Submission struct {
-	ID          string         `gorm:"primaryKey;column:sbm_id;default:gen_random_uuid()" json:"submissionId"`
-	SchoolID    string         `gorm:"column:sbm_sch_id;type:uuid" json:"schoolId"`
-	AssignmentID string        `gorm:"column:sbm_asg_id;type:uuid" json:"assignmentId"`
-	UserID      string         `gorm:"column:sbm_usr_id;type:uuid" json:"userId"`
-	User        User           `gorm:"foreignKey:UserID;references:ID" json:"user,omitempty"`
-	SubmittedAt time.Time      `gorm:"column:submitted_at;autoCreateTime" json:"submittedAt"`
-	DeletedAt   gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
-	Attachments []Attachment   `gorm:"-" json:"attachments,omitempty"`
+	ID           string         `gorm:"primaryKey;column:sbm_id;default:gen_random_uuid()" json:"submissionId"`
+	SchoolID     string         `gorm:"column:sbm_sch_id;type:uuid" json:"schoolId"`
+	AssignmentID string         `gorm:"column:sbm_asg_id;type:uuid" json:"assignmentId"`
+	UserID       string         `gorm:"column:sbm_usr_id;type:uuid" json:"userId"`
+	User         User           `gorm:"foreignKey:UserID;references:ID" json:"user,omitempty"`
+	SubmittedAt  time.Time      `gorm:"column:submitted_at;autoCreateTime" json:"submittedAt"`
+	DeletedAt    gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
+	Attachments  []Attachment   `gorm:"-" json:"attachments,omitempty"`
+	Assessment   *Assessment    `gorm:"foreignKey:SubmissionID" json:"assessment,omitempty"`
 }
 
 func (Submission) TableName() string {
