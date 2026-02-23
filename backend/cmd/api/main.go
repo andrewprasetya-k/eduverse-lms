@@ -262,6 +262,7 @@ func main() {
 			
 			// Submissions
 			assignmentAPI.POST("/submit/:assignmentId", assignmentHandler.Submit)
+			assignmentAPI.GET("/submit/:submissionId", assignmentHandler.GetSubmissionByID)
 			assignmentAPI.PATCH("/submit/:submissionId", assignmentHandler.UpdateSubmission)
 			assignmentAPI.DELETE("/submit/:submissionId", assignmentHandler.DeleteSubmission)
 			

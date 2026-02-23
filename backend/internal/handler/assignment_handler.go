@@ -301,6 +301,54 @@ func (h *AssignmentHandler) DeleteSubmission(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Submission deleted"})
 }
 
+func (h *AssignmentHandler) GetSubmissionByID(c *gin.Context) {
+	submissionId := c.Param("submissionId")
+
+	submission, err := h.service.GetSubmissionByID(submissionId)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	// Get assignment for deadline check
+	assignment, err := h.service.GetAssignmentByID(submission.AssignmentID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	var assessmentDTO *dto.AssessmentResponseDTO
+	if submission.Assessment != nil {
+		assessmentDTO = &dto.AssessmentResponseDTO{
+			Score:      submission.Assessment.Score,
+			Feedback:   submission.Assessment.Feedback,
+			Assessor:   submission.Assessment.Assessor.FullName,
+			AssessedAt: submission.Assessment.AssessedAt.Format("02-01-2006 15:04:05"),
+		}
+	}
+
+	var atts []dto.MediaResponseDTO
+	for _, a := range submission.Attachments {
+		atts = append(atts, dto.MediaResponseDTO{
+			ID:       a.Media.ID,
+			Name:     a.Media.Name,
+			FileURL:  a.Media.FileURL,
+			MimeType: a.Media.MimeType,
+		})
+	}
+
+	response := dto.SubmissionResponseDTO{
+		ID:          submission.ID,
+		UserName:    submission.User.FullName,
+		SubmittedAt: submission.SubmittedAt.Format("02-01-2006 15:04:05"),
+		IsLate:      assignment.Deadline != nil && submission.SubmittedAt.After(*assignment.Deadline),
+		Attachments: atts,
+		Assessment:  assessmentDTO,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func (h *AssignmentHandler) Assess(c *gin.Context) {
 	var input dto.CreateAssessmentDTO
 	var submissionId = c.Param("submissionId")
