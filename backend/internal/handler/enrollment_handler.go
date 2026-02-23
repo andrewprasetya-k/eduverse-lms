@@ -78,7 +78,7 @@ func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 			Title: class.Title,
 			Code:  class.Code,
 		},
-		Data: dto.PaginatedResponse{
+		Members: dto.PaginatedResponse{
 			Data:       membersDTO,
 			TotalItems: total,
 			Page:       page,

@@ -84,7 +84,7 @@ func (h *SchoolUserHandler) GetMembersBySchool(c *gin.Context) {
 
 	response := dto.SchoolWithMembersDTO{
 		School: h.mapSchoolToHeader(school),
-		Data: dto.PaginatedResponse{
+		Members: dto.PaginatedResponse{
 			Data:       membersDTO,
 			TotalItems: total,
 			Page:       page,

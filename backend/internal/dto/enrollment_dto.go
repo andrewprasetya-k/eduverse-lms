@@ -25,5 +25,5 @@ type EnrollmentResponseDTO struct {
 
 type ClassWithMembersDTO struct {
 	Class ClassHeaderDTO    `json:"class"`
-	Data  PaginatedResponse `json:"data"`
+	Members  PaginatedResponse `json:"members"`
 }
