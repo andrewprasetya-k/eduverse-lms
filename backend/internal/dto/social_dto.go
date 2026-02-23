@@ -10,12 +10,17 @@ type CreateFeedDTO struct {
 }
 
 type FeedResponseDTO struct {
-	ID          string             `json:"feedId"`
-	Content     string             `json:"content"`
-	CreatorName string             `json:"creatorName,omitempty"`
-	CreatedAt   string             `json:"createdAt"`
-	Attachments []MediaResponseDTO `json:"attachments,omitempty"`
-	CommentCount int               `json:"commentCount"`
+	ID           string             `json:"feedId"`
+	Content      string             `json:"content"`
+	CreatorName  string             `json:"creatorName,omitempty"`
+	CreatedAt    string             `json:"createdAt"`
+	Attachments  []MediaResponseDTO `json:"attachments,omitempty"`
+	CommentCount int                `json:"commentCount"`
+}
+
+type ClassWithFeedsDTO struct {
+	Class ClassHeaderDTO    `json:"class"`
+	Data  PaginatedResponse `json:"data"`
 }
 
 // Comment DTOs

@@ -11,11 +11,15 @@ import (
 )
 
 type MaterialHandler struct {
-	service service.MaterialService
+	service             service.MaterialService
+	subjectClassService service.SubjectClassService
 }
 
-func NewMaterialHandler(service service.MaterialService) *MaterialHandler {
-	return &MaterialHandler{service: service}
+func NewMaterialHandler(service service.MaterialService, subjectClassService service.SubjectClassService) *MaterialHandler {
+	return &MaterialHandler{
+		service:             service,
+		subjectClassService: subjectClassService,
+	}
 }
 
 func (h *MaterialHandler) Create(c *gin.Context) {
@@ -69,15 +73,23 @@ func (h *MaterialHandler) FindAll(c *gin.Context) {
 		TotalPages: int(totalPages),
 	}
 
-	// If subjectClassID is provided, wrap with subject header
-	if subjectClassID != "" && len(materials) > 0 {
-		subjectName := materials[0].SubjectClass.Subject.Name
-		classTitle := materials[0].SubjectClass.Class.Title
-		
+	// If subjectClassID is provided, fetch header and wrap response
+	if subjectClassID != "" {
+		subjectClass, err := h.subjectClassService.GetByID(subjectClassID)
+		if err != nil {
+			HandleError(c, err)
+			return
+		}
+
 		c.JSON(http.StatusOK, dto.MaterialListWithSubjectDTO{
-			SubjectName: subjectName,
-			ClassTitle:  classTitle,
-			Data:        paginatedResponse,
+			SubjectClass: dto.SubjectClassHeaderDTO{
+				ID:          subjectClass.ID,
+				SubjectCode: subjectClass.Subject.Code,
+				SubjectName: subjectClass.Subject.Name,
+				TeacherID:   subjectClass.Teacher.ID,
+				TeacherName: subjectClass.Teacher.User.FullName,
+			},
+			Data: paginatedResponse,
 		})
 		return
 	}

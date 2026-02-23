@@ -13,12 +13,14 @@ import (
 type FeedHandler struct {
 	service        service.FeedService
 	commentService service.CommentService
+	classService   service.ClassService
 }
 
-func NewFeedHandler(service service.FeedService, commentService service.CommentService) *FeedHandler {
+func NewFeedHandler(service service.FeedService, commentService service.CommentService, classService service.ClassService) *FeedHandler {
 	return &FeedHandler{
 		service:        service,
 		commentService: commentService,
+		classService:   classService,
 	}
 }
 
@@ -49,28 +51,44 @@ func (h *FeedHandler) GetByClass(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
+	// 1. Get Class Header
+	class, err := h.classService.GetByID(classID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	// 2. Get Feeds
 	feeds, total, err := h.service.GetByClass(classID, page, limit)
 	if err != nil {
 		HandleError(c, err)
 		return
 	}
 
-	var response []dto.FeedResponseDTO
+	var feedsDTO []dto.FeedResponseDTO
 	for _, f := range feeds {
 		count, _ := h.commentService.CountBySource(string(domain.SourceFeed), f.ID)
-		response = append(response, h.mapToResponse(f, count))
+		feedsDTO = append(feedsDTO, h.mapToResponse(f, count))
 	}
 
 	totalPages := (total + int64(limit) - 1) / int64(limit)
 
-	paginatedResponse := dto.PaginatedResponse{
-		Data:       response,
-		TotalItems: total,
-		Page:       page,
-		Limit:      limit,
-		TotalPages: int(totalPages),
+	response := dto.ClassWithFeedsDTO{
+		Class: dto.ClassHeaderDTO{
+			ID:    class.ID,
+			Title: class.Title,
+			Code:  class.Code,
+		},
+		Data: dto.PaginatedResponse{
+			Data:       feedsDTO,
+			TotalItems: total,
+			Page:       page,
+			Limit:      limit,
+			TotalPages: int(totalPages),
+		},
 	}
-	c.JSON(http.StatusOK, paginatedResponse)
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *FeedHandler) mapToResponse(f *domain.Feed, commentCount int) dto.FeedResponseDTO {

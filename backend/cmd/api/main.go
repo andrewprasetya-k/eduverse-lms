@@ -79,13 +79,13 @@ func main() {
 
 	materialRepo := repository.NewMaterialRepository(db)
 	materialService := service.NewMaterialService(materialRepo, attachmentService, mediaRepo)
-	materialHandler := handler.NewMaterialHandler(materialService)
+	materialHandler := handler.NewMaterialHandler(materialService, subjectClassService)
 
 	feedRepo := repository.NewFeedRepository(db)
 	feedService := service.NewFeedService(feedRepo, attachmentService)
 	commentRepo := repository.NewCommentRepository(db)
 	commentService := service.NewCommentService(commentRepo)
-	feedHandler := handler.NewFeedHandler(feedService, commentService)
+	feedHandler := handler.NewFeedHandler(feedService, commentService, classService)
 	commentHandler := handler.NewCommentHandler(commentService)
 
 	assignmentRepo := repository.NewAssignmentRepository(db)

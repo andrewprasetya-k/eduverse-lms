@@ -35,9 +35,8 @@ type MaterialListWithSchoolDTO struct {
 }
 
 type MaterialListWithSubjectDTO struct {
-	SubjectName string            `json:"subjectName"`
-	ClassTitle  string            `json:"classTitle"`
-	Data        PaginatedResponse `json:"data"`
+	SubjectClass SubjectClassHeaderDTO `json:"subjectClass"`
+	Data         PaginatedResponse     `json:"data"`
 }
 
 type UpdateProgressDTO struct {
