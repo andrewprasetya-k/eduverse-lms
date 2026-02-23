@@ -250,14 +250,15 @@ func (h *AssignmentHandler) mapAsgToResponse(a *domain.Assignment) dto.Assignmen
 	}
 
 	return dto.AssignmentResponseDTO{
-		ID:             a.ID,
-		SubjectClassID: a.SubjectClassID,
-		SubjectName:    a.SubjectClass.Subject.Name,
-		Title:          a.Title,
-		Description:    a.Description,
-		CategoryName:   a.Category.Name,
-		Deadline:       a.Deadline,
-		CreatedAt:      a.CreatedAt.Format("02-01-2006 15:04:05"),
-		Attachments:    atts,
+		ID:                  a.ID,
+		SubjectClassID:      a.SubjectClassID,
+		SubjectName:         a.SubjectClass.Subject.Name,
+		Title:               a.Title,
+		Description:         a.Description,
+		CategoryName:        a.Category.Name,
+		Deadline:            a.Deadline,
+		AllowLateSubmission: a.AllowLateSubmission,
+		CreatedAt:           a.CreatedAt.Format("02-01-2006 15:04:05"),
+		Attachments:         atts,
 	}
 }
