@@ -102,11 +102,11 @@ func (r *assignmentRepository) DeleteAssignment(id string) error {
 func (r *assignmentRepository) UpsertSubmission(sbm *domain.Submission) error {
 	var existing domain.Submission
 	// Check if user already submitted for this assignment
-	err := r.db.Where("sbm_asg_id = ? AND sbm_usr_id = ?", sbm.AssignmentID, sbm.UserID).First(&existing).Error
+	err := r.db.Unscoped().Where("sbm_asg_id = ? AND sbm_usr_id = ?", sbm.AssignmentID, sbm.UserID).First(&existing).Error
 	
 	if err == nil {
-		// Update existing submission ID to ensure GORM performs an Update instead of Create
 		sbm.ID = existing.ID
+		sbm.DeletedAt = gorm.DeletedAt{} //reset deleted_at
 		return r.db.Save(sbm).Error
 	}
 	
