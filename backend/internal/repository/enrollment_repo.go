@@ -8,7 +8,7 @@ import (
 type EnrollmentRepository interface {
 	Create(enr *domain.Enrollment) error
 	GetByID(id string) (*domain.Enrollment, error)
-	GetByClass(classID string) ([]*domain.Enrollment, error)
+	GetByClass(classID string, search string, page int, limit int) ([]*domain.Enrollment, int64, error)
 	GetByMember(schoolUserID string) ([]*domain.Enrollment, error)
 	Update(id string, role string) error
 	Delete(id string) error
@@ -34,11 +34,28 @@ func (r *enrollmentRepository) GetByID(id string) (*domain.Enrollment, error) {
 	return &enr, err
 }
 
-func (r *enrollmentRepository) GetByClass(classID string) ([]*domain.Enrollment, error) {
+func (r *enrollmentRepository) GetByClass(classID string, search string, page int, limit int) ([]*domain.Enrollment, int64, error) {
 	var results []*domain.Enrollment
-	err := r.db.Preload("SchoolUser.User").
-		Where("enr_cls_id = ?", classID).Find(&results).Error
-	return results, err
+	var total int64
+
+	query := r.db.Model(&domain.Enrollment{}).
+		Preload("SchoolUser.User").
+		Where("enr_cls_id = ?", classID)
+
+	// Search by user name or email
+	if search != "" {
+		query = query.Joins("JOIN edv.school_users ON school_users.scu_id = enrollments.enr_scu_id").
+			Joins("JOIN edv.users ON users.usr_id = school_users.scu_usr_id").
+			Where("users.usr_nama_lengkap ILIKE ? OR users.usr_email ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	err := query.Limit(limit).Offset(offset).Order("joined_at desc").Find(&results).Error
+	return results, total, err
 }
 
 func (r *enrollmentRepository) GetByMember(schoolUserID string) ([]*domain.Enrollment, error) {

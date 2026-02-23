@@ -18,6 +18,6 @@ type SchoolUserResponseDTO struct {
 }
 
 type SchoolWithMembersDTO struct {
-	School  SchoolHeaderDTO         `json:"school"`
-	Members []SchoolUserResponseDTO `json:"members"`
+	School SchoolHeaderDTO   `json:"school"`
+	Data   PaginatedResponse `json:"data"`
 }

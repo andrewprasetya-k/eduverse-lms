@@ -5,6 +5,7 @@ import (
 	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,16 +44,19 @@ func (h *SchoolUserHandler) Enroll(c *gin.Context) {
 
 func (h *SchoolUserHandler) GetMembersBySchool(c *gin.Context) {
 	schoolCode := c.Param("schoolCode")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	search := c.Query("search")
 
-	// 1. Ambil data sekolah (untuk header) menggunakan code
+	// 1. Ambil data sekolah (untuk header)
 	school, err := h.schoolService.GetSchoolByCode(schoolCode)
 	if err != nil {
 		HandleError(c, err)
 		return
 	}
 
-	// 2. Ambil daftar anggota menggunakan code (akan dikonversi di service)
-	members, err := h.service.GetMembersBySchool(schoolCode)
+	// 2. Ambil daftar anggota
+	members, total, err := h.service.GetMembersBySchool(schoolCode, search, page, limit)
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -76,9 +80,17 @@ func (h *SchoolUserHandler) GetMembersBySchool(c *gin.Context) {
 		})
 	}
 
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
 	response := dto.SchoolWithMembersDTO{
-		School:  h.mapSchoolToHeader(school),
-		Members: membersDTO,
+		School: h.mapSchoolToHeader(school),
+		Data: dto.PaginatedResponse{
+			Data:       membersDTO,
+			TotalItems: total,
+			Page:       page,
+			Limit:      limit,
+			TotalPages: int(totalPages),
+		},
 	}
 
 	c.JSON(http.StatusOK, response)

@@ -14,7 +14,7 @@ type AssignmentRepository interface {
 
 	// Assignment
 	CreateAssignment(asg *domain.Assignment) error
-	GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error)
+	GetAssignmentsBySubjectClass(subjectClassID string, search string, page int, limit int) ([]*domain.Assignment, int64, error)
 	GetAssignmentByID(id string) (*domain.Assignment, error)
 	GetAssignmentWithSubmissions(id string) (*domain.Assignment, error)
 	UpdateAssignment(asg *domain.Assignment) error
@@ -60,12 +60,27 @@ func (r *assignmentRepository) CreateAssignment(asg *domain.Assignment) error {
 	return r.db.Create(asg).Error
 }
 
-func (r *assignmentRepository) GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error) {
+func (r *assignmentRepository) GetAssignmentsBySubjectClass(subjectClassID string, search string, page int, limit int) ([]*domain.Assignment, int64, error) {
 	var results []*domain.Assignment
-	err := r.db.Preload("Category").Preload("SubjectClass.Subject").
-		Where("asg_scl_id = ?", subjectClassID).
-		Order("created_at desc").Find(&results).Error
-	return results, err
+	var total int64
+
+	query := r.db.Model(&domain.Assignment{}).
+		Preload("Category").
+		Preload("SubjectClass.Subject").
+		Where("asg_scl_id = ?", subjectClassID)
+
+	// Search by title or description
+	if search != "" {
+		query = query.Where("asg_title ILIKE ? OR asg_desc ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	err := query.Limit(limit).Offset(offset).Order("created_at desc").Find(&results).Error
+	return results, total, err
 }
 
 func (r *assignmentRepository) GetAssignmentByID(id string) (*domain.Assignment, error) {

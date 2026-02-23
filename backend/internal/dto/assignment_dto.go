@@ -54,8 +54,8 @@ type AssignmentResponseDTO struct {
 }
 
 type AssignmentPerSubjectClassResponseDTO struct {
-	SubjectClass  SubjectClassHeaderDTO `json:"subjectClass"`
-	Assignments   []AssignmentResponseDTO `json:"assignments"`
+	SubjectClass SubjectClassHeaderDTO `json:"subjectClass"`
+	Data         PaginatedResponse     `json:"data"`
 }
 
 type AssignmentHeaderDTO struct {

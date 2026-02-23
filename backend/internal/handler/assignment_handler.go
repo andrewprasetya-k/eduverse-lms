@@ -5,6 +5,7 @@ import (
 	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -160,6 +161,9 @@ func (h *AssignmentHandler) DeleteAssignment(c *gin.Context) {
 
 func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 	subjectClassID := c.Param("subjectClassId")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	search := c.Query("search")
 
 	// 1. Get SubjectClass Header
 	subjectClassHeader, err := h.subjectClassService.GetByID(subjectClassID)
@@ -169,7 +173,7 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 	}
 
 	// 2. Get Assignments
-	results, err := h.service.GetAssignmentsBySubjectClass(subjectClassID)
+	results, total, err := h.service.GetAssignmentsBySubjectClass(subjectClassID, search, page, limit)
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -180,6 +184,8 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 		assignments = append(assignments, h.mapAsgToResponse(r))
 	}
 
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
 	response := dto.AssignmentPerSubjectClassResponseDTO{
 		SubjectClass: dto.SubjectClassHeaderDTO{
 			ID:          subjectClassHeader.ID,
@@ -188,7 +194,13 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 			TeacherID:   subjectClassHeader.Teacher.ID,
 			TeacherName: subjectClassHeader.Teacher.User.FullName,
 		},
-		Assignments: assignments,
+		Data: dto.PaginatedResponse{
+			Data:       assignments,
+			TotalItems: total,
+			Page:       page,
+			Limit:      limit,
+			TotalPages: int(totalPages),
+		},
 	}
 
 	c.JSON(http.StatusOK, response)

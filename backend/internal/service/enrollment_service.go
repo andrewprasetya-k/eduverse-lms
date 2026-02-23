@@ -8,7 +8,7 @@ import (
 type EnrollmentService interface {
 	Enroll(schoolID string, classID string, schoolUserIDs []string, role string) error
 	GetByID(id string) (*domain.Enrollment, error)
-	GetByClass(classID string) ([]*domain.Enrollment, error)
+	GetByClass(classID string, search string, page int, limit int) ([]*domain.Enrollment, int64, error)
 	GetByMember(schoolUserID string) ([]*domain.Enrollment, error)
 	Update(id string, role string) error
 	Unenroll(id string) error
@@ -51,8 +51,8 @@ func (s *enrollmentService) GetByID(id string) (*domain.Enrollment, error) {
 	return s.repo.GetByID(id)
 }
 
-func (s *enrollmentService) GetByClass(classID string) ([]*domain.Enrollment, error) {
-	return s.repo.GetByClass(classID)
+func (s *enrollmentService) GetByClass(classID string, search string, page int, limit int) ([]*domain.Enrollment, int64, error) {
+	return s.repo.GetByClass(classID, search, page, limit)
 }
 
 func (s *enrollmentService) GetByMember(schoolUserID string) ([]*domain.Enrollment, error) {

@@ -14,7 +14,7 @@ type AssignmentService interface {
 
 	// Assignment
 	CreateAssignment(asg *domain.Assignment, mediaIDs []string) error
-	GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error)
+	GetAssignmentsBySubjectClass(subjectClassID string, search string, page int, limit int) ([]*domain.Assignment, int64, error)
 	GetAssignmentByID(id string) (*domain.Assignment, error)
 	GetAssignmentWithSubmissions(id string) (*domain.Assignment, error)
 	UpdateAssignment(id string, asg *domain.Assignment, mediaIDs []string) error
@@ -71,10 +71,10 @@ func (s *assignmentService) CreateAssignment(asg *domain.Assignment, mediaIDs []
 	return nil
 }
 
-func (s *assignmentService) GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error) {
-	results, err := s.repo.GetAssignmentsBySubjectClass(subjectClassID)
+func (s *assignmentService) GetAssignmentsBySubjectClass(subjectClassID string, search string, page int, limit int) ([]*domain.Assignment, int64, error) {
+	results, total, err := s.repo.GetAssignmentsBySubjectClass(subjectClassID, search, page, limit)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	for _, asg := range results {
@@ -83,7 +83,7 @@ func (s *assignmentService) GetAssignmentsBySubjectClass(subjectClassID string) 
 			asg.Attachments = append(asg.Attachments, *a)
 		}
 	}
-	return results, nil
+	return results, total, nil
 }
 
 func (s *assignmentService) GetAssignmentByID(id string) (*domain.Assignment, error) {

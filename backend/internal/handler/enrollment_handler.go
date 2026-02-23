@@ -4,6 +4,7 @@ import (
 	"backend/internal/dto"
 	"backend/internal/service"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,6 +38,9 @@ func (h *EnrollmentHandler) Enroll(c *gin.Context) {
 
 func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 	classID := c.Param("classId")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	search := c.Query("search")
 
 	// 1. Get Class Header
 	class, err := h.classService.GetByID(classID)
@@ -46,7 +50,7 @@ func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 	}
 
 	// 2. Get Members
-	results, err := h.service.GetByClass(classID)
+	results, total, err := h.service.GetByClass(classID, search, page, limit)
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -66,13 +70,21 @@ func (h *EnrollmentHandler) GetByClass(c *gin.Context) {
 		})
 	}
 
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
 	response := dto.ClassWithMembersDTO{
 		Class: dto.ClassHeaderDTO{
 			ID:    class.ID,
 			Title: class.Title,
 			Code:  class.Code,
 		},
-		Members: membersDTO,
+		Data: dto.PaginatedResponse{
+			Data:       membersDTO,
+			TotalItems: total,
+			Page:       page,
+			Limit:      limit,
+			TotalPages: int(totalPages),
+		},
 	}
 
 	c.JSON(http.StatusOK, response)
