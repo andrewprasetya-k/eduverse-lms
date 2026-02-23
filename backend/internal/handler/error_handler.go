@@ -27,7 +27,34 @@ func HandleError(c *gin.Context, err error) {
 
 	errStr := err.Error()
 
-	// 2. Masking Database Constraint Errors (PostgreSQL patterns)
+	// 2. Business Logic Errors (Custom validation from services)
+	
+	// Already exists errors
+	if strings.Contains(errStr, "sudah terdaftar") || strings.Contains(errStr, "already exists") || 
+	   strings.Contains(errStr, "already assigned") {
+		c.JSON(http.StatusConflict, gin.H{"error": "This data already exists or is already registered"})
+		return
+	}
+
+	// Password errors
+	if strings.Contains(errStr, "password lama salah") || strings.Contains(errStr, "incorrect password") {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Incorrect password"})
+		return
+	}
+
+	// Deadline/submission errors
+	if strings.Contains(errStr, "submission past due") || strings.Contains(errStr, "past deadline") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Cannot submit past deadline"})
+		return
+	}
+
+	// Cannot delete due to dependencies
+	if strings.Contains(errStr, "tidak bisa dihapus karena") || strings.Contains(errStr, "cannot be deleted") {
+		c.JSON(http.StatusConflict, gin.H{"error": "Cannot delete this data because it is still being used by other records"})
+		return
+	}
+
+	// 3. Database Constraint Errors (PostgreSQL patterns)
 	
 	// Foreign Key Violation
 	if strings.Contains(errStr, "violates foreign key constraint") {
@@ -41,7 +68,19 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
-	// 3. Default Error (Internal Server Error)
+	// Not Null Violation
+	if strings.Contains(errStr, "violates not-null constraint") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Required field is missing"})
+		return
+	}
+
+	// Check Constraint Violation
+	if strings.Contains(errStr, "violates check constraint") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Data does not meet validation requirements"})
+		return
+	}
+
+	// 4. Default Error (Internal Server Error)
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "An internal server error occurred"})
 }
 
@@ -52,24 +91,59 @@ func HandleBindingError(c *gin.Context, err error) {
 
 	errStr := err.Error()
 
+	// Required field validation
 	if strings.Contains(errStr, "failed on the 'required' tag") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Required fields are missing"})
 		return
 	}
+
+	// UUID validation
 	if strings.Contains(errStr, "failed on the 'uuid' tag") {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format. Must be a valid UUID"})
 		return
 	}
+
+	// Email validation
 	if strings.Contains(errStr, "failed on the 'email' tag") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email format"})
 		return
 	}
+
+	// Enum validation (oneof)
+	if strings.Contains(errStr, "failed on the 'oneof' tag") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid value. Please check allowed values"})
+		return
+	}
+
+	// Min/Max validation
+	if strings.Contains(errStr, "failed on the 'min' tag") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Value is too short or too small"})
+		return
+	}
+	if strings.Contains(errStr, "failed on the 'max' tag") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Value is too long or too large"})
+		return
+	}
+
+	// Dive validation (array elements)
+	if strings.Contains(errStr, "failed on the 'dive' tag") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "One or more array elements are invalid"})
+		return
+	}
 	
 	// Type mismatch errors (e.g. sending string instead of number)
-	if strings.Contains(errStr, "unmarshal") || strings.Contains(errStr, "type mismatch") {
+	if strings.Contains(errStr, "unmarshal") || strings.Contains(errStr, "type mismatch") || 
+	   strings.Contains(errStr, "cannot unmarshal") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Data type mismatch. Please check your input values"})
 		return
 	}
 
+	// JSON syntax errors
+	if strings.Contains(errStr, "invalid character") || strings.Contains(errStr, "unexpected end of JSON") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON format"})
+		return
+	}
+
+	// Default binding error
 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data format. Please check your request"})
 }
