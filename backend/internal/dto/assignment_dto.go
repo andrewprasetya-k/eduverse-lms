@@ -70,10 +70,11 @@ type CreateSubmissionDTO struct {
 }
 
 type SubmissionResponseDTO struct {
-	ID          string             `json:"submissionId"`
-	UserName    string             `json:"studentName"`
-	SubmittedAt string             `json:"submittedAt"`
-	Attachments []MediaResponseDTO `json:"attachments,omitempty"`
+	ID          string                 `json:"submissionId"`
+	UserName    string                 `json:"studentName"`
+	SubmittedAt string                 `json:"submittedAt"`
+	IsLate      bool                   `json:"isLate"`
+	Attachments []MediaResponseDTO     `json:"attachments,omitempty"`
 	Assessment  *AssessmentResponseDTO `json:"assessment,omitempty"`
 }
 

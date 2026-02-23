@@ -49,7 +49,7 @@ type Submission struct {
 	UserID       string         `gorm:"column:sbm_usr_id;type:uuid" json:"userId"`
 	User         User           `gorm:"foreignKey:UserID;references:ID" json:"user,omitempty"`
 	SubmittedAt  time.Time      `gorm:"column:submitted_at;autoCreateTime" json:"submittedAt"`
-	IsLate bool 		 `json:"isLate"`
+	IsLate       bool           `gorm:"-" json:"isLate"`
 	DeletedAt    gorm.DeletedAt `gorm:"column:deleted_at;index" json:"-"`
 	Attachments  []Attachment   `gorm:"-" json:"attachments,omitempty"`
 	Assessment   *Assessment    `gorm:"foreignKey:SubmissionID" json:"assessment,omitempty"`
