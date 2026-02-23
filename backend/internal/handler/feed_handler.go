@@ -46,6 +46,53 @@ func (h *FeedHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Feed posted"})
 }
 
+func (h *FeedHandler) GetByID(c *gin.Context) {
+	id := c.Param("id")
+	feed, err := h.service.GetByID(id)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	count, _ := h.commentService.CountBySource(string(domain.SourceFeed), feed.ID)
+	c.JSON(http.StatusOK, h.mapToResponse(feed, count))
+}
+
+func (h *FeedHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.UpdateFeedDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		HandleBindingError(c, err)
+		return
+	}
+
+	existing, err := h.service.GetByID(id)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	if input.Content != nil {
+		existing.Content = *input.Content
+	}
+
+	if err := h.service.Update(id, existing, input.MediaIDs); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Feed updated"})
+}
+
+func (h *FeedHandler) Delete(c *gin.Context) {
+	id := c.Param("id")
+	if err := h.service.Delete(id); err != nil {
+		HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Feed deleted"})
+}
+
 func (h *FeedHandler) GetByClass(c *gin.Context) {
 	classID := c.Param("classId")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))

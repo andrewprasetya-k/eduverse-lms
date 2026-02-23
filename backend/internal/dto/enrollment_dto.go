@@ -7,6 +7,10 @@ type CreateEnrollmentDTO struct {
 	Role          string   `json:"role" binding:"required,oneof=teacher student"`
 }
 
+type UpdateEnrollmentDTO struct {
+	Role string `json:"role" binding:"required,oneof=teacher student"`
+}
+
 type EnrollmentResponseDTO struct {
 	ID           string `json:"enrollmentId"`
 	SchoolID     string `json:"schoolId"`

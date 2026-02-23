@@ -9,6 +9,7 @@ type FeedService interface {
 	Create(feed *domain.Feed, mediaIDs []string) error
 	GetByClass(classID string, page int, limit int) ([]*domain.Feed, int64, error)
 	GetByID(id string) (*domain.Feed, error)
+	Update(id string, feed *domain.Feed, mediaIDs []string) error
 	Delete(id string) error
 }
 
@@ -70,6 +71,26 @@ func (s *feedService) GetByID(id string) (*domain.Feed, error) {
 	}
 
 	return feed, nil
+}
+
+func (s *feedService) Update(id string, feed *domain.Feed, mediaIDs []string) error {
+	feed.ID = id
+	err := s.repo.Update(feed)
+	if err != nil {
+		return err
+	}
+
+	s.attService.UnlinkBySource(string(domain.SourceFeed), id)
+	for _, mID := range mediaIDs {
+		att := &domain.Attachment{
+			SchoolID:   feed.SchoolID,
+			SourceID:   id,
+			SourceType: domain.SourceFeed,
+			MediaID:    mID,
+		}
+		s.attService.Link(att)
+	}
+	return nil
 }
 
 func (s *feedService) Delete(id string) error {

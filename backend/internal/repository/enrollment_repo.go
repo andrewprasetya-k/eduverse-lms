@@ -10,6 +10,7 @@ type EnrollmentRepository interface {
 	GetByID(id string) (*domain.Enrollment, error)
 	GetByClass(classID string) ([]*domain.Enrollment, error)
 	GetByMember(schoolUserID string) ([]*domain.Enrollment, error)
+	Update(id string, role string) error
 	Delete(id string) error
 	CheckExists(classID, schoolUserID string) (bool, error)
 }
@@ -45,6 +46,14 @@ func (r *enrollmentRepository) GetByMember(schoolUserID string) ([]*domain.Enrol
 	err := r.db.Preload("Class.School").Preload("Class.Term.AcademicYear").
 		Where("enr_scu_id = ?", schoolUserID).Find(&results).Error
 	return results, err
+}
+
+func (r *enrollmentRepository) Update(id string, role string) error {
+	result := r.db.Model(&domain.Enrollment{}).Where("enr_id = ?", id).Update("enr_role", role)
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
 }
 
 func (r *enrollmentRepository) Delete(id string) error {

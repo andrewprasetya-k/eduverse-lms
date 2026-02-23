@@ -214,6 +214,7 @@ func main() {
 			enrollmentAPI.GET("/class/:classId", enrollmentHandler.GetByClass)
 			enrollmentAPI.GET("/member/:schoolUserId", enrollmentHandler.GetByMember)
 			enrollmentAPI.GET("/:id", enrollmentHandler.GetByID)
+			enrollmentAPI.PATCH("/:id", enrollmentHandler.Update)
 			enrollmentAPI.DELETE("/:id", enrollmentHandler.Unenroll)
 		}
 
@@ -238,12 +239,17 @@ func main() {
 		{
 			feedAPI.POST("/", feedHandler.Create)
 			feedAPI.GET("/class/:classId", feedHandler.GetByClass)
+			feedAPI.GET("/:id", feedHandler.GetByID)
+			feedAPI.PATCH("/:id", feedHandler.Update)
+			feedAPI.DELETE("/:id", feedHandler.Delete)
 		}
 
 		commentAPI := api.Group("/comments")
 		{
 			commentAPI.POST("/", commentHandler.Create)
 			commentAPI.GET("/", commentHandler.GetBySource)
+			commentAPI.GET("/:id", commentHandler.GetByID)
+			commentAPI.PATCH("/:id", commentHandler.Update)
 			commentAPI.DELETE("/:id", commentHandler.Delete)
 		}
 

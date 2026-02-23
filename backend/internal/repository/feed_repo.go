@@ -9,6 +9,7 @@ type FeedRepository interface {
 	Create(feed *domain.Feed) error
 	GetByClass(classID string, page int, limit int) ([]*domain.Feed, int64, error)
 	GetByID(id string) (*domain.Feed, error)
+	Update(feed *domain.Feed) error
 	Delete(id string) error
 }
 
@@ -43,6 +44,14 @@ func (r *feedRepository) GetByID(id string) (*domain.Feed, error) {
 	var feed domain.Feed
 	err := r.db.Preload("Creator").Where("fds_id = ?", id).First(&feed).Error
 	return &feed, err
+}
+
+func (r *feedRepository) Update(feed *domain.Feed) error {
+	result := r.db.Model(&domain.Feed{}).Where("fds_id = ?", feed.ID).Updates(feed)
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
 }
 
 func (r *feedRepository) Delete(id string) error {

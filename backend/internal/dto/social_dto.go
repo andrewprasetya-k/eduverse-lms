@@ -9,6 +9,11 @@ type CreateFeedDTO struct {
 	MediaIDs  []string `json:"mediaIds"`
 }
 
+type UpdateFeedDTO struct {
+	Content  *string  `json:"content"`
+	MediaIDs []string `json:"mediaIds"`
+}
+
 type FeedResponseDTO struct {
 	ID           string             `json:"feedId"`
 	Content      string             `json:"content"`
@@ -30,6 +35,10 @@ type CreateCommentDTO struct {
 	SourceID   string `json:"sourceId" binding:"required,uuid"`
 	UserID     string `json:"userId" binding:"required,uuid"`
 	Content    string `json:"content" binding:"required"`
+}
+
+type UpdateCommentDTO struct {
+	Content *string `json:"content"`
 }
 
 type CommentResponseDTO struct {

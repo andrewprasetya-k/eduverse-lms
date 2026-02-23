@@ -63,6 +63,50 @@ func (h *CommentHandler) GetBySource(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *CommentHandler) GetByID(c *gin.Context) {
+	id := c.Param("id")
+	comment, err := h.service.GetByID(id)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	response := dto.CommentResponseDTO{
+		ID:          comment.ID,
+		Content:     comment.Content,
+		CreatorName: comment.User.FullName,
+		CreatedAt:   comment.CreatedAt.Format("02-01-2006 15:04:05"),
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *CommentHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.UpdateCommentDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		HandleBindingError(c, err)
+		return
+	}
+
+	existing, err := h.service.GetByID(id)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	if input.Content != nil {
+		existing.Content = *input.Content
+	}
+
+	if err := h.service.Update(id, existing); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Comment updated"})
+}
+
 func (h *CommentHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Delete(id); err != nil {

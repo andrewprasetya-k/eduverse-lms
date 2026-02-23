@@ -8,6 +8,8 @@ import (
 type CommentService interface {
 	Create(comment *domain.Comment) error
 	GetBySource(sourceType string, sourceID string) ([]*domain.Comment, error)
+	GetByID(id string) (*domain.Comment, error)
+	Update(id string, comment *domain.Comment) error
 	Delete(id string) error
 	CountBySource(sourceType string, sourceID string) (int, error)
 }
@@ -26,6 +28,15 @@ func (s *commentService) Create(comment *domain.Comment) error {
 
 func (s *commentService) GetBySource(sourceType string, sourceID string) ([]*domain.Comment, error) {
 	return s.repo.GetBySource(domain.SourceType(sourceType), sourceID)
+}
+
+func (s *commentService) GetByID(id string) (*domain.Comment, error) {
+	return s.repo.GetByID(id)
+}
+
+func (s *commentService) Update(id string, comment *domain.Comment) error {
+	comment.ID = id
+	return s.repo.Update(comment)
 }
 
 func (s *commentService) Delete(id string) error {

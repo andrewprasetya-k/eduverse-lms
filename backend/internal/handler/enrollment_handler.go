@@ -125,6 +125,22 @@ func (h *EnrollmentHandler) GetByID(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *EnrollmentHandler) Update(c *gin.Context) {
+	id := c.Param("id")
+	var input dto.UpdateEnrollmentDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		HandleBindingError(c, err)
+		return
+	}
+
+	if err := h.service.Update(id, input.Role); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Enrollment updated"})
+}
+
 func (h *EnrollmentHandler) Unenroll(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.service.Unenroll(id); err != nil {

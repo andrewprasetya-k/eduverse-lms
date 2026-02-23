@@ -10,6 +10,7 @@ type EnrollmentService interface {
 	GetByID(id string) (*domain.Enrollment, error)
 	GetByClass(classID string) ([]*domain.Enrollment, error)
 	GetByMember(schoolUserID string) ([]*domain.Enrollment, error)
+	Update(id string, role string) error
 	Unenroll(id string) error
 }
 
@@ -56,6 +57,10 @@ func (s *enrollmentService) GetByClass(classID string) ([]*domain.Enrollment, er
 
 func (s *enrollmentService) GetByMember(schoolUserID string) ([]*domain.Enrollment, error) {
 	return s.repo.GetByMember(schoolUserID)
+}
+
+func (s *enrollmentService) Update(id string, role string) error {
+	return s.repo.Update(id, role)
 }
 
 func (s *enrollmentService) Unenroll(id string) error {
