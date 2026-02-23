@@ -107,6 +107,57 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Assignment created"})
 }
 
+func (h *AssignmentHandler) UpdateAssignment(c *gin.Context) {
+	id := c.Param("submissionId")
+	var input dto.UpdateAssignmentDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		HandleBindingError(c, err)
+		return
+	}
+
+	// Get existing assignment
+	existing, err := h.service.GetAssignmentByID(id)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	// Update fields if provided
+	if input.CategoryID != nil {
+		existing.CategoryID = *input.CategoryID
+	}
+	if input.Title != nil {
+		existing.Title = *input.Title
+	}
+	if input.Description != nil {
+		existing.Description = *input.Description
+	}
+	if input.Deadline != nil {
+		existing.Deadline = input.Deadline
+	}
+	if input.AllowLateSubmission != nil {
+		existing.AllowLateSubmission = *input.AllowLateSubmission
+	}
+
+	if err := h.service.UpdateAssignment(id, existing, input.MediaIDs); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Assignment updated"})
+}
+
+func (h *AssignmentHandler) DeleteAssignment(c *gin.Context) {
+	id := c.Param("submissionId")
+
+	if err := h.service.DeleteAssignment(id); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Assignment deleted"})
+}
+
 func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 	subjectClassID := c.Param("subjectClassId")
 

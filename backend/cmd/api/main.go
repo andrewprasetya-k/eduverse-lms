@@ -257,11 +257,13 @@ func main() {
 			assignmentAPI.POST("/", assignmentHandler.CreateAssignment)
 			assignmentAPI.GET("/subject-class/:subjectClassId", assignmentHandler.GetBySubjectClass)
 			assignmentAPI.GET("/:submissionId", assignmentHandler.GetSubmissionsByAssignment)
+			assignmentAPI.PATCH("/:submissionId", assignmentHandler.UpdateAssignment)
+			assignmentAPI.DELETE("/:submissionId", assignmentHandler.DeleteAssignment)
 			
 			// Submissions
 			assignmentAPI.POST("/submit/:assignmentId", assignmentHandler.Submit)
-			assignmentAPI.PATCH("/:submissionId", assignmentHandler.UpdateSubmission)
-			assignmentAPI.DELETE("submission/:submissionId", assignmentHandler.DeleteSubmission)
+			assignmentAPI.PATCH("/submit/:submissionId", assignmentHandler.UpdateSubmission)
+			assignmentAPI.DELETE("/submit/:submissionId", assignmentHandler.DeleteSubmission)
 			
 			// Assessments
 			assignmentAPI.POST("/assess/:submissionId", assignmentHandler.Assess)

@@ -17,6 +17,8 @@ type AssignmentRepository interface {
 	GetAssignmentsBySubjectClass(subjectClassID string) ([]*domain.Assignment, error)
 	GetAssignmentByID(id string) (*domain.Assignment, error)
 	GetAssignmentWithSubmissions(id string) (*domain.Assignment, error)
+	UpdateAssignment(asg *domain.Assignment) error
+	DeleteAssignment(id string) error
 
 	// Submission
 	UpsertSubmission(sbm *domain.Submission) error
@@ -79,6 +81,22 @@ func (r *assignmentRepository) GetAssignmentWithSubmissions(id string) (*domain.
 		Preload("Submissions.Assessment.Assessor").
 		Where("asg_id = ?", id).First(&asg).Error
 	return &asg, err
+}
+
+func (r *assignmentRepository) UpdateAssignment(asg *domain.Assignment) error {
+	result := r.db.Model(&domain.Assignment{}).Where("asg_id = ?", asg.ID).Updates(asg)
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
+}
+
+func (r *assignmentRepository) DeleteAssignment(id string) error {
+	result := r.db.Where("asg_id = ?", id).Delete(&domain.Assignment{})
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
 }
 
 func (r *assignmentRepository) UpsertSubmission(sbm *domain.Submission) error {

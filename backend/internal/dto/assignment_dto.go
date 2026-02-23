@@ -33,6 +33,15 @@ type CreateAssignmentDTO struct {
 	MediaIDs            []string   `json:"mediaIds"`
 }
 
+type UpdateAssignmentDTO struct {
+	CategoryID          *string    `json:"categoryId" binding:"omitempty,uuid"`
+	Title               *string    `json:"assignmentTitle"`
+	Description         *string    `json:"assignmentDescription"`
+	Deadline            *time.Time `json:"deadline"`
+	AllowLateSubmission *bool      `json:"allowLateSubmission"`
+	MediaIDs            []string   `json:"mediaIds"`
+}
+
 type AssignmentResponseDTO struct {
 	ID                  string             `json:"assignmentId"`
 	Title               string             `json:"assignmentTitle"`
