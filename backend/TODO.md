@@ -12,6 +12,7 @@
 8. ✅ File upload support (multipart form & inline media)
 9. ✅ Dashboard Statistics (Student, Teacher, Admin)
 10. ✅ Authentication & Authorization (JWT middleware)
+11. implementasi auto get email dan user id dari middleware
 
 ## 🚀 High Priority (Critical for Production)
 
