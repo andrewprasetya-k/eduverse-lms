@@ -38,9 +38,9 @@ Get dashboard statistics for a student.
 ## 2. Teacher Dashboard
 Get dashboard statistics for a teacher.
 
-- **URL:** `/teacher/:teacherId`
+- **URL:** `/teacher/:schoolUserId`
 - **Method:** `GET`
-- **Note:** `teacherId` is the `school_user_id` (scu_id), not user_id
+- **Note:** `schoolUserId` is the `school_user_id` (scu_id), NOT user_id
 - **Response:**
 ```json
 {
@@ -134,16 +134,19 @@ Each dashboard is tailored to the user's role:
 ### Student checking their dashboard
 ```bash
 GET /api/dashboard/student/123e4567-e89b-12d3-a456-426614174000
+# Parameter: userId (usr_id from users table)
 ```
 
 ### Teacher viewing pending reviews
 ```bash
 GET /api/dashboard/teacher/223e4567-e89b-12d3-a456-426614174000
+# Parameter: schoolUserId (scu_id from school_users table)
 ```
 
 ### Admin monitoring school statistics
 ```bash
 GET /api/dashboard/admin/323e4567-e89b-12d3-a456-426614174000
+# Parameter: schoolId (sch_id from schools table)
 ```
 
 ---

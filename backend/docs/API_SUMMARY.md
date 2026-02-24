@@ -148,8 +148,8 @@ Base URL: `http://localhost:8080/api`
 - `GET /logs/school/:schoolId` - Get logs by school
 
 ## 📈 Dashboard
-- `GET /dashboard/student/:userId` - Get student dashboard
-- `GET /dashboard/teacher/:teacherId` - Get teacher dashboard (teacherId = school_user_id)
+- `GET /dashboard/student/:userId` - Get student dashboard (userId = usr_id)
+- `GET /dashboard/teacher/:schoolUserId` - Get teacher dashboard (schoolUserId = scu_id)
 - `GET /dashboard/admin/:schoolId` - Get admin dashboard
 
 ---
