@@ -9,6 +9,8 @@
 5. ✅ Complete CRUD operations untuk semua modules
 6. ✅ Pagination & search untuk list endpoints yang besar
 7. ✅ Assignment status tracking (submission statistics)
+8. ✅ File upload support (multipart form & inline media)
+9. ✅ Dashboard Statistics (Student, Teacher, Admin)
 
 ## 🚀 High Priority (Critical for Production)
 
@@ -18,10 +20,10 @@
 
 ## 📊 Analytics & Reporting (Medium Priority)
 
-- [ ] **Dashboard Statistics**:
-  - Student: pending assignments, average scores, upcoming deadlines
-  - Teacher: pending reviews, submission rates, class performance
-  - Admin: school statistics, enrollment trends
+- [x] **Dashboard Statistics**:
+  - Student: pending assignments, average scores, upcoming deadlines ✅
+  - Teacher: pending reviews, submission rates, class performance ✅
+  - Admin: school statistics, enrollment trends ✅
   
 - [ ] **Grade Report / Transcript**:
   - Calculate weighted grades using assessment_weights table
