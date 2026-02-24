@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/internal/handler"
+	"backend/internal/middleware"
 	"backend/internal/repository"
 	"backend/internal/service"
 	"os"
@@ -117,8 +118,12 @@ func main() {
 
 	api := r.Group("/api")
 	{
+		//public routes
 		api.POST("/login", authHandler.Login)
 		api.POST("/register", authHandler.Register)
+
+		//protected routes
+		api.Use(middleware.AuthRequired())
 
 		schoolAPI:=api.Group("/schools")
 		{
