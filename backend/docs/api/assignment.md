@@ -73,11 +73,17 @@ Base URL: `/api/assignments`
 ```
 
 ### 5. Get Assignment with Submissions
-- **URL:** `/:id`
+- **URL:** `/:submissionId`
 - **Method:** `GET`
+- **Note:** This endpoint gets assignment details with all submissions
 - **Response:** `AssignmentWithSubmissionsDTO` (includes all submissions and assessments)
 
-### 6. Update Assignment
+### 6. Get Assignment Status
+- **URL:** `/status/:id`
+- **Method:** `GET`
+- **Response:** Assignment with submission statistics (total, submitted, graded, pending)
+
+### 7. Update Assignment
 - **URL:** `/:id`
 - **Method:** `PATCH`
 - **Body:** (all fields optional)
@@ -92,7 +98,7 @@ Base URL: `/api/assignments`
 }
 ```
 
-### 7. Delete Assignment
+### 8. Delete Assignment
 - **URL:** `/:id`
 - **Method:** `DELETE`
 - **Note:** Soft delete
@@ -101,7 +107,7 @@ Base URL: `/api/assignments`
 
 ## Submissions
 
-### 8. Submit Assignment
+### 9. Submit Assignment
 - **URL:** `/submit/:assignmentId`
 - **Method:** `POST`
 - **Body:**
@@ -114,12 +120,12 @@ Base URL: `/api/assignments`
 ```
 - **Note:** Upsert logic - updates existing submission if already submitted
 
-### 9. Get Submission by ID
+### 10. Get Submission by ID
 - **URL:** `/submit/:submissionId`
 - **Method:** `GET`
 - **Response:** Includes `isLate` indicator and assessment if graded
 
-### 10. Update Submission
+### 11. Update Submission
 - **URL:** `/submit/:submissionId`
 - **Method:** `PATCH`
 - **Body:**
@@ -131,7 +137,7 @@ Base URL: `/api/assignments`
 }
 ```
 
-### 11. Delete Submission
+### 12. Delete Submission
 - **URL:** `/submit/:submissionId`
 - **Method:** `DELETE`
 - **Note:** Soft delete, can be restored by resubmitting
@@ -140,7 +146,7 @@ Base URL: `/api/assignments`
 
 ## Assessments
 
-### 12. Grade Submission
+### 13. Grade Submission
 - **URL:** `/assess/:submissionId`
 - **Method:** `POST`
 - **Body:**
@@ -153,7 +159,7 @@ Base URL: `/api/assignments`
 ```
 - **Note:** Upsert logic - updates existing assessment if already graded
 
-### 13. Update Assessment
+### 14. Update Assessment
 - **URL:** `/assess/:submissionId`
 - **Method:** `PATCH`
 - **Body:** (all fields optional)
@@ -164,7 +170,7 @@ Base URL: `/api/assignments`
 }
 ```
 
-### 14. Delete Assessment
+### 15. Delete Assessment
 - **URL:** `/assess/:submissionId`
 - **Method:** `DELETE`
 - **Note:** Removes grading, submission remains
