@@ -2,6 +2,21 @@
 
 Base URL: `http://localhost:8080/api`
 
+## 🔐 Authentication
+
+**Public Endpoints (No Auth Required):**
+- `POST /login` - User login
+- `POST /register` - User registration
+
+**All other endpoints require JWT authentication.**
+
+**Authentication Header:**
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+---
+
 ## 🏫 Schools
 - `POST /schools` - Create school
 - `GET /schools` - List all schools (with pagination)
@@ -155,6 +170,12 @@ Base URL: `http://localhost:8080/api`
 ---
 
 ## 🔑 Key Features
+
+### Authentication
+- JWT-based authentication
+- Token expiry: 24 hours
+- Public endpoints: login, register
+- All other endpoints protected
 
 ### Pagination
 Most list endpoints support:
