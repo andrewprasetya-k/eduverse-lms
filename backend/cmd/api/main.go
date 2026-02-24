@@ -30,22 +30,27 @@ func main() {
 	}
 
 	//initialize repo, service, handler
+
+	
 	schoolRepo := repository.NewSchoolRepository(db)
 	schoolService := service.NewSchoolService(schoolRepo)
 	schoolHandler := handler.NewSchoolHandler(schoolService)
-
+	
 	academicYearRepo := repository.NewAcademicYearRepository(db)
 	academicYearService := service.NewAcademicYearService(academicYearRepo, schoolService)
 	academicYearHandler := handler.NewAcademicYearHandler(academicYearService, schoolService)
-
+	
 	termRepo := repository.NewTermRepository(db)
 	termService := service.NewTermService(termRepo)
 	termHandler := handler.NewTermHandler(termService)
-
+	
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
-
+	
+	authService := service.NewAuthService(userRepo)
+	authHandler := handler.NewAuthHandler(authService)
+	
 	schoolUserRepo := repository.NewSchoolUserRepository(db)
 	schoolUserService := service.NewSchoolUserService(schoolUserRepo, schoolService)
 	schoolUserHandler := handler.NewSchoolUserHandler(schoolUserService, schoolService)
@@ -112,6 +117,12 @@ func main() {
 
 	api := r.Group("/api")
 	{
+		authAPI := api.Group("/auth")
+		{
+			authAPI.POST("/login", authHandler.Login)
+			authAPI.POST("/register", authHandler.Register)
+		}
+		
 		schoolAPI:=api.Group("/schools")
 		{
 			schoolAPI.POST("/", schoolHandler.CreateSchool)
