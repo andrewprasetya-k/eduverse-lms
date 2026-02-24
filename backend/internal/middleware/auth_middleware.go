@@ -62,3 +62,18 @@ func GetUserID(c *gin.Context) string {
 
 	return userID
 }
+
+func GetEmail(c *gin.Context) string {
+	userClaims, exists := c.Get("user")
+	if !exists {
+		return ""
+	}
+
+	claims := userClaims.(jwt.MapClaims)
+	email, ok := claims["email"].(string)
+	if !ok {
+		return ""
+	}
+
+	return email
+}
