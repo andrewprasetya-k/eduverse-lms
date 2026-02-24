@@ -11,10 +11,11 @@
 7. ✅ Assignment status tracking (submission statistics)
 8. ✅ File upload support (multipart form & inline media)
 9. ✅ Dashboard Statistics (Student, Teacher, Admin)
+10. ✅ Authentication & Authorization (JWT middleware)
 
 ## 🚀 High Priority (Critical for Production)
 
-- [ ] **Authentication & Authorization**: JWT middleware + role-based access control
+- [ ] **Role-based Access Control**: Middleware untuk cek role (admin, teacher, student)
 - [ ] **File Upload Integration**: S3/Supabase storage untuk media files
 - [ ] **Notification System**: Real-time notifications untuk assignments, grades, feeds
 
@@ -24,7 +25,6 @@
   - Student: pending assignments, average scores, upcoming deadlines ✅
   - Teacher: pending reviews, submission rates, class performance ✅
   - Admin: school statistics, enrollment trends ✅
-  
 - [ ] **Grade Report / Transcript**:
   - Calculate weighted grades using assessment_weights table
   - Generate report cards per student per term
