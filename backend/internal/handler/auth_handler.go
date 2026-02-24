@@ -50,7 +50,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 	token, user, err := h.authService.Register(input.FullName, input.Email, input.Password)
 	if err != nil {
-		HandleError(c, err)
+		if err.Error() == "Email already registered" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			HandleError(c, err)
+		}
 		return
 	}
 

@@ -3,6 +3,7 @@ package service
 import (
 	"backend/internal/domain"
 	"backend/internal/repository"
+	"errors"
 	"os"
 	"time"
 
@@ -55,9 +56,17 @@ func (s *authService) Login(email string, password string) (string, *domain.User
 }
 
 func (s *authService) Register(fullName string, email string, password string) (string, *domain.User, error) {
+	isEmailExists, err := s.userRepo.CheckEmailExists(email, "")
+	if err != nil {
+		return "", nil, err
+	}
+	if isEmailExists {
+		return "", nil, errors.New("Email already registered")
+	}
+	
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "Incorrect credentials", nil, err
+		return "", nil, err
 	}
 
 	user := &domain.User{
@@ -68,7 +77,7 @@ func (s *authService) Register(fullName string, email string, password string) (
 
 	err = s.userRepo.Create(user)
 	if err != nil {
-		return "Failed to create user", nil, err
+		return "", nil, err
 	}
 
 	return s.Login(email, password) // Auto-login after registration
