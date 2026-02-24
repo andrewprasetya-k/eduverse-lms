@@ -11,11 +11,8 @@ import (
 )
 
 type AuthService interface {
-	Login(username string, password string) (string, error) // returns JWT token
-	Register(fullName string, email string, password string) (string, error) // returns JWT token
-
-	// GenerateToken(userID string, role string) (string, error)
-	// ValidateToken(tokenStr string) (string, string, error) // returns userID and role
+	Login(email string, password string) (string, *domain.User, error) // returns JWT token and user
+	Register(fullName string, email string, password string) (string, *domain.User, error) // returns JWT token and user
 }
 
 type authService struct {
@@ -26,45 +23,41 @@ func NewAuthService(userRepo repository.UserRepository) AuthService {
 	return &authService{userRepo: userRepo}
 }
 
-func (s *authService) Login(email string, password string) (string, error) {
-	userEmail,err := s.userRepo.GetByEmail(email)
+func (s *authService) Login(email string, password string) (string, *domain.User, error) {
+	userEmail, err := s.userRepo.GetByEmail(email)
 	if err != nil {
-		return err.Error(), err
+		return "", nil, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(userEmail.Password), []byte(password))
 	if err != nil {
-		return "Invalid credentials", err
-	}
-
-	if userEmail.ID == "" {
-		return "User not found", nil
+		return "", nil, err
 	}
 
 	payload := jwt.MapClaims{
 		"user_id": userEmail.ID,
 		"email":   userEmail.Email,
-		"exp":     jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // Token expires in 24 hours
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
 	}
 
 	secretKey := os.Getenv("JWT_SECRET")
 	if secretKey == "" {
-		return "JWT secret key not configured", nil
+		return "", nil, err
 	}
 
-	//create token
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-	tokenString, err := jwtToken.SignedString([]byte(secretKey))  // ← Convert to []byte
+	tokenString, err := jwtToken.SignedString([]byte(secretKey))
 	if err != nil {
-		return "Failed to generate token", err
+		return "", nil, err
 	}
-	return tokenString, nil
+	
+	return tokenString, userEmail, nil
 }
 
-func (s *authService) Register(fullName string, email string, password string) (string, error) {
+func (s *authService) Register(fullName string, email string, password string) (string, *domain.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "Failed to hash password", err
+		return "Incorrect credentials", nil, err
 	}
 
 	user := &domain.User{
@@ -75,7 +68,7 @@ func (s *authService) Register(fullName string, email string, password string) (
 
 	err = s.userRepo.Create(user)
 	if err != nil {
-		return "Failed to create user", err
+		return "Failed to create user", nil, err
 	}
 
 	return s.Login(email, password) // Auto-login after registration
