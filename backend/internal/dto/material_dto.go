@@ -1,13 +1,22 @@
 package dto
 
 type CreateMaterialDTO struct {
-	SchoolID       string   `json:"schoolId" binding:"required,uuid"`
-	SubjectClassID string   `json:"subjectClassId" binding:"required,uuid"`
-	Title          string   `json:"materialTitle" binding:"required"`
-	Description    string   `json:"materialDesc"`
-	Type           string   `json:"materialType" binding:"required,oneof=video pdf ppt other"`
-	CreatedBy      string   `json:"createdBy" binding:"required,uuid"`
-	MediaIDs       []string `json:"mediaIds"` // Files to attach
+	SchoolID       string              `json:"schoolId" binding:"required,uuid"`
+	SubjectClassID string              `json:"subjectClassId" binding:"required,uuid"`
+	Title          string              `json:"materialTitle" binding:"required"`
+	Description    string              `json:"materialDesc"`
+	Type           string              `json:"materialType" binding:"required,oneof=video pdf ppt other"`
+	CreatedBy      string              `json:"createdBy" binding:"required,uuid"`
+	MediaIDs       []string            `json:"mediaIds"` // Existing media IDs
+	Medias         []CreateMediaInline `json:"medias"`   // New media to create
+}
+
+type CreateMediaInline struct {
+	Name         string `json:"name" binding:"required"`
+	FileSize     int64  `json:"fileSize"`
+	MimeType     string `json:"mimeType"`
+	FileURL      string `json:"fileUrl" binding:"required"`
+	ThumbnailURL string `json:"thumbnailUrl"`
 }
 
 type UpdateMaterialDTO struct {

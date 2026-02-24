@@ -220,6 +220,7 @@ func main() {
 
 		mediaAPI := api.Group("/medias")
 		{
+			mediaAPI.POST("/upload", mediaHandler.Upload)
 			mediaAPI.POST("/metadata", mediaHandler.RecordMetadata)
 			mediaAPI.GET("/:id", mediaHandler.GetByID)
 			mediaAPI.DELETE("/:id", mediaHandler.Delete)

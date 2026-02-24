@@ -2,13 +2,14 @@ package service
 
 import (
 	"backend/internal/domain"
+	"backend/internal/dto"
 	"backend/internal/repository"
 	"strings"
 	"time"
 )
 
 type MaterialService interface {
-	Create(mat *domain.Material, mediaIDs []string) error
+	Create(mat *domain.Material, mediaIDs []string, medias []dto.CreateMediaInline) error
 	FindAll(search string, subjectClassID string, page int, limit int) ([]*domain.Material, int64, error)
 	GetByID(id string) (*domain.Material, error)
 	Update(mat *domain.Material, mediaIDs []string) error
@@ -33,12 +34,30 @@ func NewMaterialService(repo repository.MaterialRepository, attService Attachmen
 	}
 }
 
-func (s *materialService) Create(mat *domain.Material, mediaIDs []string) error {
+func (s *materialService) Create(mat *domain.Material, mediaIDs []string, medias []dto.CreateMediaInline) error {
 	mat.Title = strings.TrimSpace(mat.Title)
 
 	err := s.repo.Create(mat)
 	if err != nil {
 		return err
+	}
+
+	// Create new medias if provided
+	for _, m := range medias {
+		media := &domain.Media{
+			SchoolID:     mat.SchoolID,
+			Name:         m.Name,
+			FileSize:     m.FileSize,
+			MimeType:     m.MimeType,
+			FileURL:      m.FileURL,
+			ThumbnailURL: m.ThumbnailURL,
+			IsPublic:     true,
+			OwnerType:    domain.OwnerMaterial,
+			OwnerID:      mat.ID,
+		}
+		if err := s.mediaRepo.Create(media); err == nil {
+			mediaIDs = append(mediaIDs, media.ID)
+		}
 	}
 
 	// Link attachments

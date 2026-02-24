@@ -23,27 +23,88 @@ func NewMaterialHandler(service service.MaterialService, subjectClassService ser
 }
 
 func (h *MaterialHandler) Create(c *gin.Context) {
-	var input dto.CreateMaterialDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
-		HandleBindingError(c, err)
+	// Check if it's multipart form (with files) or JSON
+	contentType := c.GetHeader("Content-Type")
+	
+	if contentType == "application/json" {
+		// Original JSON flow
+		var input dto.CreateMaterialDTO
+		if err := c.ShouldBindJSON(&input); err != nil {
+			HandleBindingError(c, err)
+			return
+		}
+
+		mat := domain.Material{
+			SchoolID:       input.SchoolID,
+			SubjectClassID: input.SubjectClassID,
+			Title:          input.Title,
+			Description:    input.Description,
+			Type:           domain.MaterialType(input.Type),
+			CreatedBy:      input.CreatedBy,
+		}
+
+		if err := h.service.Create(&mat, input.MediaIDs, input.Medias); err != nil {
+			HandleError(c, err)
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"message": "Material created successfully"})
+		return
+	}
+
+	// Multipart form flow (with file uploads)
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data"})
+		return
+	}
+
+	// Parse form fields
+	schoolID := c.PostForm("schoolId")
+	subjectClassID := c.PostForm("subjectClassId")
+	title := c.PostForm("materialTitle")
+	description := c.PostForm("materialDesc")
+	materialType := c.PostForm("materialType")
+	createdBy := c.PostForm("createdBy")
+
+	if schoolID == "" || subjectClassID == "" || title == "" || materialType == "" || createdBy == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Required fields: schoolId, subjectClassId, materialTitle, materialType, createdBy"})
 		return
 	}
 
 	mat := domain.Material{
-		SchoolID:       input.SchoolID,
-		SubjectClassID: input.SubjectClassID,
-		Title:          input.Title,
-		Description:    input.Description,
-		Type:           domain.MaterialType(input.Type),
-		CreatedBy:      input.CreatedBy,
+		SchoolID:       schoolID,
+		SubjectClassID: subjectClassID,
+		Title:          title,
+		Description:    description,
+		Type:           domain.MaterialType(materialType),
+		CreatedBy:      createdBy,
 	}
 
-	if err := h.service.Create(&mat, input.MediaIDs); err != nil {
+	// Process uploaded files
+	files := form.File["files"]
+	var medias []dto.CreateMediaInline
+
+	for _, file := range files {
+		fileSize := file.Size / (1024 * 1024) // Convert to MB
+		if fileSize > 10 { // Example limit: 10MB
+			c.JSON(http.StatusBadRequest, gin.H{"error": "File size exceeds 10MB limit"})
+			return
+		}
+		medias = append(medias, dto.CreateMediaInline{
+			Name:     file.Filename,
+			FileSize: file.Size,
+			MimeType: file.Header.Get("Content-Type"),
+			FileURL:  "https://placeholder.supabase.co/storage/v1/object/public/materials/" + file.Filename,
+		})
+	}
+
+	if err := h.service.Create(&mat, nil, medias); err != nil {
 		HandleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Material created successfully"})
+	c.JSON(http.StatusCreated, gin.H{"message": "Material created successfully with files"})
 }
 
 func (h *MaterialHandler) FindAll(c *gin.Context) {
