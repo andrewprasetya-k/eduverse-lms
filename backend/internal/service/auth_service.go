@@ -47,14 +47,14 @@ func (s *authService) Login(email string, password string) (string, error) {
 		"exp":     jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // Token expires in 24 hours
 	}
 
-	secretKey:=os.Getenv("JWT_SECRET")
+	secretKey := os.Getenv("JWT_SECRET")
 	if secretKey == "" {
 		return "JWT secret key not configured", nil
 	}
 
 	//create token
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-	tokenString, err := jwtToken.SignedString(secretKey)
+	tokenString, err := jwtToken.SignedString([]byte(secretKey))  // ← Convert to []byte
 	if err != nil {
 		return "Failed to generate token", err
 	}
