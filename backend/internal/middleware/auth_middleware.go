@@ -41,9 +41,24 @@ func AuthRequired() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		c.Set("user", token.Claims.(jwt.MapClaims))
 
 		c.Next()
 	}
+}
+
+func GetUserID(c *gin.Context) string {
+	userClaims, exists := c.Get("user")
+	if !exists {
+		return ""
+	}
+
+	claims := userClaims.(jwt.MapClaims)
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return ""
+	}
+
+	return userID
 }
