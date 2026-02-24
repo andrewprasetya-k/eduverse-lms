@@ -117,12 +117,9 @@ func main() {
 
 	api := r.Group("/api")
 	{
-		authAPI := api.Group("/auth")
-		{
-			authAPI.POST("/login", authHandler.Login)
-			authAPI.POST("/register", authHandler.Register)
-		}
-		
+		api.POST("/login", authHandler.Login)
+		api.POST("/register", authHandler.Register)
+
 		schoolAPI:=api.Group("/schools")
 		{
 			schoolAPI.POST("/", schoolHandler.CreateSchool)
