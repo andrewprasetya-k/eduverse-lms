@@ -96,6 +96,10 @@ func main() {
 	logService := service.NewLogService(logRepo)
 	logHandler := handler.NewLogHandler(logService)
 
+	dashboardRepo := repository.NewDashboardRepository(db)
+	dashboardService := service.NewDashboardService(dashboardRepo)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService)
+
 
 	//router setup
 	r := gin.Default()
@@ -280,10 +284,17 @@ func main() {
 			assignmentAPI.DELETE("/assess/:submissionId", assignmentHandler.DeleteAssessment)
 		}
 
-				logAPI := api.Group("/logs")
-				{
-					logAPI.GET("/school/:schoolId", logHandler.GetBySchool)
-				}
+		logAPI := api.Group("/logs")
+		{
+			logAPI.GET("/school/:schoolId", logHandler.GetBySchool)
+		}
+
+		dashboardAPI := api.Group("/dashboard")
+		{
+			dashboardAPI.GET("/student/:userId", dashboardHandler.GetStudentDashboard)
+			dashboardAPI.GET("/teacher/:teacherId", dashboardHandler.GetTeacherDashboard)
+			dashboardAPI.GET("/admin/:schoolId", dashboardHandler.GetAdminDashboard)
+		}
 			}
 		
 			//run server
