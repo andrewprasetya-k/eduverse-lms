@@ -292,7 +292,7 @@ func main() {
 		dashboardAPI := api.Group("/dashboard")
 		{
 			dashboardAPI.GET("/student/:userId", dashboardHandler.GetStudentDashboard)
-			dashboardAPI.GET("/teacher/:teacherId", dashboardHandler.GetTeacherDashboard)
+			dashboardAPI.GET("/teacher/:schoolUserId", dashboardHandler.GetTeacherDashboard)
 			dashboardAPI.GET("/admin/:schoolId", dashboardHandler.GetAdminDashboard)
 		}
 			}

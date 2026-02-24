@@ -28,9 +28,9 @@ func (h *DashboardHandler) GetStudentDashboard(c *gin.Context) {
 }
 
 func (h *DashboardHandler) GetTeacherDashboard(c *gin.Context) {
-	teacherID := c.Param("teacherId")
+	schoolUserID := c.Param("schoolUserId")
 	
-	dashboard, err := h.service.GetTeacherDashboard(teacherID)
+	dashboard, err := h.service.GetTeacherDashboard(schoolUserID)
 	if err != nil {
 		HandleError(c, err)
 		return

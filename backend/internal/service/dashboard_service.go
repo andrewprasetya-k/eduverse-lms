@@ -8,7 +8,7 @@ import (
 
 type DashboardService interface {
 	GetStudentDashboard(userID string) (*dto.StudentDashboardDTO, error)
-	GetTeacherDashboard(teacherID string) (*dto.TeacherDashboardDTO, error)
+	GetTeacherDashboard(schoolUserID string) (*dto.TeacherDashboardDTO, error)
 	GetAdminDashboard(schoolID string) (*dto.AdminDashboardDTO, error)
 }
 
@@ -62,23 +62,23 @@ func (s *dashboardService) GetStudentDashboard(userID string) (*dto.StudentDashb
 	}, nil
 }
 
-func (s *dashboardService) GetTeacherDashboard(teacherID string) (*dto.TeacherDashboardDTO, error) {
-	pending, err := s.repo.GetPendingReviewsCount(teacherID)
+func (s *dashboardService) GetTeacherDashboard(schoolUserID string) (*dto.TeacherDashboardDTO, error) {
+	pending, err := s.repo.GetPendingReviewsCount(schoolUserID)
 	if err != nil {
 		return nil, err
 	}
 
-	totalStudents, err := s.repo.GetTotalStudentsByTeacher(teacherID)
+	totalStudents, err := s.repo.GetTotalStudentsByTeacher(schoolUserID)
 	if err != nil {
 		return nil, err
 	}
 
-	submissionRate, err := s.repo.GetSubmissionRateByTeacher(teacherID)
+	submissionRate, err := s.repo.GetSubmissionRateByTeacher(schoolUserID)
 	if err != nil {
 		return nil, err
 	}
 
-	performance, err := s.repo.GetClassPerformance(teacherID)
+	performance, err := s.repo.GetClassPerformance(schoolUserID)
 	if err != nil {
 		return nil, err
 	}
