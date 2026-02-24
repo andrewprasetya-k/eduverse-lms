@@ -23,13 +23,22 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := h.authService.Login(input.Email, input.Password)
+	token, user, err := h.authService.Login(input.Email, input.Password)
 	if err != nil {
 		HandleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	response := dto.LoginResponseDTO{
+		Token: token,
+		User: dto.UserInfo{
+			ID:       user.ID,
+			FullName: user.FullName,
+			Email:    user.Email,
+		},
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -39,10 +48,20 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	if _, err := h.authService.Register(input.FullName, input.Email, input.Password); err != nil {
+	token, user, err := h.authService.Register(input.FullName, input.Email, input.Password)
+	if err != nil {
 		HandleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
+	response := dto.LoginResponseDTO{
+		Token: token,
+		User: dto.UserInfo{
+			ID:       user.ID,
+			FullName: user.FullName,
+			Email:    user.Email,
+		},
+	}
+
+	c.JSON(http.StatusCreated, response)
 }
