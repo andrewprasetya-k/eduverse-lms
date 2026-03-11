@@ -131,7 +131,35 @@ Replace all roles for a user.
 
 ---
 
-## 3. RBAC Middleware
+## 3. Super Admin Management
+
+### Create Super Admin
+Create a new super admin user (automatically enrolled to "admin" school with super_admin role).
+
+- **URL:** `/super-admin`
+- **Method:** `POST`
+- **Auth:** Required (super_admin only)
+- **Body:**
+```json
+{
+  "fullName": "John Doe",
+  "email": "john@admin.com",
+  "password": "securepassword"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Super admin created successfully"
+}
+```
+
+**Note:** This endpoint can only be accessed by existing super_admin. For the first super_admin, use manual setup (see section 6).
+
+---
+
+## 4. RBAC Middleware
 
 ### School Context Header
 
@@ -251,9 +279,93 @@ User bukan member dari school yang diakses.
 
 ## 6. Setup & Testing
 
-### Initial Setup
+### Initial Setup (First Super Admin)
 
-1. **Create Roles** (via API or SQL)
+**Option 1: Via API (3 steps)**
+
+1. **Create User**
+```bash
+POST /api/register
+{
+  "fullName": "Super Admin",
+  "email": "admin@system.com",
+  "password": "securepassword"
+}
+```
+
+2. **Get School "admin" ID**
+```bash
+GET /api/schools
+# Find school with name "admin", copy sch_id
+```
+
+3. **Enroll to admin school**
+```bash
+POST /api/school-users/enroll
+{
+  "scu_usr_id": "<user-id>",
+  "scu_sch_id": "<admin-school-id>"
+}
+# Copy scu_id from response
+```
+
+4. **Get super_admin role ID**
+```bash
+GET /api/rbac/roles
+# Find role with name "super_admin", copy rol_id
+```
+
+5. **Assign super_admin role**
+```bash
+POST /api/rbac/user-roles
+{
+  "schoolUserId": "<scu-id>",
+  "roleId": "<super-admin-role-id>"
+}
+```
+
+**Option 2: Via SQL (Quick)**
+```sql
+-- 1. Create user
+INSERT INTO edv.users (usr_id, usr_nama_lengkap, usr_email, usr_password, is_active)
+VALUES (gen_random_uuid(), 'Super Admin', 'admin@system.com', '<hashed-password>', true);
+
+-- 2. Get IDs
+SELECT usr_id FROM edv.users WHERE usr_email = 'admin@system.com';
+SELECT sch_id FROM edv.schools WHERE sch_name = 'admin';
+SELECT rol_id FROM edv.roles WHERE rol_name = 'super_admin';
+
+-- 3. Enroll to admin school
+INSERT INTO edv.school_users (scu_id, scu_usr_id, scu_sch_id)
+VALUES (gen_random_uuid(), '<user-id>', '<admin-school-id>');
+
+-- 4. Assign role
+INSERT INTO edv.user_roles (urol_id, urol_scu_id, urol_rol_id)
+VALUES (gen_random_uuid(), '<school-user-id>', '<role-id>');
+```
+
+### Create Additional Super Admins
+
+Once you have one super_admin, use the endpoint:
+
+```bash
+POST /api/rbac/super-admin
+Authorization: Bearer <super-admin-token>
+SchoolId: <admin-school-id>
+
+{
+  "fullName": "Another Super Admin",
+  "email": "admin2@system.com",
+  "password": "securepassword"
+}
+```
+
+This automatically:
+- Creates user
+- Enrolls to "admin" school
+- Assigns super_admin role
+
+### Initial Setup (Roles)
 ```bash
 POST /api/rbac/roles
 {
