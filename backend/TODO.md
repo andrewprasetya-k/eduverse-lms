@@ -12,11 +12,11 @@
 8. ✅ File upload support (multipart form & inline media)
 9. ✅ Dashboard Statistics (Student, Teacher, Admin)
 10. ✅ Authentication & Authorization (JWT middleware)
-11. implementasi auto get email dan user id dari middleware
+11. ✅ Implementasi auto get email dan user id dari middleware
+12. ✅ Role-based Access Control (RBAC middleware)
 
 ## 🚀 High Priority (Critical for Production)
 
-- [ ] **Role-based Access Control**: Middleware untuk cek role (admin, teacher, student)
 - [ ] **File Upload Integration**: S3/Supabase storage untuk media files
 - [ ] **Notification System**: Real-time notifications untuk assignments, grades, feeds
 
