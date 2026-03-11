@@ -157,6 +157,22 @@ func (h *RBACHandler) UpdateUserRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User roles updated successfully"})
 }
 
+func (h *RBACHandler) CreateSuperAdmin(c *gin.Context) {
+	var input dto.CreateUserDTO
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		HandleBindingError(c, err)
+		return
+	}
+
+	if err := h.service.CreateSuperAdmin(input.FullName, input.Email, input.Password); err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Super admin created successfully"})
+}
+
 // Helpers
 func (h *RBACHandler) mapRoleToResponse(role *domain.Role) dto.RoleResponseDTO {
 	return dto.RoleResponseDTO{

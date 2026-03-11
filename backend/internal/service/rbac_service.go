@@ -20,15 +20,22 @@ type RBACService interface {
 	RemoveRoleFromUser(schoolUserID string, roleID string) error
 	GetUserRoles(schoolUserID string) ([]*domain.UserRole, error)
 	SyncUserRoles(schoolUserID string, roleIDs []string) error
+
+	// Super Admin management
+	CreateSuperAdmin(name, email, password string) error
 }
 
 type rbacService struct {
-	repo repository.RBACRepository
+	repo        repository.RBACRepository
+	userService UserService
+	schoolRepo  repository.SchoolRepository
 }
 
-func NewRBACService(repo repository.RBACRepository) RBACService {
+func NewRBACService(repo repository.RBACRepository, userService UserService, schoolRepo repository.SchoolRepository) RBACService {
 	return &rbacService{
-		repo: repo,
+		repo:        repo,
+		userService: userService,
+		schoolRepo:  schoolRepo,
 	}
 }
 
@@ -92,4 +99,60 @@ func (s *rbacService) GetUserRoles(schoolUserID string) ([]*domain.UserRole, err
 
 func (s *rbacService) SyncUserRoles(schoolUserID string, roleIDs []string) error {
 	return s.repo.SyncUserRoles(schoolUserID, roleIDs)
+}
+
+func (s *rbacService) CreateSuperAdmin(name, email, password string) error {
+	// 1. Get admin school
+	adminSchool, err := s.schoolRepo.GetSchoolByName("admin")
+	if err != nil {
+		return fmt.Errorf("admin school not found: %v", err)
+	}
+
+	// 2. Get super_admin role
+	roles, err := s.repo.GetAllRoles()
+	if err != nil {
+		return fmt.Errorf("failed to get roles: %v", err)
+	}
+	
+	var superAdminRoleID string
+	for _, role := range roles {
+		if role.Name == "super_admin" {
+			superAdminRoleID = role.ID
+			break
+		}
+	}
+	if superAdminRoleID == "" {
+		return fmt.Errorf("super_admin role not found")
+	}
+
+	// 3. Create user (userService.Create will hash password automatically)
+	user := &domain.User{
+		FullName: name,
+		Email:    email,
+		Password: password,
+		IsActive: true,
+	}
+	if err := s.userService.Create(user); err != nil {
+		return fmt.Errorf("failed to create user: %v", err)
+	}
+
+	// 4. Enroll to admin school
+	schoolUser := &domain.SchoolUser{
+		UserID:   user.ID,
+		SchoolID: adminSchool.ID,
+	}
+	if err := s.schoolRepo.EnrollUser(schoolUser); err != nil {
+		return fmt.Errorf("failed to enroll user: %v", err)
+	}
+
+	// 5. Assign super_admin role
+	userRole := &domain.UserRole{
+		SchoolUserID: schoolUser.ID,
+		RoleID:       superAdminRoleID,
+	}
+	if err := s.repo.AssignRole(userRole); err != nil {
+		return fmt.Errorf("failed to assign role: %v", err)
+	}
+
+	return nil
 }

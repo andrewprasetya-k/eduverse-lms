@@ -13,6 +13,7 @@ type SchoolRepository interface{
 	GetSchools(search string, status string, page int, limit int, sortBy string, order string) ([]*domain.School, int64, error)
 	GetSchoolByCode(schoolCode string) (*domain.School, error)
 	GetSchoolByID(schoolID string) (*domain.School, error)
+	GetSchoolByName(name string) (*domain.School, error)
 	RestoreDeletedSchool(schoolID string) error
 	UpdateSchool(school *domain.School) error
 	DeleteSchool(schoolID string) error
@@ -20,6 +21,7 @@ type SchoolRepository interface{
 	CheckEmailExists(email string, excludeID string) (bool, error)
 	CheckPhoneExists(phone string, excludeID string) (bool, error)
 	GetSchoolSummary() (active int64, deleted int64, total int64, err error)
+	EnrollUser(schoolUser *domain.SchoolUser) error
 }
 
 type schoolRepository struct {
@@ -175,4 +177,14 @@ func (r *schoolRepository) GetSchoolSummary() (active int64, deleted int64, tota
 	}
 	total = active + deleted
 	return
+}
+
+func (r *schoolRepository) GetSchoolByName(name string) (*domain.School, error) {
+	var school domain.School
+	err := r.db.Where("LOWER(sch_name) = LOWER(?)", name).First(&school).Error
+	return &school, err
+}
+
+func (r *schoolRepository) EnrollUser(schoolUser *domain.SchoolUser) error {
+	return r.db.Create(schoolUser).Error
 }

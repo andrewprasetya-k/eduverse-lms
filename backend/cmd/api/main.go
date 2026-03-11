@@ -61,7 +61,7 @@ func main() {
 	subjectHandler := handler.NewSubjectHandler(subjectService, schoolService)
 
 	rbacRepo := repository.NewRBACRepository(db)
-	rbacService := service.NewRBACService(rbacRepo)
+	rbacService := service.NewRBACService(rbacRepo, userService, schoolRepo)
 	rbacHandler := handler.NewRBACHandler(rbacService)
 
 	classRepo := repository.NewClassRepository(db)
@@ -207,6 +207,9 @@ func main() {
 			rbacAPI.DELETE("/user-roles", middleware.RequireRole(schoolService, "admin", "super_admin"), rbacHandler.RemoveRole)
 			rbacAPI.GET("/user-roles/:schoolUserId", rbacHandler.GetUserRoles)
 			rbacAPI.PATCH("/user-roles/:schoolUserId", middleware.RequireRole(schoolService, "admin", "super_admin"), rbacHandler.UpdateUserRoles)
+
+			// Super Admin
+			rbacAPI.POST("/super-admin", middleware.RequireRole(schoolService, "super_admin"), rbacHandler.CreateSuperAdmin)
 		}
 
 		classAPI := api.Group("/classes")
