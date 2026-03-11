@@ -106,6 +106,8 @@ func main() {
 	dashboardService := service.NewDashboardService(dashboardRepo)
 	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 
+	// Initialize RBAC middleware
+	middleware.InitRBAC(rbacRepo)
 
 	//router setup
 	r := gin.Default()
@@ -127,112 +129,112 @@ func main() {
 
 		schoolAPI:=api.Group("/schools")
 		{
-			schoolAPI.POST("/", schoolHandler.CreateSchool)
+			schoolAPI.POST("/", middleware.RequireRole(schoolService, "super_admin"), schoolHandler.CreateSchool)
 			schoolAPI.GET("/", schoolHandler.GetSchools)
 			schoolAPI.GET("/summary", schoolHandler.GetSchoolSummary)
 			schoolAPI.GET("/check-code/:schoolCode", schoolHandler.CheckCodeAvailability)
-			schoolAPI.GET("/:schoolCode", schoolHandler.GetSchoolByCode)
-			schoolAPI.PATCH("/:schoolCode", schoolHandler.UpdateSchool)
-			schoolAPI.PATCH("/restore/:schoolCode", schoolHandler.RestoreDeletedSchool)
-			schoolAPI.DELETE("/:schoolCode", schoolHandler.DeleteSchool)
-			schoolAPI.DELETE("/permanent/:schoolCode", schoolHandler.HardDeleteSchool)
+			schoolAPI.GET("/:schoolCode", middleware.RequireSchoolAccess(schoolService), schoolHandler.GetSchoolByCode)
+			schoolAPI.PATCH("/:schoolCode", middleware.RequireSchoolAccess(schoolService), middleware.RequireRole(schoolService, "admin", "super_admin"), schoolHandler.UpdateSchool)
+			schoolAPI.PATCH("/restore/:schoolCode", middleware.RequireRole(schoolService, "super_admin"), schoolHandler.RestoreDeletedSchool)
+			schoolAPI.DELETE("/:schoolCode", middleware.RequireSchoolAccess(schoolService), middleware.RequireRole(schoolService, "admin", "super_admin"), schoolHandler.DeleteSchool)
+			schoolAPI.DELETE("/permanent/:schoolCode", middleware.RequireRole(schoolService, "super_admin"), schoolHandler.HardDeleteSchool)
 		}
 
 		academicYearAPI := api.Group("/academic-years")
 		{
-			academicYearAPI.POST("/", academicYearHandler.Create)
+			academicYearAPI.POST("/", middleware.RequireRole(schoolService, "admin", "super_admin"), academicYearHandler.Create)
 			academicYearAPI.GET("/", academicYearHandler.FindAll)
 			academicYearAPI.GET("/:id", academicYearHandler.GetByID)
-			academicYearAPI.GET("/school/:schoolCode", academicYearHandler.GetBySchool)
-			academicYearAPI.PATCH("/:id", academicYearHandler.Update)
-			academicYearAPI.PATCH("/activate/:id", academicYearHandler.Activate)
-			academicYearAPI.PATCH("/deactivate/:id", academicYearHandler.Deactivate)
-			academicYearAPI.DELETE("/:id", academicYearHandler.Delete)
+			academicYearAPI.GET("/school/:schoolCode", middleware.RequireSchoolAccess(schoolService), academicYearHandler.GetBySchool)
+			academicYearAPI.PATCH("/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), academicYearHandler.Update)
+			academicYearAPI.PATCH("/activate/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), academicYearHandler.Activate)
+			academicYearAPI.PATCH("/deactivate/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), academicYearHandler.Deactivate)
+			academicYearAPI.DELETE("/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), academicYearHandler.Delete)
 		}
 
 		termAPI := api.Group("/terms")
 		{
-			termAPI.POST("/", termHandler.Create)
+			termAPI.POST("/", middleware.RequireRole(schoolService, "admin", "super_admin"), termHandler.Create)
 			termAPI.GET("/", termHandler.FindAll)
 			termAPI.GET("/:id", termHandler.GetByID)
 			termAPI.GET("/academic-year/:academicYearId", termHandler.GetByAcademicYear)
-			termAPI.PATCH("/:id", termHandler.Update)
-			termAPI.PATCH("/activate/:id", termHandler.Activate)
-			termAPI.PATCH("/deactivate/:id", termHandler.Deactivate)
-			termAPI.DELETE("/:id", termHandler.Delete)
+			termAPI.PATCH("/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), termHandler.Update)
+			termAPI.PATCH("/activate/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), termHandler.Activate)
+			termAPI.PATCH("/deactivate/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), termHandler.Deactivate)
+			termAPI.DELETE("/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), termHandler.Delete)
 		}
 
 		userAPI := api.Group("/users")
 		{
-			userAPI.POST("/", userHandler.Create)
-			userAPI.GET("/", userHandler.FindAll)
+			userAPI.POST("/", middleware.RequireRole(schoolService, "admin", "super_admin"), userHandler.Create)
+			userAPI.GET("/", middleware.RequireRole(schoolService, "admin", "super_admin"), userHandler.FindAll)
 			userAPI.GET("/:id", userHandler.GetByID)
 			userAPI.PATCH("/:id", userHandler.Update)
 			userAPI.PATCH("/change-password/:id", userHandler.ChangePassword)
-			userAPI.DELETE("/:id", userHandler.Delete)
+			userAPI.DELETE("/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), userHandler.Delete)
 		}
 
 		schoolUserAPI := api.Group("/school-users")
 		{
-			schoolUserAPI.POST("/enroll", schoolUserHandler.Enroll)
-			schoolUserAPI.GET("/school/:schoolCode", schoolUserHandler.GetMembersBySchool)
+			schoolUserAPI.POST("/enroll", middleware.RequireRole(schoolService, "admin", "super_admin"), schoolUserHandler.Enroll)
+			schoolUserAPI.GET("/school/:schoolCode", middleware.RequireSchoolAccess(schoolService), schoolUserHandler.GetMembersBySchool)
 			schoolUserAPI.GET("/user/:userId", schoolUserHandler.GetSchoolsByUser)
-			schoolUserAPI.DELETE("/:userId", schoolUserHandler.Unenroll)
+			schoolUserAPI.DELETE("/:userId", middleware.RequireRole(schoolService, "admin", "super_admin"), schoolUserHandler.Unenroll)
 		}
 
 		subjectAPI := api.Group("/subjects")
 		{
-			subjectAPI.POST("/", subjectHandler.Create)
+			subjectAPI.POST("/", middleware.RequireRole(schoolService, "admin", "super_admin"), subjectHandler.Create)
 			subjectAPI.GET("/", subjectHandler.FindAll)
 			subjectAPI.GET("/:id", subjectHandler.GetByID)
-			subjectAPI.GET("/school/:schoolCode", subjectHandler.GetBySchool)
-			subjectAPI.GET("/school/:schoolCode/:subjectCode", subjectHandler.GetByCode)
-			subjectAPI.PATCH("/:id", subjectHandler.Update)
-			subjectAPI.DELETE("/:id", subjectHandler.Delete)
+			subjectAPI.GET("/school/:schoolCode", middleware.RequireSchoolAccess(schoolService), subjectHandler.GetBySchool)
+			subjectAPI.GET("/school/:schoolCode/:subjectCode", middleware.RequireSchoolAccess(schoolService), subjectHandler.GetByCode)
+			subjectAPI.PATCH("/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), subjectHandler.Update)
+			subjectAPI.DELETE("/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), subjectHandler.Delete)
 		}
 
 		rbacAPI := api.Group("/rbac")
 		{
 			// Roles
-			rbacAPI.POST("/roles", rbacHandler.CreateRole)
+			rbacAPI.POST("/roles", middleware.RequireRole(schoolService, "super_admin"), rbacHandler.CreateRole)
 			rbacAPI.GET("/roles", rbacHandler.GetAllRoles)
 			rbacAPI.GET("/roles/:id", rbacHandler.GetRoleByID)
-			rbacAPI.PATCH("/roles/:id", rbacHandler.UpdateRole)
-			rbacAPI.DELETE("/roles/:id", rbacHandler.DeleteRole)
+			rbacAPI.PATCH("/roles/:id", middleware.RequireRole(schoolService, "super_admin"), rbacHandler.UpdateRole)
+			rbacAPI.DELETE("/roles/:id", middleware.RequireRole(schoolService, "super_admin"), rbacHandler.DeleteRole)
 
 			// User Roles (Assignments)
-			rbacAPI.POST("/user-roles", rbacHandler.AssignRole)
-			rbacAPI.DELETE("/user-roles", rbacHandler.RemoveRole)
+			rbacAPI.POST("/user-roles", middleware.RequireRole(schoolService, "admin", "super_admin"), rbacHandler.AssignRole)
+			rbacAPI.DELETE("/user-roles", middleware.RequireRole(schoolService, "admin", "super_admin"), rbacHandler.RemoveRole)
 			rbacAPI.GET("/user-roles/:schoolUserId", rbacHandler.GetUserRoles)
-			rbacAPI.PATCH("/user-roles/:schoolUserId", rbacHandler.UpdateUserRoles)
+			rbacAPI.PATCH("/user-roles/:schoolUserId", middleware.RequireRole(schoolService, "admin", "super_admin"), rbacHandler.UpdateUserRoles)
 		}
 
 		classAPI := api.Group("/classes")
 		{
-			classAPI.POST("/", classHandler.Create)
+			classAPI.POST("/", middleware.RequireRole(schoolService, "admin", "teacher"), classHandler.Create)
 			classAPI.GET("/", classHandler.FindAll)
 			classAPI.GET("/:id", classHandler.GetByID)
-			classAPI.PATCH("/:id", classHandler.Update)
-			classAPI.DELETE("/:id", classHandler.Delete)
+			classAPI.PATCH("/:id", middleware.RequireRole(schoolService, "admin", "teacher"), classHandler.Update)
+			classAPI.DELETE("/:id", middleware.RequireRole(schoolService, "admin"), classHandler.Delete)
 		}
 
 		subjectClassAPI := api.Group("/subject-classes")
 		{
-			subjectClassAPI.POST("/assign", subjectClassHandler.Assign)
+			subjectClassAPI.POST("/assign", middleware.RequireRole(schoolService, "admin", "teacher"), subjectClassHandler.Assign)
 			subjectClassAPI.GET("/class/:classId", subjectClassHandler.GetByClass)
 			subjectClassAPI.GET("/:id", subjectClassHandler.GetByID)
-			subjectClassAPI.PATCH("/:id", subjectClassHandler.Update)
-			subjectClassAPI.DELETE("/:id", subjectClassHandler.Unassign)
+			subjectClassAPI.PATCH("/:id", middleware.RequireRole(schoolService, "admin", "teacher"), subjectClassHandler.Update)
+			subjectClassAPI.DELETE("/:id", middleware.RequireRole(schoolService, "admin"), subjectClassHandler.Unassign)
 		}
 
 		enrollmentAPI := api.Group("/enrollments")
 		{
-			enrollmentAPI.POST("/", enrollmentHandler.Enroll)
+			enrollmentAPI.POST("/", middleware.RequireRole(schoolService, "admin", "teacher"), enrollmentHandler.Enroll)
 			enrollmentAPI.GET("/class/:classId", enrollmentHandler.GetByClass)
 			enrollmentAPI.GET("/member/:schoolUserId", enrollmentHandler.GetByMember)
 			enrollmentAPI.GET("/:id", enrollmentHandler.GetByID)
-			enrollmentAPI.PATCH("/:id", enrollmentHandler.Update)
-			enrollmentAPI.DELETE("/:id", enrollmentHandler.Unenroll)
+			enrollmentAPI.PATCH("/:id", middleware.RequireRole(schoolService, "admin", "teacher"), enrollmentHandler.Update)
+			enrollmentAPI.DELETE("/:id", middleware.RequireRole(schoolService, "admin", "teacher"), enrollmentHandler.Unenroll)
 		}
 
 		mediaAPI := api.Group("/medias")
@@ -245,17 +247,17 @@ func main() {
 
 		materialAPI := api.Group("/materials")
 		{
-			materialAPI.POST("/", materialHandler.Create)
+			materialAPI.POST("/", middleware.RequireRole(schoolService, "teacher"), materialHandler.Create)
 			materialAPI.GET("/", materialHandler.FindAll)
 			materialAPI.GET("/:id", materialHandler.GetByID)
-			materialAPI.PATCH("/:id", materialHandler.Update)
-			materialAPI.DELETE("/:id", materialHandler.Delete)
+			materialAPI.PATCH("/:id", middleware.RequireRole(schoolService, "teacher"), materialHandler.Update)
+			materialAPI.DELETE("/:id", middleware.RequireRole(schoolService, "teacher", "admin"), materialHandler.Delete)
 			materialAPI.POST("/progress", materialHandler.UpdateProgress)
 		}
 
 		feedAPI := api.Group("/feeds")
 		{
-			feedAPI.POST("/", feedHandler.Create)
+			feedAPI.POST("/", middleware.RequireRole(schoolService, "teacher", "admin"), feedHandler.Create)
 			feedAPI.GET("/class/:classId", feedHandler.GetByClass)
 			feedAPI.GET("/:id", feedHandler.GetByID)
 			feedAPI.PATCH("/:id", feedHandler.Update)
@@ -274,27 +276,27 @@ func main() {
 		assignmentAPI := api.Group("/assignments")
 		{
 			// Categories
-			assignmentAPI.POST("/categories", assignmentHandler.CreateCategory)
-			assignmentAPI.GET("/categories/school/:schoolCode", assignmentHandler.GetCategoriesBySchool)
+			assignmentAPI.POST("/categories", middleware.RequireRole(schoolService, "admin"), assignmentHandler.CreateCategory)
+			assignmentAPI.GET("/categories/school/:schoolCode", middleware.RequireSchoolAccess(schoolService), assignmentHandler.GetCategoriesBySchool)
 			
 			// Assignments
-			assignmentAPI.POST("/", assignmentHandler.CreateAssignment)
+			assignmentAPI.POST("/", middleware.RequireRole(schoolService, "teacher"), assignmentHandler.CreateAssignment)
 			assignmentAPI.GET("/subject-class/:subjectClassId", assignmentHandler.GetBySubjectClass)
 			assignmentAPI.GET("/:submissionId", assignmentHandler.GetSubmissionsByAssignment)
 			assignmentAPI.GET("/status/:id", assignmentHandler.GetAssignmentStatus)
-			assignmentAPI.PATCH("/:id", assignmentHandler.UpdateAssignment)
-			assignmentAPI.DELETE("/:id", assignmentHandler.DeleteAssignment)
+			assignmentAPI.PATCH("/:id", middleware.RequireRole(schoolService, "teacher"), assignmentHandler.UpdateAssignment)
+			assignmentAPI.DELETE("/:id", middleware.RequireRole(schoolService, "teacher", "admin"), assignmentHandler.DeleteAssignment)
 			
 			// Submissions
-			assignmentAPI.POST("/submit/:assignmentId", assignmentHandler.Submit)
+			assignmentAPI.POST("/submit/:assignmentId", middleware.RequireRole(schoolService, "student"), assignmentHandler.Submit)
 			assignmentAPI.GET("/submit/:submissionId", assignmentHandler.GetSubmissionByID)
-			assignmentAPI.PATCH("/submit/:submissionId", assignmentHandler.UpdateSubmission)
-			assignmentAPI.DELETE("/submit/:submissionId", assignmentHandler.DeleteSubmission)
+			assignmentAPI.PATCH("/submit/:submissionId", middleware.RequireRole(schoolService, "student"), assignmentHandler.UpdateSubmission)
+			assignmentAPI.DELETE("/submit/:submissionId", middleware.RequireRole(schoolService, "student"), assignmentHandler.DeleteSubmission)
 			
 			// Assessments
-			assignmentAPI.POST("/assess/:submissionId", assignmentHandler.Assess)
-			assignmentAPI.PATCH("/assess/:submissionId", assignmentHandler.UpdateAssessment)
-			assignmentAPI.DELETE("/assess/:submissionId", assignmentHandler.DeleteAssessment)
+			assignmentAPI.POST("/assess/:submissionId", middleware.RequireRole(schoolService, "teacher"), assignmentHandler.Assess)
+			assignmentAPI.PATCH("/assess/:submissionId", middleware.RequireRole(schoolService, "teacher"), assignmentHandler.UpdateAssessment)
+			assignmentAPI.DELETE("/assess/:submissionId", middleware.RequireRole(schoolService, "teacher"), assignmentHandler.DeleteAssessment)
 		}
 
 		logAPI := api.Group("/logs")
