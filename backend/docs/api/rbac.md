@@ -139,7 +139,7 @@ Replace all roles for a user.
 
 **Priority 1: Header (Recommended)**
 ```
-X-School-ID: uuid-school-id
+SchoolId: uuid-school-id
 ```
 
 **Priority 2: URL Parameter (Fallback)**
@@ -152,7 +152,7 @@ X-School-ID: uuid-school-id
 ```bash
 POST /api/classes
 Authorization: Bearer <token>
-X-School-ID: uuid-school-id
+SchoolId: uuid-school-id
 Content-Type: application/json
 
 {
@@ -216,7 +216,7 @@ School context tidak ditemukan.
 
 ```json
 {
-  "error": "School context required (X-School-ID header or schoolCode param)"
+  "error": "School context required (SchoolId header or schoolCode param)"
 }
 ```
 
@@ -293,12 +293,12 @@ const schools = await fetch(`/api/school-users/user/${userId}`, {
 // 3. User selects a school
 const selectedSchoolId = schools[0].school.sch_id;
 
-// 4. Make requests with X-School-ID header
+// 4. Make requests with SchoolId header
 const response = await fetch('/api/classes', {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${token}`,
-    'X-School-ID': selectedSchoolId,
+    'SchoolId': selectedSchoolId,
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -314,7 +314,7 @@ const response = await fetch('/api/classes', {
 ```bash
 POST /api/classes
 Authorization: Bearer <admin-token>
-X-School-ID: <school-id>
+SchoolId: <school-id>
 
 {
   "cls_code": "12-IPA-1",
@@ -328,7 +328,7 @@ X-School-ID: <school-id>
 ```bash
 POST /api/classes
 Authorization: Bearer <student-token>
-X-School-ID: <school-id>
+SchoolId: <school-id>
 
 {
   "cls_code": "12-IPA-1",
@@ -347,7 +347,7 @@ X-School-ID: <school-id>
 
 ### Multi-School Support
 - User dapat memiliki role berbeda di sekolah berbeda
-- Frontend mengirim `X-School-ID` header untuk specify context
+- Frontend mengirim `SchoolId` header untuk specify context
 - Middleware otomatis validate membership dan role
 
 ### Backward Compatible
