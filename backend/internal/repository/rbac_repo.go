@@ -25,6 +25,7 @@ type RBACRepository interface {
 	GetUserRoleNamesInSchool(userID, schoolID string) ([]string, error)
 	IsUserInSchool(userID, schoolID string) (bool, error)
 	GetSchoolUserID(userID, schoolID string) (string, error)
+	IsSuperAdmin(userID string) (bool, error)
 }
 
 type rbacRepository struct {
@@ -163,4 +164,15 @@ func (r *rbacRepository) GetSchoolUserID(userID, schoolID string) (string, error
 		return "", gorm.ErrRecordNotFound
 	}
 	return scuID, nil
+}
+
+// IsSuperAdmin checks if user has super_admin role
+func (r *rbacRepository) IsSuperAdmin(userID string) (bool, error) {
+	var count int64
+	err := r.db.Table("edv.user_roles").
+		Joins("JOIN edv.roles ON edv.roles.rol_id = edv.user_roles.urol_rol_id").
+		Joins("JOIN edv.school_users ON edv.school_users.scu_id = edv.user_roles.urol_scu_id").
+		Where("edv.school_users.scu_usr_id = ? AND edv.roles.rol_name = ?", userID, "super_admin").
+		Count(&count).Error
+	return count > 0, err
 }

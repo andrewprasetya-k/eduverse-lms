@@ -130,7 +130,7 @@ func main() {
 		schoolAPI:=api.Group("/schools")
 		{
 			schoolAPI.POST("/", middleware.RequireRole(schoolService, "super_admin"), schoolHandler.CreateSchool)
-			schoolAPI.GET("/", schoolHandler.GetSchools)
+			schoolAPI.GET("/", middleware.RequireRole(schoolService, "super_admin"), schoolHandler.GetSchools)
 			schoolAPI.GET("/summary", schoolHandler.GetSchoolSummary)
 			schoolAPI.GET("/check-code/:schoolCode", schoolHandler.CheckCodeAvailability)
 			schoolAPI.GET("/:schoolCode", middleware.RequireSchoolAccess(schoolService), schoolHandler.GetSchoolByCode)

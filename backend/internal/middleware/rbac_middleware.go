@@ -16,6 +16,7 @@ func InitRBAC(repo repository.RBACRepository) {
 
 // RequireSchoolAccess checks if user belongs to the school
 // Priority: SchoolId header > schoolCode URL param
+// Note: super_admin bypasses school membership check
 func RequireSchoolAccess(schoolService interface {
 	ConvertCodeToID(code string) (string, error)
 }) gin.HandlerFunc {
@@ -49,17 +50,28 @@ func RequireSchoolAccess(schoolService interface {
 			}
 		}
 
-		isMember, err := rbacRepo.IsUserInSchool(userID, schoolID)
+		// Check if user is super_admin (bypass school membership check)
+		isSuperAdmin, err := rbacRepo.IsSuperAdmin(userID)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify school access"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify permissions"})
 			c.Abort()
 			return
 		}
 
-		if !isMember {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: not a member of this school"})
-			c.Abort()
-			return
+		if !isSuperAdmin {
+			// Regular user: check school membership
+			isMember, err := rbacRepo.IsUserInSchool(userID, schoolID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify school access"})
+				c.Abort()
+				return
+			}
+
+			if !isMember {
+				c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: not a member of this school"})
+				c.Abort()
+				return
+			}
 		}
 
 		// Store for later use
