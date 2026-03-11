@@ -20,6 +20,11 @@ type RBACRepository interface {
 	RemoveRoleFromUser(schoolUserID string, roleID string) error
 	GetUserRoles(schoolUserID string) ([]*domain.UserRole, error)
 	SyncUserRoles(schoolUserID string, roleIDs []string) error
+
+	// RBAC Helpers
+	GetUserRoleNamesInSchool(userID, schoolID string) ([]string, error)
+	IsUserInSchool(userID, schoolID string) (bool, error)
+	GetSchoolUserID(userID, schoolID string) (string, error)
 }
 
 type rbacRepository struct {
@@ -121,4 +126,41 @@ func (r *rbacRepository) SyncUserRoles(schoolUserID string, roleIDs []string) er
 		}
 		return nil
 	})
+}
+
+// GetUserRoleNamesInSchool returns role names for a user in a specific school
+func (r *rbacRepository) GetUserRoleNamesInSchool(userID, schoolID string) ([]string, error) {
+	var roleNames []string
+	err := r.db.Table("user_roles").
+		Select("roles.rol_name").
+		Joins("JOIN school_users ON school_users.scu_id = user_roles.urol_scu_id").
+		Joins("JOIN roles ON roles.rol_id = user_roles.urol_rol_id").
+		Where("school_users.scu_usr_id = ? AND school_users.scu_sch_id = ?", userID, schoolID).
+		Pluck("roles.rol_name", &roleNames).Error
+	return roleNames, err
+}
+
+// IsUserInSchool checks if user belongs to a school
+func (r *rbacRepository) IsUserInSchool(userID, schoolID string) (bool, error) {
+	var count int64
+	err := r.db.Table("school_users").
+		Where("scu_usr_id = ? AND scu_sch_id = ?", userID, schoolID).
+		Count(&count).Error
+	return count > 0, err
+}
+
+// GetSchoolUserID returns school_user ID for a user in a school
+func (r *rbacRepository) GetSchoolUserID(userID, schoolID string) (string, error) {
+	var scuID string
+	err := r.db.Table("school_users").
+		Select("scu_id").
+		Where("scu_usr_id = ? AND scu_sch_id = ?", userID, schoolID).
+		Pluck("scu_id", &scuID).Error
+	if err != nil {
+		return "", err
+	}
+	if scuID == "" {
+		return "", gorm.ErrRecordNotFound
+	}
+	return scuID, nil
 }
