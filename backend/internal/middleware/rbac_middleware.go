@@ -14,7 +14,8 @@ func InitRBAC(repo repository.RBACRepository) {
 	rbacRepo = repo
 }
 
-// RequireSchoolAccess checks if user belongs to the school in path
+// RequireSchoolAccess checks if user belongs to the school
+// Priority: X-School-ID header > schoolCode URL param
 func RequireSchoolAccess(schoolService interface {
 	ConvertCodeToID(code string) (string, error)
 }) gin.HandlerFunc {
@@ -26,17 +27,26 @@ func RequireSchoolAccess(schoolService interface {
 			return
 		}
 
-		schoolCode := c.Param("schoolCode")
-		if schoolCode == "" {
-			c.Next()
-			return
-		}
+		var schoolID string
+		var err error
 
-		schoolID, err := schoolService.ConvertCodeToID(schoolCode)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
-			c.Abort()
-			return
+		// Priority 1: Check X-School-ID header
+		schoolID = c.GetHeader("X-School-ID")
+
+		// Priority 2: Check schoolCode in URL param
+		if schoolID == "" {
+			schoolCode := c.Param("schoolCode")
+			if schoolCode == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "School context required (X-School-ID header or schoolCode param)"})
+				c.Abort()
+				return
+			}
+			schoolID, err = schoolService.ConvertCodeToID(schoolCode)
+			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+				c.Abort()
+				return
+			}
 		}
 
 		isMember, err := rbacRepo.IsUserInSchool(userID, schoolID)
@@ -59,6 +69,7 @@ func RequireSchoolAccess(schoolService interface {
 }
 
 // RequireRole checks if user has any of the allowed roles in the school
+// Priority: context > X-School-ID header > schoolCode URL param
 func RequireRole(schoolService interface {
 	ConvertCodeToID(code string) (string, error)
 }, allowedRoles ...string) gin.HandlerFunc {
@@ -70,26 +81,35 @@ func RequireRole(schoolService interface {
 			return
 		}
 
-		// Get schoolID from context or param
-		schoolID, exists := c.Get("school_id")
-		if !exists {
-			schoolCode := c.Param("schoolCode")
-			if schoolCode != "" {
-				sid, err := schoolService.ConvertCodeToID(schoolCode)
-				if err != nil {
-					c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+		var schoolID string
+		var err error
+
+		// Priority 1: Get from context (set by RequireSchoolAccess)
+		if sid, exists := c.Get("school_id"); exists {
+			schoolID = sid.(string)
+		} else {
+			// Priority 2: Check X-School-ID header
+			schoolID = c.GetHeader("X-School-ID")
+
+			// Priority 3: Check schoolCode in URL param
+			if schoolID == "" {
+				schoolCode := c.Param("schoolCode")
+				if schoolCode != "" {
+					schoolID, err = schoolService.ConvertCodeToID(schoolCode)
+					if err != nil {
+						c.JSON(http.StatusNotFound, gin.H{"error": "School not found"})
+						c.Abort()
+						return
+					}
+				} else {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "School context required (X-School-ID header or schoolCode param)"})
 					c.Abort()
 					return
 				}
-				schoolID = sid
-			} else {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
-				c.Abort()
-				return
 			}
 		}
 
-		roles, err := rbacRepo.GetUserRoleNamesInSchool(userID, schoolID.(string))
+		roles, err := rbacRepo.GetUserRoleNamesInSchool(userID, schoolID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify roles"})
 			c.Abort()
