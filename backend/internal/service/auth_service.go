@@ -27,12 +27,14 @@ func NewAuthService(userRepo repository.UserRepository) AuthService {
 func (s *authService) Login(email string, password string) (string, *domain.User, error) {
 	userEmail, err := s.userRepo.GetByEmail(email)
 	if err != nil {
-		return "", nil, err
+		// Return generic error to prevent user enumeration
+		return "", nil, errors.New("invalid email or password")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(userEmail.Password), []byte(password))
 	if err != nil {
-		return "", nil, err
+		// Return same generic error for password mismatch
+		return "", nil, errors.New("invalid email or password")
 	}
 
 	payload := jwt.MapClaims{
@@ -43,7 +45,7 @@ func (s *authService) Login(email string, password string) (string, *domain.User
 
 	secretKey := os.Getenv("JWT_SECRET")
 	if secretKey == "" {
-		return "", nil, err
+		return "", nil, errors.New("server configuration error")
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
