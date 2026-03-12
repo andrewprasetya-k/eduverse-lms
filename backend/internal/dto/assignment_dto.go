@@ -116,14 +116,14 @@ type SetAssessmentWeightDTO struct {
 }
 
 type WeightItemDTO struct {
-	CategoryID   string  `json:"categoryId"`
-	Weight 	 float64 `json:"weight"`
+	CategoryID   string  `json:"categoryId" binding:"required,uuid"`
+	Weight 	 float64 `json:"weight" binding:"required,min=0,max=100"`
 }
 
 type WeightResponseDTO struct {
 	SubjectID string		  `json:"subjectId"`
 	SubjectName string		  `json:"subjectName"`
-	SubjcetCode string		  `json:"subjectCode"`
+	SubjectCode string		  `json:"subjectCode"`
 	Weights   []WeightDetailDTO `json:"weights"`
 	TotalWeight float64           `json:"totalWeight"`
 }
@@ -145,11 +145,17 @@ type GradeReportDTO struct {
 	LetterGrade string  `json:"letterGrade"`
 }
 
+type ConfigureWeightsDTO struct {
+	SubjectID string  `json:"subjectId" binding:"required,uuid"`
+	Weights   []SetAssessmentWeightDTO `json:"weights" binding:"required,dive"`
+}
+
 type CategoryBreakdownDTO struct {
 	CategoryID   string  `json:"categoryId"`
 	CategoryName string  `json:"categoryName"`
 	AverageScore float64 `json:"averageScore"`
 	WeightedScore float64 `json:"weightedScore"`
+	Weight          float64 `json:"weight"` 
 	AssignmentCount int     `json:"assignmentCount"`
 }
 

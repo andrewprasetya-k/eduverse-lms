@@ -46,6 +46,7 @@ type Submission struct {
 	ID           string         `gorm:"primaryKey;column:sbm_id;default:gen_random_uuid()" json:"submissionId"`
 	SchoolID     string         `gorm:"column:sbm_sch_id;type:uuid" json:"schoolId"`
 	AssignmentID string         `gorm:"column:sbm_asg_id;type:uuid" json:"assignmentId"`
+	Assignment   Assignment     `gorm:"foreignKey:AssignmentID;references:ID" json:"assignment,omitempty"`
 	UserID       string         `gorm:"column:sbm_usr_id;type:uuid" json:"userId"`
 	User         User           `gorm:"foreignKey:UserID;references:ID" json:"user,omitempty"`
 	SubmittedAt  time.Time      `gorm:"column:submitted_at;autoCreateTime" json:"submittedAt"`
@@ -60,13 +61,14 @@ func (Submission) TableName() string {
 }
 
 type Assessment struct {
-	ID         string    `gorm:"primaryKey;column:asm_id;default:gen_random_uuid()" json:"assessmentId"`
-	SubmissionID string  `gorm:"column:asm_sbm_id;type:uuid" json:"submissionId"`
-	Score      float64   `gorm:"column:asm_score" json:"score"`
-	Feedback   string    `gorm:"column:asm_feedback" json:"feedback"`
-	AssessedBy string    `gorm:"column:assessed_by;type:uuid" json:"assessedBy"`
-	Assessor   User      `gorm:"foreignKey:AssessedBy;references:ID" json:"assessor,omitempty"`
-	AssessedAt time.Time `gorm:"column:assessed_at;autoCreateTime" json:"assessedAt"`
+    ID           string     `gorm:"primaryKey;column:asm_id;default:gen_random_uuid()" json:"assessmentId"`
+    SubmissionID string     `gorm:"column:asm_sbm_id;type:uuid" json:"submissionId"`
+    Submission   Submission `gorm:"foreignKey:SubmissionID;references:ID" json:"submission,omitempty"` // TAMBAH INI
+    Score        float64    `gorm:"column:asm_score" json:"score"`
+    Feedback     string     `gorm:"column:asm_feedback" json:"feedback"`
+    AssessedBy   string     `gorm:"column:assessed_by;type:uuid" json:"assessedBy"`
+    Assessor     User       `gorm:"foreignKey:AssessedBy;references:ID" json:"assessor,omitempty"`
+    AssessedAt   time.Time  `gorm:"column:assessed_at;autoCreateTime" json:"assessedAt"`
 }
 
 func (Assessment) TableName() string {
