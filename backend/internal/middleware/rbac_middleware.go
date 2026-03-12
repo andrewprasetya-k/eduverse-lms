@@ -14,10 +14,10 @@ func InitRBAC(repo repository.RBACRepository) {
 	rbacRepo = repo
 }
 
-// RequireSchoolAccess checks if user belongs to the school
+// RequireSchoolMember checks if user belongs to the school
 // Priority: SchoolId header > schoolCode URL param
 // Note: super_admin bypasses school membership check
-func RequireSchoolAccess(schoolService interface {
+func RequireSchoolMember(schoolService interface {
 	ConvertCodeToID(code string) (string, error)
 }) gin.HandlerFunc {
 	return func(c *gin.Context) {
