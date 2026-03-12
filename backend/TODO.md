@@ -14,6 +14,23 @@
 10. ✅ Authentication & Authorization (JWT middleware)
 11. ✅ Implementasi auto get email dan user id dari middleware
 12. ✅ Role-based Access Control (RBAC middleware)
+13. tambahkan tabel notifikasi di schema.md dengan query create table:
+    '''
+    -- Migration: create_notifications_table.sql
+    CREATE TABLE edv.notifications (
+    ntf_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    ntf_usr_id UUID NOT NULL REFERENCES edv.users(usr_id),
+    ntf_type VARCHAR(50) NOT NULL, -- 'assignment_created', 'assignment_graded', 'comment_added', etc
+    ntf_title VARCHAR(255) NOT NULL,
+    ntf_message TEXT,
+    ntf_link TEXT, -- deep link ke resource (e.g., /assignments/uuid)
+    ntf_related_id UUID, -- ID of related resource
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+    );
+
+CREATE INDEX idx_notifications_user ON edv.notifications(ntf_usr_id, is_read, created_at DESC);
+'''
 
 ## 🚀 High Priority (Critical for Production)
 
