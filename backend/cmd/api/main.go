@@ -98,6 +98,14 @@ func main() {
 	assignmentService := service.NewAssignmentService(assignmentRepo, attachmentService)
 	assignmentHandler := handler.NewAssignmentHandler(assignmentService, schoolService, subjectClassService)
 
+	gradeHandler := handler.NewGradeHandler(service.NewGradeService(
+		repository.NewAssessmentWeightRepository(db),
+		repository.NewGradeRepository(db),
+		subjectRepo,
+		classRepo,
+		userRepo,
+	))
+
 	logRepo := repository.NewLogRepository(db)
 	logService := service.NewLogService(logRepo)
 	logHandler := handler.NewLogHandler(logService)
@@ -300,6 +308,25 @@ func main() {
 			assignmentAPI.POST("/assess/:submissionId", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "teacher"), assignmentHandler.Assess)
 			assignmentAPI.PATCH("/assess/:submissionId", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "teacher"), assignmentHandler.UpdateAssessment)
 			assignmentAPI.DELETE("/assess/:submissionId", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "teacher"), assignmentHandler.DeleteAssessment)
+		}
+
+		gradeAPI := api.Group("/grades")
+		{
+			gradeAPI.POST("/weights",
+					middleware.RequireRole(schoolService, "admin", "teacher"),
+					gradeHandler.ConfigureWeights)
+
+			gradeAPI.GET("/weights/subject/:subjectId",
+					middleware.RequireSchoolMember(schoolService),
+					gradeHandler.GetWeightsBySubject)
+
+			gradeAPI.GET("/student/:userId/subject/:subjectId",
+					middleware.RequireSchoolMember(schoolService),
+					gradeHandler.GetStudentGrade)
+
+			gradeAPI.GET("/class/:classId/subject/:subjectId",
+					middleware.RequireRole(schoolService, "teacher", "admin"),
+					gradeHandler.GetClassGradeReport)
 		}
 
 		logAPI := api.Group("/logs")
