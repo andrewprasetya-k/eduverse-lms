@@ -20,7 +20,12 @@
 ## 🚀 High Priority (Critical for Production)
 
 - [ ] **File Upload Integration**: S3/Supabase storage untuk media files
-- [ ] **Notification System**: Real-time notifications untuk assignments, grades, feeds
+- [ ] **Notification Triggers Integration**: Auto-create notifications untuk:
+  - New assignment created → notify students
+  - Assignment graded → notify student
+  - New comment added → notify content owner
+  - New material added → notify students
+  - New feed posted → notify class members
 
 ## 📊 Analytics & Reporting (Medium Priority)
 
