@@ -10,12 +10,18 @@ Role-Based Access Control (RBAC) mengamankan API endpoints berdasarkan role user
 
 ### Roles
 
-| Role | Permissions |
-|------|-------------|
-| `super_admin` | Full access ke semua sekolah dan fitur |
-| `admin` | Manage sekolah tertentu (academic years, terms, users, subjects) |
-| `teacher` | Manage kelas, materials, assignments yang diajar |
-| `student` | Akses read-only + submit assignment |
+| Role | Scope | Permissions |
+|------|-------|-------------|
+| `super_admin` | **System-wide** (bukan school-specific) | System management: create/manage schools, roles, super admins. Read access ke semua sekolah. **TIDAK bisa** melakukan operasi akademik (create assignments, materials, dll) tanpa role sekolah. |
+| `admin` | School-specific | Manage sekolah tertentu (academic years, terms, users, subjects, classes) |
+| `teacher` | School-specific | Manage kelas, materials, assignments yang diajar |
+| `student` | School-specific | Akses read-only + submit assignment |
+
+**Catatan Penting:**
+- `super_admin` adalah **admin sistem aplikasi**, bukan admin sekolah
+- `super_admin` bisa VIEW data semua sekolah (monitoring/troubleshooting)
+- `super_admin` TIDAK bisa CREATE/UPDATE/DELETE konten akademik tanpa role sekolah
+- Untuk operasi akademik, super_admin harus di-enroll sebagai `admin` atau `teacher` di sekolah tersebut
 
 ---
 
@@ -193,47 +199,65 @@ Content-Type: application/json
 
 ## 4. Protected Endpoints
 
+**Legend:**
+- ✅ = Can perform action
+- 📖 = Read-only access
+- ❌ = No access
+
+### System Management (Super Admin Only)
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/schools` | POST | ✅ | ❌ | ❌ | ❌ |
+| `/rbac/roles` | POST | ✅ | ❌ | ❌ | ❌ |
+| `/rbac/super-admin` | POST | ✅ | ❌ | ❌ | ❌ |
+
 ### School Management
-| Endpoint | Method | Required Role |
-|----------|--------|---------------|
-| `/schools` | POST | super_admin |
-| `/schools/:schoolCode` | PATCH | admin, super_admin |
-| `/schools/:schoolCode` | DELETE | admin, super_admin |
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/schools/:schoolCode` | GET | 📖 | 📖 | 📖 | 📖 |
+| `/schools/:schoolCode` | PATCH | ❌* | ✅ | ❌ | ❌ |
+| `/schools/:schoolCode` | DELETE | ❌* | ✅ | ❌ | ❌ |
+
+*Super admin harus enroll sebagai admin di sekolah tersebut
 
 ### Academic Structure
-| Endpoint | Method | Required Role |
-|----------|--------|---------------|
-| `/academic-years` | POST | admin, super_admin |
-| `/terms` | POST | admin, super_admin |
-| `/subjects` | POST | admin, super_admin |
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/academic-years` | GET | 📖 | 📖 | 📖 | 📖 |
+| `/academic-years` | POST | ❌ | ✅ | ❌ | ❌ |
+| `/terms` | POST | ❌ | ✅ | ❌ | ❌ |
+| `/subjects` | POST | ❌ | ✅ | ❌ | ❌ |
 
 ### Class Management
-| Endpoint | Method | Required Role |
-|----------|--------|---------------|
-| `/classes` | POST | admin, teacher |
-| `/classes/:id` | PATCH | admin, teacher |
-| `/classes/:id` | DELETE | admin |
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/classes` | GET | 📖 | 📖 | 📖 | 📖 |
+| `/classes` | POST | ❌ | ✅ | ✅ | ❌ |
+| `/classes/:id` | PATCH | ❌ | ✅ | ✅ | ❌ |
+| `/classes/:id` | DELETE | ❌ | ✅ | ❌ | ❌ |
 
 ### Learning Content
-| Endpoint | Method | Required Role |
-|----------|--------|---------------|
-| `/materials` | POST | teacher |
-| `/assignments` | POST | teacher |
-| `/assignments/submit/:id` | POST | student |
-| `/assignments/assess/:id` | POST | teacher |
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/materials` | GET | 📖 | 📖 | 📖 | 📖 |
+| `/materials` | POST | ❌ | ❌ | ✅ | ❌ |
+| `/assignments` | POST | ❌ | ❌ | ✅ | ❌ |
+| `/assignments/submit/:id` | POST | ❌ | ❌ | ❌ | ✅ |
+| `/assignments/assess/:id` | POST | ❌ | ❌ | ✅ | ❌ |
 
 ### User Management
-| Endpoint | Method | Required Role |
-|----------|--------|---------------|
-| `/users` | POST | admin, super_admin |
-| `/users` | GET | admin, super_admin |
-| `/users/:id` | DELETE | admin, super_admin |
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/users` | POST | 📖 | ✅ | ❌ | ❌ |
+| `/users` | GET | 📖 | ✅ | ❌ | ❌ |
+| `/users/:id` | DELETE | 📖 | ✅ | ❌ | ❌ |
 
 ### Enrollment
-| Endpoint | Method | Required Role |
-|----------|--------|---------------|
-| `/enrollments` | POST | admin, teacher |
-| `/enrollments/:id` | DELETE | admin, teacher |
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/enrollments` | GET | 📖 | 📖 | 📖 | 📖 |
+| `/enrollments` | POST | ❌ | ✅ | ✅ | ❌ |
+| `/enrollments/:id` | DELETE | ❌ | ✅ | ✅ | ❌ |
 
 ---
 
