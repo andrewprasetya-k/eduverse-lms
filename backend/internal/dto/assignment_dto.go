@@ -1,6 +1,8 @@
 package dto
 
-import "time"
+import (
+	"time"
+)
 
 // Category
 type CreateAssignmentCategoryDTO struct {
@@ -111,4 +113,62 @@ type SetAssessmentWeightDTO struct {
 	SubjectID  string  `json:"subjectId" binding:"required,uuid"`
 	CategoryID string  `json:"categoryId" binding:"required,uuid"`
 	Weight     float64 `json:"weight" binding:"required"`
+}
+
+type WeightItemDTO struct {
+	CategoryID   string  `json:"categoryId"`
+	Weight 	 float64 `json:"weight"`
+}
+
+type WeightResponseDTO struct {
+	SubjectID string		  `json:"subjectId"`
+	SubjectName string		  `json:"subjectName"`
+	SubjcetCode string		  `json:"subjectCode"`
+	Weights   []WeightDetailDTO `json:"weights"`
+	TotalWeight float64           `json:"totalWeight"`
+}
+
+type WeightDetailDTO struct {
+	WeightID  string  `json:"weightId"`
+	CategoryID string  `json:"categoryId"`
+	CategoryName string  `json:"categoryName"`
+	Weight     float64 `json:"weight"`
+}
+
+type GradeReportDTO struct {
+	StudentID   string  `json:"studentId"`
+	StudentName string  `json:"studentName"`
+	SubjectID   string  `json:"subjectId"`
+	SubjectName string  `json:"subjectName"`
+	Breakdown  []CategoryBreakdownDTO `json:"breakdown"`
+	FinalGrade  float64 `json:"finalGrade"`
+	LetterGrade string  `json:"letterGrade"`
+}
+
+type CategoryBreakdownDTO struct {
+	CategoryID   string  `json:"categoryId"`
+	CategoryName string  `json:"categoryName"`
+	AverageScore float64 `json:"averageScore"`
+	WeightedScore float64 `json:"weightedScore"`
+	AssignmentCount int     `json:"assignmentCount"`
+}
+
+type ClassGradeReportDTO struct {
+        Class   ClassHeaderDTO       `json:"class"`
+        Subject SubjectHeaderDTO     `json:"subject"`
+        Students []StudentGradeSummaryDTO `json:"students"`
+}
+
+type StudentGradeSummaryDTO struct {
+        StudentID   string `json:"studentId"`
+        StudentName string    `json:"studentName"`
+        StudentEmail string   `json:"studentEmail"`
+        FinalGrade  float64   `json:"finalGrade"`
+        LetterGrade string    `json:"letterGrade"`
+}
+
+type SubjectHeaderDTO struct {
+        SubjectID   string `json:"subjectId"`
+        SubjectName string    `json:"subjectName"`
+        SubjectCode string    `json:"subjectCode"`
 }
