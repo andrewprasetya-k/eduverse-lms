@@ -32,6 +32,9 @@
 CREATE INDEX idx_notifications_user ON edv.notifications(ntf_usr_id, is_read, created_at DESC);
 '''
 
+14. notifications
+15.
+
 ## 🚀 High Priority (Critical for Production)
 
 - [ ] **File Upload Integration**: S3/Supabase storage untuk media files
