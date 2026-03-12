@@ -77,8 +77,10 @@ type AssessmentWeight struct {
 	ID         string             `gorm:"primaryKey;column:asw_id;default:gen_random_uuid()" json:"weightId"`
 	SubjectID  string             `gorm:"column:asw_sub_id;type:uuid" json:"subjectId"`
 	CategoryID string             `gorm:"column:asw_asc_id;type:uuid" json:"categoryId"`
-	Category   AssignmentCategory `gorm:"foreignKey:CategoryID;references:ID" json:"category,omitempty"`
 	Weight     float64            `gorm:"column:asw_weight" json:"weight"`
+	
+	Subject   Subject            `gorm:"foreignKey:SubjectID;references:ID" json:"subject,omitempty"`
+	Category   AssignmentCategory `gorm:"foreignKey:CategoryID;references:ID" json:"category,omitempty"`
 }
 
 func (AssessmentWeight) TableName() string {
