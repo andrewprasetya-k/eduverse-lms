@@ -37,6 +37,8 @@ type AssignmentRepository interface {
 	// Weights
 	SetWeight(weight *domain.AssessmentWeight) error
 	GetWeightsBySubject(subID string) ([]*domain.AssessmentWeight, error)
+	DeleteBySubject(subID string) error
+	GetTotalWeightBySubject(subID string) (float64, error)
 }
 
 type assignmentRepository struct {
@@ -213,4 +215,18 @@ func (r *assignmentRepository) GetWeightsBySubject(subID string) ([]*domain.Asse
 	var weights []*domain.AssessmentWeight
 	err := r.db.Preload("Category").Where("asw_sub_id = ?", subID).Find(&weights).Error
 	return weights, err
+}
+
+func (r *assignmentRepository) DeleteBySubject(subID string) error {
+	result := r.db.Where("asw_sub_id = ?", subID).Delete(&domain.AssessmentWeight{})
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return result.Error
+}
+
+func (r *assignmentRepository) GetTotalWeightBySubject(subID string) (float64, error) {
+	var total float64
+	err := r.db.Model(&domain.AssessmentWeight{}).Where("asw_sub_id = ?", subID).Select("SUM(asw_weight)").Scan(&total).Error
+	return total, err
 }
