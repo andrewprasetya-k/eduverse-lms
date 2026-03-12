@@ -129,7 +129,6 @@ func (r *rbacRepository) SyncUserRoles(schoolUserID string, roleIDs []string) er
 	})
 }
 
-// GetUserRoleNamesInSchool returns role names for a user in a specific school
 func (r *rbacRepository) GetUserRoleNamesInSchool(userID, schoolID string) ([]string, error) {
 	var roleNames []string
 	err := r.db.Table("edv.user_roles").

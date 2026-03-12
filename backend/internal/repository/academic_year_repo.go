@@ -105,7 +105,6 @@ func (r *academicYearRepository) SetActiveStatus(id string, isActive bool) error
 
 func (r *academicYearRepository) HasTerms(id string) (bool, error) {
 	var count int64
-	// Kita cek ke tabel edv.terms
 	err := r.db.Table("edv.terms").Where("trm_acy_id = ?", id).Count(&count).Error
 	return count > 0, err
 }

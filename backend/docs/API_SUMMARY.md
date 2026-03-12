@@ -162,6 +162,19 @@ Authorization: Bearer <your-jwt-token>
 ## 📊 Logs
 - `GET /logs/school/:schoolId` - Get logs by school
 
+## 📊 Grade Book
+- `POST /grades/weights` - Configure assessment weights
+- `GET /grades/weights/subject/:subjectId` - Get weights by subject
+- `GET /grades/student/:userId/subject/:subjectId` - Get student final grade
+- `GET /grades/class/:classId/subject/:subjectId` - Get class grade report
+
+## 🔔 Notifications
+- `GET /notifications` - Get user notifications (with pagination)
+- `GET /notifications/unread-count` - Get unread count
+- `PATCH /notifications/read/:id` - Mark notification as read
+- `PATCH /notifications/read-all` - Mark all notifications as read
+- `DELETE /notifications/:id` - Delete notification
+
 ## 📈 Dashboard
 - `GET /dashboard/student/:userId` - Get student dashboard (userId = usr_id)
 - `GET /dashboard/teacher/:schoolUserId` - Get teacher dashboard (schoolUserId = scu_id)
@@ -200,5 +213,5 @@ Most list endpoints support:
 
 ---
 
-**Last Updated:** 2026-02-24
-**Version:** 1.0
+**Last Updated:** 2026-03-12
+**Version:** 1.2

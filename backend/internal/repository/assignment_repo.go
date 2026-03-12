@@ -130,7 +130,7 @@ func (r *assignmentRepository) DeleteAssignment(id string) error {
 
 func (r *assignmentRepository) UpsertSubmission(sbm *domain.Submission) error {
 	var existing domain.Submission
-	// Check if user already submitted for this assignment
+	// cek apakah user sudah pernah submit assignment ini sebelumnya
 	err := r.db.Unscoped().Where("sbm_asg_id = ? AND sbm_usr_id = ?", sbm.AssignmentID, sbm.UserID).First(&existing).Error
 	
 	if err == nil {

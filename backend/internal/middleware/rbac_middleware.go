@@ -31,10 +31,10 @@ func RequireSchoolMember(schoolService interface {
 		var schoolID string
 		var err error
 
-		// Priority 1: Check SchoolId header
+		// cek school id di header
 		schoolID = c.GetHeader("SchoolId")
 
-		// Priority 2: Check schoolCode in URL param
+		// cek school code di url param
 		if schoolID == "" {
 			schoolCode := c.Param("schoolCode")
 			if schoolCode == "" {
@@ -50,7 +50,7 @@ func RequireSchoolMember(schoolService interface {
 			}
 		}
 
-		// Check if user is super_admin (bypass school membership check)
+		// kalau super admin, bypass cek membership sekolah
 		isSuperAdmin, err := rbacRepo.IsSuperAdmin(userID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify permissions"})
@@ -59,7 +59,7 @@ func RequireSchoolMember(schoolService interface {
 		}
 
 		if !isSuperAdmin {
-			// Regular user: check school membership
+			// check school membership kalau bukan super admin
 			isMember, err := rbacRepo.IsUserInSchool(userID, schoolID)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify school access"})
@@ -74,14 +74,12 @@ func RequireSchoolMember(schoolService interface {
 			}
 		}
 
-		// Store for later use
 		c.Set("school_id", schoolID)
 		c.Next()
 	}
 }
 
-// RequireRole checks if user has any of the allowed roles in the school
-// Priority: context > SchoolId header > schoolCode URL param
+//cek role tertentu (bisa multi-role)
 func RequireRole(schoolService interface {
 	ConvertCodeToID(code string) (string, error)
 }, allowedRoles ...string) gin.HandlerFunc {
@@ -96,14 +94,14 @@ func RequireRole(schoolService interface {
 		var schoolID string
 		var err error
 
-		// Priority 1: Get from context (set by RequireSchoolAccess)
+		//cek school_id context apakah sudah ada (bisa di-set oleh RequireSchoolMember)
 		if sid, exists := c.Get("school_id"); exists {
 			schoolID = sid.(string)
 		} else {
-			// Priority 2: Check SchoolId header
+			// Cek SchoolId header
 			schoolID = c.GetHeader("SchoolId")
 
-			// Priority 3: Check schoolCode in URL param
+			// cek schoolCode in URL param
 			if schoolID == "" {
 				schoolCode := c.Param("schoolCode")
 				if schoolCode != "" {
@@ -128,7 +126,7 @@ func RequireRole(schoolService interface {
 			return
 		}
 
-		// Check if user has any of the allowed roles
+		//cek apakah user memiliki role yang diizinkan
 		hasRole := false
 		for _, userRole := range roles {
 			for _, allowedRole := range allowedRoles {
