@@ -223,11 +223,11 @@ func main() {
 
 		subjectClassAPI := api.Group("/subject-classes")
 		{
-			subjectClassAPI.POST("/assign", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher"), subjectClassHandler.Assign)
-			subjectClassAPI.GET("/class/:classId", subjectClassHandler.GetByClass)
-			subjectClassAPI.GET("/:id", subjectClassHandler.GetByID)
-			subjectClassAPI.PATCH("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher"), subjectClassHandler.Update)
-			subjectClassAPI.DELETE("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin"), subjectClassHandler.Unassign)
+			subjectClassAPI.POST("/assign", middleware.RequireRole(schoolService, "admin", "teacher"), subjectClassHandler.Assign)
+			subjectClassAPI.GET("/class/:classId", middleware.RequireSchoolMember(schoolService), subjectClassHandler.GetByClass)
+			subjectClassAPI.GET("/:id", middleware.RequireSchoolMember(schoolService), subjectClassHandler.GetByID)
+			subjectClassAPI.PATCH("/:id", middleware.RequireRole(schoolService, "admin", "teacher"), subjectClassHandler.Update)
+			subjectClassAPI.DELETE("/:id", middleware.RequireRole(schoolService, "admin"), subjectClassHandler.Unassign)
 		}
 
 		enrollmentAPI := api.Group("/enrollments")
