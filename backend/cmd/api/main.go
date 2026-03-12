@@ -106,6 +106,10 @@ func main() {
 		userRepo,
 	))
 
+	notificationRepo := repository.NewNotificationRepository(db)
+	notificationService := service.NewNotificationService(notificationRepo)
+	notificationHandler := handler.NewNotificationHandler(notificationService)
+
 	logRepo := repository.NewLogRepository(db)
 	logService := service.NewLogService(logRepo)
 	logHandler := handler.NewLogHandler(logService)
@@ -312,21 +316,19 @@ func main() {
 
 		gradeAPI := api.Group("/grades")
 		{
-			gradeAPI.POST("/weights",
-					middleware.RequireRole(schoolService, "admin", "teacher"),
-					gradeHandler.ConfigureWeights)
+			gradeAPI.POST("/weights",middleware.RequireRole(schoolService, "admin", "teacher"),gradeHandler.ConfigureWeights)
+			gradeAPI.GET("/weights/subject/:subjectId",middleware.RequireSchoolMember(schoolService),gradeHandler.GetWeightsBySubject)
+			gradeAPI.GET("/student/:userId/subject/:subjectId",middleware.RequireSchoolMember(schoolService),gradeHandler.GetStudentGrade)
+			gradeAPI.GET("/class/:classId/subject/:subjectId",middleware.RequireRole(schoolService, "teacher", "admin"),gradeHandler.GetClassGradeReport)
+		}
 
-			gradeAPI.GET("/weights/subject/:subjectId",
-					middleware.RequireSchoolMember(schoolService),
-					gradeHandler.GetWeightsBySubject)
-
-			gradeAPI.GET("/student/:userId/subject/:subjectId",
-					middleware.RequireSchoolMember(schoolService),
-					gradeHandler.GetStudentGrade)
-
-			gradeAPI.GET("/class/:classId/subject/:subjectId",
-					middleware.RequireRole(schoolService, "teacher", "admin"),
-					gradeHandler.GetClassGradeReport)
+		notificationAPI := api.Group("/notifications")
+		{
+			notificationAPI.GET("/",notificationHandler.GetNotifications)
+			notificationAPI.GET("/unread-count",notificationHandler.GetUnreadCount)
+			notificationAPI.PATCH("/read/:id",notificationHandler.MarkAsRead)
+			notificationAPI.PATCH("/read-all",notificationHandler.MarkAllAsRead)
+			notificationAPI.DELETE("/:id",notificationHandler.Delete)
 		}
 
 		logAPI := api.Group("/logs")
