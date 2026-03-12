@@ -19,13 +19,24 @@
 
 ## 🚀 High Priority (Critical for Production)
 
-- [ ] **File Upload Integration**: S3/Supabase storage untuk media files
+- [ ] **Assignment Extensions**: Student request extension, teacher approve/reject, extended deadline logic
+  - Files needed: Update `internal/domain/assignment.go` (add extension fields to Submission), update DTOs, service, handler
+  - Endpoints: `POST /assignments/submit/:submissionId/request-extension`, `PATCH /assignments/submit/:submissionId/review-extension`
+  - Database: Add extension fields to submissions table
+  
 - [ ] **Notification Triggers Integration**: Auto-create notifications untuk:
-  - New assignment created → notify students
-  - Assignment graded → notify student
+  - New assignment created → notify students in class
+  - Assignment graded → notify student who submitted
   - New comment added → notify content owner
-  - New material added → notify students
+  - New material added → notify students in class
   - New feed posted → notify class members
+  - Files to update: All existing services (assignment, material, comment, feed) to call notificationService.Create()
+
+- [ ] **File Upload Integration**: S3/Supabase storage untuk media files
+  - Real file upload (bukan hanya metadata)
+  - Generate signed URLs untuk download
+  - File validation (type, size)
+  - Thumbnail generation
 
 ## 📊 Analytics & Reporting (Medium Priority)
 
@@ -33,16 +44,36 @@
   - Student: pending assignments, average scores, upcoming deadlines ✅
   - Teacher: pending reviews, submission rates, class performance ✅
   - Admin: school statistics, enrollment trends ✅
-- [ ] **Grade Report / Transcript**:
-  - Calculate weighted grades using assessment_weights table
-  - Generate report cards per student per term
-  - Export to PDF/Excel
+- [x] **Grade Book Implementation**:
+  - Configure weighted grades using assessment_weights table ✅
+  - Auto-calculate final grades per student per subject ✅
+  - Generate grade reports per class ✅
+  - Letter grade conversion (A, B, C, D, E) ✅
+- [ ] **Grade Report / Transcript Export**:
+  - Export individual student transcript to PDF
+  - Export class grade report to Excel
+  - Generate report cards per term/year
 
 - [ ] **Activity Feed / Timeline**:
   - Recent assignments, submissions, grades, comments
   - Per class or per user feed
 
 ## 🎓 Academic Features (Medium Priority)
+
+- [ ] **Rich Text Support**: HTML content untuk descriptions (materials, assignments, feeds)
+  - Update validation untuk accept HTML
+  - Sanitize HTML input (prevent XSS)
+  - Frontend rich text editor integration
+
+- [ ] **Nested Comments**: Reply to comments functionality
+  - Add parent_comment_id field to comments table
+  - Update repository untuk fetch nested structure
+  - Response DTO dengan nested comments
+
+- [ ] **Activity Feed Enhancement**: Unified stream untuk class activities
+  - Combine materials + assignments + feeds + comments dalam satu feed
+  - Pin/unpin posts functionality
+  - Filter by type (assignments only, announcements only)
 
 - [ ] **Class Schedule / Timetable**:
   - Weekly schedule per class
