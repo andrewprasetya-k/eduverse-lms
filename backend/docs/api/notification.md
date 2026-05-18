@@ -118,13 +118,42 @@ Delete specific notification.
 
 ## Notification Types
 
-| Type | Description | Recipients |
-|------|-------------|------------|
-| `assignment_created` | New assignment posted | Students in class |
-| `assignment_graded` | Assignment has been graded | Student who submitted |
-| `comment_added` | New comment on content | Content owner |
-| `material_added` | New material posted | Students in class |
-| `feed_posted` | New announcement posted | Class members |
+| Type | Description | Recipients | Self-notif |
+|------|-------------|------------|------------|
+| `assignment_created` | New assignment posted | Students enrolled in the class | N/A |
+| `assignment_graded` | Submission has been graded | Student who submitted | N/A |
+| `material_added` | New learning material posted | Students enrolled in the class | N/A |
+| `feed_posted` | New announcement posted | All class members | Excluded |
+| `comment_added` | New comment on content | Owner of the commented content | Excluded |
+
+---
+
+## Auto Triggers
+
+Notifications are created **automatically** by the backend when the following events occur. No manual API call is needed.
+
+| Event | Trigger point | Payload `relatedId` |
+|---|---|---|
+| Teacher creates assignment | `POST /assignments` | `assignmentId` |
+| Teacher grades a submission | `POST /assignments/assess/:submissionId` | `submissionId` |
+| Teacher creates material | `POST /materials` | `materialId` |
+| Teacher/admin posts feed | `POST /feeds` | `feedId` |
+| Anyone posts a comment | `POST /comments` | source content ID |
+
+**Behavior:**
+- All triggers are **best-effort** — if notification creation fails, the primary action (create assignment, grade, etc.) still succeeds.
+- `feed_posted`: creator is excluded from recipients.
+- `comment_added`: if the commenter is the content owner, no notification is sent.
+- `unread-count` increments automatically for each notification created.
+
+**Supported comment source types for `comment_added`:**
+
+| `sourceType` | Owner field |
+|---|---|
+| `feed` | feed creator |
+| `material` | material creator |
+| `assignment` | assignment creator |
+| `submission` | student who submitted |
 
 ---
 
@@ -222,4 +251,4 @@ async function loadNotifications(page = 1) {
 
 ---
 
-**Last Updated:** 2026-03-12
+**Last Updated:** 2026-05-18
