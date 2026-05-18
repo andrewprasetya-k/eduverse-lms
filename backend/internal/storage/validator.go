@@ -74,7 +74,7 @@ func (v *ObjectPathValidator) SafeURL(objectPath string) string {
 	// URL-encode each segment
 	encoded := make([]string, len(segments))
 	for i, segment := range segments {
-		encoded[i] = url.QueryEscape(segment)
+		encoded[i] = url.PathEscape(segment)
 	}
 
 	// Rejoin with forward slash

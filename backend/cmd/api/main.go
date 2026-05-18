@@ -5,7 +5,10 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/repository"
 	"backend/internal/service"
+	"backend/internal/storage"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -76,7 +79,11 @@ func main() {
 	enrollmentHandler := handler.NewEnrollmentHandler(enrollmentService, classService)
 
 	mediaRepo := repository.NewMediaRepository(db)
-	mediaService := service.NewMediaService(mediaRepo)
+	storageProvider, err := buildStorageProvider()
+	if err != nil {
+		panic("failed to initialize storage provider: " + err.Error())
+	}
+	mediaService := service.NewMediaService(mediaRepo, storageProvider)
 	mediaHandler := handler.NewMediaHandler(mediaService)
 
 	attachmentRepo := repository.NewAttachmentRepository(db)
@@ -345,4 +352,22 @@ func main() {
 
 	//run server
 	r.Run(":8080")
+}
+
+func buildStorageProvider() (storage.Provider, error) {
+	provider := strings.ToLower(strings.TrimSpace(os.Getenv("STORAGE_PROVIDER")))
+	if provider == "" || provider == "disabled" {
+		return storage.NewDisabledStorage(), nil
+	}
+
+	if provider == "supabase" {
+		return storage.NewSupabaseStorage(
+			os.Getenv("SUPABASE_URL"),
+			os.Getenv("SUPABASE_SERVICE_KEY"),
+			os.Getenv("SUPABASE_BUCKET"),
+			10*1024*1024,
+		)
+	}
+
+	return nil, fmt.Errorf("unsupported storage provider: %s", provider)
 }
