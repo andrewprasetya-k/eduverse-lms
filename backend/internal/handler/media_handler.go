@@ -139,7 +139,7 @@ func (h *MediaHandler) GetByID(c *gin.Context) {
 
 func (h *MediaHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.service.Delete(id); err != nil {
+	if err := h.service.Delete(c.Request.Context(), id); err != nil {
 		HandleError(c, err)
 		return
 	}

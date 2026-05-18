@@ -5,7 +5,9 @@ import (
 	"backend/internal/repository"
 	"backend/internal/storage"
 	"context"
+	"errors"
 	"io"
+	"strings"
 )
 
 type MediaService interface {
@@ -13,7 +15,7 @@ type MediaService interface {
 	UploadAndRecord(ctx context.Context, media *domain.Media, content io.Reader) error
 	GetByID(id string) (*domain.Media, error)
 	GetByOwner(ownerType string, ownerID string) ([]*domain.Media, error)
-	Delete(id string) error
+	Delete(ctx context.Context, id string) error
 }
 
 type mediaService struct {
@@ -54,7 +56,17 @@ func (s *mediaService) GetByOwner(ownerType string, ownerID string) ([]*domain.M
 	return s.repo.GetByOwner(domain.OwnerType(ownerType), ownerID)
 }
 
-func (s *mediaService) Delete(id string) error {
-	// TODO: Integrate with actual file deletion (S3/Local)
+func (s *mediaService) Delete(ctx context.Context, id string) error {
+	media, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	if strings.TrimSpace(media.StoragePath) != "" {
+		if err := s.storage.Delete(ctx, media.StoragePath); err != nil && !errors.Is(err, storage.ErrNotFound) {
+			return err
+		}
+	}
+
 	return s.repo.Delete(id)
 }
