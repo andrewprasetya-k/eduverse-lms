@@ -12,17 +12,20 @@ import (
 
 // SupabaseStorage implements Provider for Supabase Storage
 type SupabaseStorage struct {
-	url        string // Base Supabase URL (e.g., https://project.supabase.co)
-	serviceKey string // Service role key (private, for backend use)
-	bucketName string // Bucket name in Supabase Storage
-	httpClient *http.Client
+	url           string // Base Supabase URL (e.g., https://project.supabase.co)
+	serviceKey    string // Service role key (private, for backend use)
+	bucketName    string // Bucket name in Supabase Storage
+	httpClient    *http.Client
+	maxUploadSize int64 // Maximum upload size in bytes
+	pathValidator *ObjectPathValidator
 }
 
 // NewSupabaseStorage creates a new Supabase storage provider
 // url: Supabase project URL (e.g., "https://project.supabase.co")
 // serviceKey: Service role key (backend-only, never expose)
 // bucketName: Bucket name in Supabase Storage (e.g., "media")
-func NewSupabaseStorage(url, serviceKey, bucketName string) (*SupabaseStorage, error) {
+// maxUploadSize: Maximum upload size in bytes (e.g., 10*1024*1024 for 10MB). Use 0 for default 10MB.
+func NewSupabaseStorage(url, serviceKey, bucketName string, maxUploadSize int64) (*SupabaseStorage, error) {
 	if strings.TrimSpace(url) == "" {
 		return nil, fmt.Errorf("supabase URL is required")
 	}
@@ -33,32 +36,49 @@ func NewSupabaseStorage(url, serviceKey, bucketName string) (*SupabaseStorage, e
 		return nil, fmt.Errorf("supabase bucket name is required")
 	}
 
+	// Default max upload size: 10MB
+	if maxUploadSize <= 0 {
+		maxUploadSize = 10 * 1024 * 1024
+	}
+
 	// Normalize URL - remove trailing slash
 	url = strings.TrimSuffix(url, "/")
 
 	return &SupabaseStorage{
-		url:        url,
-		serviceKey: serviceKey,
-		bucketName: bucketName,
-		httpClient: &http.Client{},
+		url:           url,
+		serviceKey:    serviceKey,
+		bucketName:    bucketName,
+		httpClient:    &http.Client{},
+		maxUploadSize: maxUploadSize,
+		pathValidator: NewObjectPathValidator(512),
 	}, nil
 }
 
 // Upload stores a file in Supabase Storage and returns the public URL
 func (s *SupabaseStorage) Upload(ctx context.Context, objectPath string, content io.Reader, contentType string) (string, error) {
-	if objectPath == "" {
-		return "", ErrInvalidPath
+	// Validate objectPath
+	if err := s.pathValidator.Validate(objectPath); err != nil {
+		return "", err
 	}
 
-	// Read content into buffer
-	data, err := io.ReadAll(content)
+	// Read content with size limit to prevent memory exhaustion
+	limitedReader := io.LimitReader(content, s.maxUploadSize+1)
+	data, err := io.ReadAll(limitedReader)
 	if err != nil {
 		return "", fmt.Errorf("failed to read file content: %w", err)
 	}
 
+	// Check if content exceeded max size
+	if int64(len(data)) > s.maxUploadSize {
+		return "", fmt.Errorf("file exceeds maximum upload size of %d bytes", s.maxUploadSize)
+	}
+
+	// Safely encode objectPath for URL
+	safeObjectPath := s.pathValidator.SafeURL(objectPath)
+
 	// Build upload URL
-	// Format: {url}/storage/v1/object/{bucketName}/{objectPath}
-	uploadURL := fmt.Sprintf("%s/storage/v1/object/%s/%s", s.url, s.bucketName, objectPath)
+	// Format: {url}/storage/v1/object/{bucketName}/{safeObjectPath}
+	uploadURL := fmt.Sprintf("%s/storage/v1/object/%s/%s", s.url, s.bucketName, safeObjectPath)
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "POST", uploadURL, bytes.NewReader(data))
@@ -92,22 +112,26 @@ func (s *SupabaseStorage) Upload(ctx context.Context, objectPath string, content
 		// Just use the objectPath for URL construction
 	}
 
-	// Build public URL
-	// Format: {url}/storage/v1/object/public/{bucketName}/{objectPath}
-	publicURL := fmt.Sprintf("%s/storage/v1/object/public/%s/%s", s.url, s.bucketName, objectPath)
+	// Build public URL - use original (unencoded) objectPath for display URL
+	// Note: Supabase URL decodes path automatically, so we use original here
+	publicURL := fmt.Sprintf("%s/storage/v1/object/public/%s/%s", s.url, s.bucketName, safeObjectPath)
 
 	return publicURL, nil
 }
 
 // Delete removes a file from Supabase Storage
 func (s *SupabaseStorage) Delete(ctx context.Context, objectPath string) error {
-	if objectPath == "" {
-		return ErrInvalidPath
+	// Validate objectPath
+	if err := s.pathValidator.Validate(objectPath); err != nil {
+		return err
 	}
 
+	// Safely encode objectPath for URL
+	safeObjectPath := s.pathValidator.SafeURL(objectPath)
+
 	// Build delete URL
-	// Format: {url}/storage/v1/object/{bucketName}/{objectPath}
-	deleteURL := fmt.Sprintf("%s/storage/v1/object/%s/%s", s.url, s.bucketName, objectPath)
+	// Format: {url}/storage/v1/object/{bucketName}/{safeObjectPath}
+	deleteURL := fmt.Sprintf("%s/storage/v1/object/%s/%s", s.url, s.bucketName, safeObjectPath)
 
 	// Create request
 	req, err := http.NewRequestWithContext(ctx, "DELETE", deleteURL, nil)
@@ -176,5 +200,7 @@ func (s *SupabaseStorage) GetPublicURL(objectPath string) string {
 	if objectPath == "" {
 		return ""
 	}
-	return fmt.Sprintf("%s/storage/v1/object/public/%s/%s", s.url, s.bucketName, objectPath)
+	// Safely encode objectPath for URL
+	safeObjectPath := s.pathValidator.SafeURL(objectPath)
+	return fmt.Sprintf("%s/storage/v1/object/public/%s/%s", s.url, s.bucketName, safeObjectPath)
 }
