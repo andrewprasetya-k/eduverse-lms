@@ -4,9 +4,7 @@ import (
 	"backend/internal/domain"
 	"backend/internal/dto"
 	"backend/internal/service"
-	"fmt"
 	"net/http"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,6 +17,14 @@ func NewMediaHandler(service service.MediaService) *MediaHandler {
 	return &MediaHandler{service: service}
 }
 
+// isStorageAvailable checks if the file storage backend is available
+// Returns false if storage is not yet implemented
+func isStorageAvailable() bool {
+	// TODO: Replace with actual storage availability check (e.g., Supabase/S3 health check)
+	// For now, always return false to prevent fake success responses
+	return false
+}
+
 // Upload handles multipart file upload
 func (h *MediaHandler) Upload(c *gin.Context) {
 	file, err := c.FormFile("file")
@@ -28,8 +34,6 @@ func (h *MediaHandler) Upload(c *gin.Context) {
 	}
 
 	schoolID := c.PostForm("schoolId")
-	ownerType := c.PostForm("ownerType")
-	ownerID := c.PostForm("ownerId")
 
 	if schoolID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "schoolId is required"})
@@ -38,47 +42,20 @@ func (h *MediaHandler) Upload(c *gin.Context) {
 
 	// Auto-detect file info
 	fileSize := file.Size / (1024 * 1024) // Convert to MB
-	if fileSize > 10 {                    // Example limit: 100MB
+	if fileSize > 10 {                    // Example limit: 10MB
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File size exceeds 10MB limit"})
 		return
 	}
-	mimeType := file.Header.Get("Content-Type")
-	fileName := file.Filename
-	ext := filepath.Ext(fileName)
 
-	// Generate storage path (you can customize this)
-	storagePath := fmt.Sprintf("materials/%s/%s", schoolID, fileName)
-
-	// TODO: Upload to Supabase Storage here
-	// For now, we'll create a placeholder URL
-	fileURL := fmt.Sprintf("https://placeholder.supabase.co/storage/v1/object/public/%s", storagePath)
-
-	media := domain.Media{
-		SchoolID:    schoolID,
-		Name:        fileName,
-		FileSize:    fileSize,
-		MimeType:    mimeType,
-		StoragePath: storagePath,
-		FileURL:     fileURL,
-		IsPublic:    true,
-		OwnerType:   domain.OwnerType(ownerType),
-		OwnerID:     ownerID,
-	}
-
-	if err := h.service.RecordMetadata(&media); err != nil {
-		HandleError(c, err)
+	// Check if storage is available
+	if !isStorageAvailable() {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "File storage service is not available. Please try again later"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message":  "File uploaded successfully",
-		"mediaId":  media.ID,
-		"fileName": fileName,
-		"fileSize": fileSize,
-		"mimeType": mimeType,
-		"fileUrl":  fileURL,
-		"ext":      ext,
-	})
+	// TODO: Upload to Supabase Storage here
+	// For now, return error since real storage is not implemented
+	c.JSON(http.StatusNotImplemented, gin.H{"error": "File upload to storage is not yet implemented"})
 }
 
 // RecordMetadata records metadata of an already uploaded file (e.g., to Supabase/S3)
