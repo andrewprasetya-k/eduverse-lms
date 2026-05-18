@@ -86,6 +86,13 @@ func (s *subjectService) Update(subject *domain.Subject) error {
 }
 
 func (s *subjectService) Delete(id string) error {
-	// TODO: Cek apakah mata pelajaran sedang digunakan di tabel subject_classes
+	subjectClassCount, err := s.repo.CountSubjectClassesBySubject(id)
+	if err != nil {
+		return err
+	}
+	if subjectClassCount > 0 {
+		return fmt.Errorf("tidak dapat menghapus mata pelajaran karena masih memiliki %d penugasan kelas", subjectClassCount)
+	}
+
 	return s.repo.Delete(id)
 }

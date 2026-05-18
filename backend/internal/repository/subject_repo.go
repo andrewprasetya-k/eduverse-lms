@@ -15,6 +15,7 @@ type SubjectRepository interface {
 	Update(subject *domain.Subject) error
 	Delete(id string) error
 	CheckDuplicateCode(schoolID string, code string, excludeID string) (bool, error)
+	CountSubjectClassesBySubject(subjectID string) (int64, error)
 }
 
 type subjectRepository struct {
@@ -97,4 +98,10 @@ func (r *subjectRepository) CheckDuplicateCode(schoolID string, code string, exc
 	}
 	err := query.Count(&count).Error
 	return count > 0, err
+}
+
+func (r *subjectRepository) CountSubjectClassesBySubject(subjectID string) (int64, error) {
+	var count int64
+	err := r.db.Model(&domain.SubjectClass{}).Where("scl_sub_id = ?", subjectID).Count(&count).Error
+	return count, err
 }
