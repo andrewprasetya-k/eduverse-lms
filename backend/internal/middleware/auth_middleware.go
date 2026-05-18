@@ -42,7 +42,14 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user", token.Claims.(jwt.MapClaims))
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user", claims)
 
 		c.Next()
 	}
@@ -54,7 +61,11 @@ func GetUserID(c *gin.Context) string {
 		return ""
 	}
 
-	claims := userClaims.(jwt.MapClaims)
+	claims, ok := userClaims.(jwt.MapClaims)
+	if !ok {
+		return ""
+	}
+
 	userID, ok := claims["user_id"].(string)
 	if !ok {
 		return ""
@@ -69,7 +80,11 @@ func GetEmail(c *gin.Context) string {
 		return ""
 	}
 
-	claims := userClaims.(jwt.MapClaims)
+	claims, ok := userClaims.(jwt.MapClaims)
+	if !ok {
+		return ""
+	}
+
 	email, ok := claims["email"].(string)
 	if !ok {
 		return ""

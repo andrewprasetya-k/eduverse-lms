@@ -27,6 +27,11 @@ func RequireSchoolMember(schoolService interface {
 			c.Abort()
 			return
 		}
+		if rbacRepo == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "RBAC middleware is not initialized"})
+			c.Abort()
+			return
+		}
 
 		var schoolID string
 		var err error
@@ -79,7 +84,7 @@ func RequireSchoolMember(schoolService interface {
 	}
 }
 
-//cek role tertentu (bisa multi-role)
+// cek role tertentu (bisa multi-role)
 func RequireRole(schoolService interface {
 	ConvertCodeToID(code string) (string, error)
 }, allowedRoles ...string) gin.HandlerFunc {
@@ -87,6 +92,11 @@ func RequireRole(schoolService interface {
 		userID := GetUserID(c)
 		if userID == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+		if rbacRepo == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "RBAC middleware is not initialized"})
 			c.Abort()
 			return
 		}
