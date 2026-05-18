@@ -34,17 +34,28 @@ Create a new learning material for a class with optional attachments.
 ```
 
 ### Option B: Multipart Form (with file uploads)
+Files are uploaded to the configured storage provider (same as `POST /api/medias/upload`). Requires `STORAGE_PROVIDER=supabase` to be set. Returns `501` if storage is not configured.
+
+Each file is uploaded to storage first. If upload succeeds but DB record fails, the storage object is deleted (best-effort cleanup). Max file size per file: **10MB**.
+
 - **Content-Type:** `multipart/form-data`
 - **Form Fields:**
 | Field | Type | Required | Note |
 | :--- | :--- | :--- | :--- |
-| `schoolId` | string | Yes | UUID |
+| `schoolId` | string | Yes | Must be a valid UUID |
 | `subjectClassId` | string | Yes | UUID |
-| `materialTitle`| string | Yes | |
+| `materialTitle` | string | Yes | |
 | `materialDesc` | string | No | |
-| `materialType`| string | Yes | `video`, `pdf`, `ppt`, `other` |
+| `materialType` | string | Yes | `video`, `pdf`, `ppt`, `other` |
 | `createdBy` | string | Yes | UUID |
-| `files` | file[] | No | Multiple files (auto-detect size, mime type) |
+| `files` | file[] | No | Multiple files, max 10MB each |
+
+**Object path in storage:** `schools/{schoolId}/{uuid}{ext}` (consistent with media upload)
+
+**Response `501`** (storage not configured):
+```json
+{ "error": "File upload to storage is not configured" }
+```
 
 ---
 

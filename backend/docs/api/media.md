@@ -2,21 +2,41 @@
 
 Base URL: `/api/medias`
 
+## Storage Configuration
+
+File upload requires a configured storage provider via environment variables.
+
+| Env Variable | Required | Description |
+| :--- | :--- | :--- |
+| `STORAGE_PROVIDER` | Yes | `supabase` to enable uploads, `disabled` or empty to disable |
+| `SUPABASE_URL` | If supabase | Your Supabase project URL |
+| `SUPABASE_SERVICE_KEY` | If supabase | Supabase service role key (not anon key) |
+| `SUPABASE_BUCKET` | If supabase | Target storage bucket name |
+
+If `STORAGE_PROVIDER` is `disabled` or not set, upload endpoints return `501 Not Implemented`.
+
+---
+
 ## 1. Upload File
-Upload file directly to backend (multipart form). System will auto-detect file size, mime type, and filename.
+Upload a file directly to storage (multipart form). The backend uploads to the configured storage provider and records metadata in the database atomically. If the DB record fails after a successful upload, the storage object is deleted (best-effort cleanup).
 
 - **URL:** `/upload`
 - **Method:** `POST`
+- **Auth:** Required
 - **Content-Type:** `multipart/form-data`
-- **Form Fields:**
+- **Max file size:** 10MB
+
+**Form Fields:**
 | Field | Type | Required | Note |
 | :--- | :--- | :--- | :--- |
 | `file` | file | Yes | The file to upload |
-| `schoolId` | string | Yes | UUID |
-| `ownerType`| string | No | `user`, `school`, `material`, etc. |
-| `ownerId` | string | No | UUID |
+| `schoolId` | string | Yes | Must be a valid UUID |
+| `ownerType` | string | No | `user`, `school`, `material`, `assignment`, etc. |
+| `ownerId` | string | No | UUID of the owning entity |
 
-**Response:**
+**Object path in storage:** `schools/{schoolId}/{uuid}{ext}`
+
+**Response `201`:**
 ```json
 {
   "message": "File uploaded successfully",
@@ -24,33 +44,39 @@ Upload file directly to backend (multipart form). System will auto-detect file s
   "fileName": "example.pdf",
   "fileSize": 1024000,
   "mimeType": "application/pdf",
-  "fileUrl": "https://...",
+  "storagePath": "schools/uuid/uuid.pdf",
+  "fileUrl": "https://your-supabase-url/storage/v1/object/public/bucket/schools/uuid/uuid.pdf",
   "ext": ".pdf"
 }
 ```
 
-**Note:** Currently returns placeholder URL. For production, integrate with Supabase Storage client.
+**Response `501`** (storage not configured):
+```json
+{ "error": "File upload to storage is not configured" }
+```
 
 ---
 
 ## 2. Record Media Metadata
-After uploading a file to external storage (like S3 or Supabase), use this endpoint to record the metadata in the database.
+Record metadata of a file already uploaded directly to external storage (e.g., via Supabase client SDK). No file transfer occurs — only a DB record is created.
 
 - **URL:** `/metadata`
 - **Method:** `POST`
+- **Auth:** Required
 - **Content-Type:** `application/json`
-- **Body:**
+
+**Body:**
 | Field | Type | Required | Note |
 | :--- | :--- | :--- | :--- |
 | `schoolId` | uuid | Yes | |
-| `name`| string | Yes | |
+| `mediaName` | string | Yes | |
 | `fileSize` | int64 | Yes | In bytes |
-| `mimeType` | string | Yes | e.g., "image/png" |
-| `storagePath`| string | Yes | Path in S3/Supabase |
-| `fileUrl` | string | Yes | Public URL |
-| `thumbnailUrl`| string | No | |
-| `isPublic` | boolean | No | Default: true |
-| `ownerType`| string | Yes | `user`, `school`, `material`, etc. |
+| `mimeType` | string | Yes | e.g., `application/pdf` |
+| `storagePath` | string | Yes | Path within the storage bucket |
+| `fileUrl` | string | Yes | Public URL of the file |
+| `thumbnailUrl` | string | No | |
+| `isPublic` | boolean | No | Default: `true` |
+| `ownerType` | string | Yes | `user`, `school`, `material`, `assignment`, etc. |
 | `ownerId` | uuid | Yes | |
 
 ---
@@ -58,9 +84,13 @@ After uploading a file to external storage (like S3 or Supabase), use this endpo
 ## 3. Get Media Detail
 - **URL:** `/:id`
 - **Method:** `GET`
+- **Auth:** Required
 
 ---
 
-## 4. Delete Media Record
+## 4. Delete Media
+Deletes the storage object first, then soft-deletes the metadata record. If the storage object does not exist, deletion proceeds and the DB record is still removed.
+
 - **URL:** `/:id`
 - **Method:** `DELETE`
+- **Auth:** Required
