@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/internal/domain"
+	"backend/internal/dto"
 	"backend/internal/repository"
 	"fmt"
 	"time"
@@ -35,14 +36,16 @@ type AssignmentService interface {
 }
 
 type assignmentService struct {
-	repo       repository.AssignmentRepository
-	attService AttachmentService
+	repo         repository.AssignmentRepository
+	attService   AttachmentService
+	notifService NotificationService
 }
 
-func NewAssignmentService(repo repository.AssignmentRepository, attService AttachmentService) AssignmentService {
+func NewAssignmentService(repo repository.AssignmentRepository, attService AttachmentService, notifService NotificationService) AssignmentService {
 	return &assignmentService{
-		repo:       repo,
-		attService: attService,
+		repo:         repo,
+		attService:   attService,
+		notifService: notifService,
 	}
 }
 
@@ -250,7 +253,22 @@ func (s *assignmentService) GetSubmissionByID(id string) (*domain.Submission, er
 }
 
 func (s *assignmentService) Assess(asm *domain.Assessment) error {
-	return s.repo.UpsertAssessment(asm)
+	if err := s.repo.UpsertAssessment(asm); err != nil {
+		return err
+	}
+
+	sbm, err := s.repo.GetSubmissionByID(asm.SubmissionID)
+	if err == nil {
+		_ = s.notifService.Create(&dto.CreateNotificationDTO{
+			UserID:    sbm.UserID,
+			Type:      domain.NotifAssignmentGraded,
+			Title:     "Assignment Graded",
+			Message:   fmt.Sprintf("Your submission has been graded. Score: %.2f", asm.Score),
+			RelatedID: asm.SubmissionID,
+		})
+	}
+
+	return nil
 }
 
 func (s *assignmentService) UpdateSubmission(id string, mediaIDs []string) error {

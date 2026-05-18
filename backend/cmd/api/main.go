@@ -100,8 +100,12 @@ func main() {
 	feedHandler := handler.NewFeedHandler(feedService, commentService, classService)
 	commentHandler := handler.NewCommentHandler(commentService)
 
+	notificationRepo := repository.NewNotificationRepository(db)
+	notificationService := service.NewNotificationService(notificationRepo)
+	notificationHandler := handler.NewNotificationHandler(notificationService)
+
 	assignmentRepo := repository.NewAssignmentRepository(db)
-	assignmentService := service.NewAssignmentService(assignmentRepo, attachmentService)
+	assignmentService := service.NewAssignmentService(assignmentRepo, attachmentService, notificationService)
 	assignmentHandler := handler.NewAssignmentHandler(assignmentService, schoolService, subjectClassService)
 
 	gradeHandler := handler.NewGradeHandler(service.NewGradeService(
@@ -111,10 +115,6 @@ func main() {
 		classRepo,
 		userRepo,
 	))
-
-	notificationRepo := repository.NewNotificationRepository(db)
-	notificationService := service.NewNotificationService(notificationRepo)
-	notificationHandler := handler.NewNotificationHandler(notificationService)
 
 	logRepo := repository.NewLogRepository(db)
 	logService := service.NewLogService(logRepo)
