@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/domain"
 	"backend/internal/dto"
+	"backend/internal/middleware"
 	"backend/internal/service"
 	"net/http"
 	"strconv"
@@ -89,6 +90,12 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 		return
 	}
 
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	asg := domain.Assignment{
 		SchoolID:            input.SchoolID,
 		SubjectClassID:      input.SubjectClassID,
@@ -97,7 +104,7 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 		Description:         input.Description,
 		Deadline:            input.Deadline,
 		AllowLateSubmission: input.AllowLateSubmission,
-		CreatedBy:           input.CreatedBy,
+		CreatedBy:           userID,
 	}
 
 	if err := h.service.CreateAssignment(&asg, input.MediaIDs); err != nil {
@@ -280,10 +287,16 @@ func (h *AssignmentHandler) Submit(c *gin.Context) {
 		return
 	}
 
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	sbm := domain.Submission{
 		SchoolID:     input.SchoolID,
 		AssignmentID: assignmentId,
-		UserID:       input.UserID,
+		UserID:       userID,
 	}
 
 	if err := h.service.Submit(&sbm, input.MediaIDs); err != nil {
@@ -381,11 +394,17 @@ func (h *AssignmentHandler) Assess(c *gin.Context) {
 		return
 	}
 
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	asm := domain.Assessment{
 		SubmissionID: submissionId,
 		Score:        input.Score,
 		Feedback:     input.Feedback,
-		AssessedBy:   input.AssessedBy,
+		AssessedBy:   userID,
 	}
 
 	if err := h.service.Assess(&asm); err != nil {

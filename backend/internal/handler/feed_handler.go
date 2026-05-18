@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/domain"
 	"backend/internal/dto"
+	"backend/internal/middleware"
 	"backend/internal/service"
 	"net/http"
 	"strconv"
@@ -31,11 +32,17 @@ func (h *FeedHandler) Create(c *gin.Context) {
 		return
 	}
 
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	feed := domain.Feed{
 		SchoolID:  input.SchoolID,
 		ClassID:   input.ClassID,
 		Content:   input.Content,
-		CreatedBy: input.CreatedBy,
+		CreatedBy: userID,
 	}
 
 	if err := h.service.Create(&feed, input.MediaIDs); err != nil {

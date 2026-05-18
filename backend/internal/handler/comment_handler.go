@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/domain"
 	"backend/internal/dto"
+	"backend/internal/middleware"
 	"backend/internal/service"
 	"net/http"
 
@@ -24,11 +25,17 @@ func (h *CommentHandler) Create(c *gin.Context) {
 		return
 	}
 
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	comment := domain.Comment{
 		SchoolID:   input.SchoolID,
 		SourceType: domain.SourceType(input.SourceType),
 		SourceID:   input.SourceID,
-		UserID:     input.UserID,
+		UserID:     userID,
 		Content:    input.Content,
 	}
 

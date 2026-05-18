@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/domain"
 	"backend/internal/dto"
+	"backend/internal/middleware"
 	"backend/internal/service"
 	"net/http"
 	"strconv"
@@ -29,13 +30,19 @@ func (h *ClassHandler) Create(c *gin.Context) {
 		return
 	}
 
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	class := domain.Class{
 		SchoolID:    input.SchoolID,
 		TermID:      input.TermID,
 		Code:        input.Code,
 		Title:       input.Title,
 		Description: input.Description,
-		CreatedBy:   input.CreatedBy,
+		CreatedBy:   userID,
 	}
 
 	if err := h.service.Create(&class); err != nil {

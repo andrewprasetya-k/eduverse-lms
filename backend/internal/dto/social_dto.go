@@ -2,11 +2,10 @@ package dto
 
 // Feed DTOs
 type CreateFeedDTO struct {
-	SchoolID  string   `json:"schoolId" binding:"required,uuid"`
-	ClassID   string   `json:"classId" binding:"required,uuid"`
-	Content   string   `json:"content" binding:"required"`
-	CreatedBy string   `json:"createdBy" binding:"required,uuid"`
-	MediaIDs  []string `json:"mediaIds"`
+	SchoolID string   `json:"schoolId" binding:"required,uuid"`
+	ClassID  string   `json:"classId" binding:"required,uuid"`
+	Content  string   `json:"content" binding:"required"`
+	MediaIDs []string `json:"mediaIds"`
 }
 
 type UpdateFeedDTO struct {
@@ -33,7 +32,6 @@ type CreateCommentDTO struct {
 	SchoolID   string `json:"schoolId" binding:"required,uuid"`
 	SourceType string `json:"sourceType" binding:"required"`
 	SourceID   string `json:"sourceId" binding:"required,uuid"`
-	UserID     string `json:"userId" binding:"required,uuid"`
 	Content    string `json:"content" binding:"required"`
 }
 

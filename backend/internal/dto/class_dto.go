@@ -6,7 +6,6 @@ type CreateClassDTO struct {
 	Code        string `json:"classCode" binding:"required"`
 	Title       string `json:"classTitle" binding:"required"`
 	Description string `json:"classDesc"`
-	CreatedBy   string `json:"createdBy" binding:"required,uuid"`
 }
 
 type UpdateClassDTO struct {

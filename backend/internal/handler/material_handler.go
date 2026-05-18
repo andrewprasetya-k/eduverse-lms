@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/domain"
 	"backend/internal/dto"
+	"backend/internal/middleware"
 	"backend/internal/service"
 	"backend/internal/storage"
 	"errors"
@@ -25,6 +26,12 @@ func NewMaterialHandler(service service.MaterialService, subjectClassService ser
 }
 
 func (h *MaterialHandler) Create(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	// Check if it's multipart form (with files) or JSON
 	contentType := c.GetHeader("Content-Type")
 
@@ -42,7 +49,7 @@ func (h *MaterialHandler) Create(c *gin.Context) {
 			Title:          input.Title,
 			Description:    input.Description,
 			Type:           domain.MaterialType(input.Type),
-			CreatedBy:      input.CreatedBy,
+			CreatedBy:      userID,
 		}
 
 		if err := h.service.Create(c.Request.Context(), &mat, input.MediaIDs, input.Medias, nil); err != nil {
@@ -67,10 +74,9 @@ func (h *MaterialHandler) Create(c *gin.Context) {
 	title := c.PostForm("materialTitle")
 	description := c.PostForm("materialDesc")
 	materialType := c.PostForm("materialType")
-	createdBy := c.PostForm("createdBy")
 
-	if schoolID == "" || subjectClassID == "" || title == "" || materialType == "" || createdBy == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Required fields: schoolId, subjectClassId, materialTitle, materialType, createdBy"})
+	if schoolID == "" || subjectClassID == "" || title == "" || materialType == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Required fields: schoolId, subjectClassId, materialTitle, materialType"})
 		return
 	}
 
@@ -80,7 +86,7 @@ func (h *MaterialHandler) Create(c *gin.Context) {
 		Title:          title,
 		Description:    description,
 		Type:           domain.MaterialType(materialType),
-		CreatedBy:      createdBy,
+		CreatedBy:      userID,
 	}
 
 	// Process uploaded files
@@ -194,7 +200,13 @@ func (h *MaterialHandler) UpdateProgress(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateProgress(input.UserID, input.MaterialID, input.Status); err != nil {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if err := h.service.UpdateProgress(userID, input.MaterialID, input.Status); err != nil {
 		HandleError(c, err)
 		return
 	}

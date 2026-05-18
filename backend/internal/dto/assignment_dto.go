@@ -31,7 +31,6 @@ type CreateAssignmentDTO struct {
 	Description         string     `json:"assignmentDescription"`
 	Deadline            *time.Time `json:"deadline"`
 	AllowLateSubmission bool       `json:"allowLateSubmission"`
-	CreatedBy           string     `json:"createdBy" binding:"required,uuid"`
 	MediaIDs            []string   `json:"mediaIds"`
 }
 
@@ -76,7 +75,6 @@ type AssignmentWithSubmissionsDTO struct {
 // Submission
 type CreateSubmissionDTO struct {
 	SchoolID string   `json:"schoolId" binding:"required,uuid"`
-	UserID   string   `json:"userId" binding:"required,uuid"`
 	MediaIDs []string `json:"mediaIds"`
 }
 
@@ -91,9 +89,8 @@ type SubmissionResponseDTO struct {
 
 // Assessment
 type CreateAssessmentDTO struct {
-	Score      float64 `json:"score" binding:"required"`
-	Feedback   string  `json:"feedback"`
-	AssessedBy string  `json:"assessedBy" binding:"required,uuid"`
+	Score    float64 `json:"score" binding:"required"`
+	Feedback string  `json:"feedback"`
 }
 
 type UpdateAssessmentDTO struct {

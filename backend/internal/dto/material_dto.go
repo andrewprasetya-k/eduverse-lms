@@ -6,7 +6,6 @@ type CreateMaterialDTO struct {
 	Title          string              `json:"materialTitle" binding:"required"`
 	Description    string              `json:"materialDesc"`
 	Type           string              `json:"materialType" binding:"required,oneof=video pdf ppt other"`
-	CreatedBy      string              `json:"createdBy" binding:"required,uuid"`
 	MediaIDs       []string            `json:"mediaIds"` // Existing media IDs
 	Medias         []CreateMediaInline `json:"medias"`   // New media to create
 }
@@ -49,7 +48,6 @@ type MaterialListWithSubjectDTO struct {
 }
 
 type UpdateProgressDTO struct {
-	UserID     string `json:"userId" binding:"required,uuid"`
 	MaterialID string `json:"materialId" binding:"required,uuid"`
 	Status     string `json:"status" binding:"required,oneof=not_started completed"`
 }

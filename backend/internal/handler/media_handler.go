@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/domain"
 	"backend/internal/dto"
+	"backend/internal/middleware"
 	"backend/internal/service"
 	"backend/internal/storage"
 	"errors"
@@ -33,7 +34,7 @@ func (h *MediaHandler) Upload(c *gin.Context) {
 
 	schoolID := c.PostForm("schoolId")
 	ownerType := c.PostForm("ownerType")
-	ownerID := c.PostForm("ownerId")
+	ownerID := middleware.GetUserID(c)
 
 	if schoolID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "schoolId is required"})
