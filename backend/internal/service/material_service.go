@@ -36,21 +36,27 @@ type MaterialService interface {
 }
 
 type materialService struct {
-	repo       repository.MaterialRepository
-	attService AttachmentService
-	mediaRepo  repository.MediaRepository
-	storage    storage.Provider
+	repo         repository.MaterialRepository
+	attService   AttachmentService
+	mediaRepo    repository.MediaRepository
+	storage      storage.Provider
+	notifService NotificationService
+	sclRepo      repository.SubjectClassRepository
+	enrRepo      repository.EnrollmentRepository
 }
 
-func NewMaterialService(repo repository.MaterialRepository, attService AttachmentService, mediaRepo repository.MediaRepository, storageProvider storage.Provider) MaterialService {
+func NewMaterialService(repo repository.MaterialRepository, attService AttachmentService, mediaRepo repository.MediaRepository, storageProvider storage.Provider, notifService NotificationService, sclRepo repository.SubjectClassRepository, enrRepo repository.EnrollmentRepository) MaterialService {
 	if storageProvider == nil {
 		storageProvider = storage.NewDisabledStorage()
 	}
 	return &materialService{
-		repo:       repo,
-		attService: attService,
-		mediaRepo:  mediaRepo,
-		storage:    storageProvider,
+		repo:         repo,
+		attService:   attService,
+		mediaRepo:    mediaRepo,
+		storage:      storageProvider,
+		notifService: notifService,
+		sclRepo:      sclRepo,
+		enrRepo:      enrRepo,
 	}
 }
 
@@ -121,6 +127,21 @@ func (s *materialService) Create(ctx context.Context, mat *domain.Material, medi
 			MediaID:    mID,
 		}
 		s.attService.Link(att)
+	}
+
+	// Best-effort: notify students in the class
+	if classID, err := s.sclRepo.GetClassIDBySubjectClass(mat.SubjectClassID); err == nil && classID != "" {
+		if userIDs, err := s.enrRepo.GetStudentUserIDsByClass(classID); err == nil {
+			for _, uid := range userIDs {
+				_ = s.notifService.Create(&dto.CreateNotificationDTO{
+					UserID:    uid,
+					Type:      domain.NotifMaterialAdded,
+					Title:     "New Material",
+					Message:   "New learning material has been posted: " + mat.Title,
+					RelatedID: mat.ID,
+				})
+			}
+		}
 	}
 
 	return nil

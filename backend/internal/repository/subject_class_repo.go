@@ -12,6 +12,7 @@ type SubjectClassRepository interface {
 	Update(scl *domain.SubjectClass) error
 	Delete(id string) error
 	CheckExists(classID, subjectID, schoolUserID string) (bool, error)
+	GetClassIDBySubjectClass(subjectClassID string) (string, error)
 }
 
 type subjectClassRepository struct {
@@ -68,4 +69,12 @@ func (r *subjectClassRepository) CheckExists(classID, subjectID, schoolUserID st
 		Where("scl_cls_id = ? AND scl_sub_id = ? AND scl_scu_id = ?", classID, subjectID, schoolUserID).
 		Count(&count).Error
 	return count > 0, err
+}
+
+func (r *subjectClassRepository) GetClassIDBySubjectClass(subjectClassID string) (string, error) {
+	var classID string
+	err := r.db.Model(&domain.SubjectClass{}).
+		Where("scl_id = ?", subjectClassID).
+		Pluck("scl_cls_id", &classID).Error
+	return classID, err
 }

@@ -89,8 +89,12 @@ func main() {
 	attachmentRepo := repository.NewAttachmentRepository(db)
 	attachmentService := service.NewAttachmentService(attachmentRepo)
 
+	notificationRepo := repository.NewNotificationRepository(db)
+	notificationService := service.NewNotificationService(notificationRepo)
+	notificationHandler := handler.NewNotificationHandler(notificationService)
+
 	materialRepo := repository.NewMaterialRepository(db)
-	materialService := service.NewMaterialService(materialRepo, attachmentService, mediaRepo, storageProvider)
+	materialService := service.NewMaterialService(materialRepo, attachmentService, mediaRepo, storageProvider, notificationService, subjectClassRepo, enrollmentRepo)
 	materialHandler := handler.NewMaterialHandler(materialService, subjectClassService)
 
 	feedRepo := repository.NewFeedRepository(db)
@@ -99,10 +103,6 @@ func main() {
 	commentService := service.NewCommentService(commentRepo)
 	feedHandler := handler.NewFeedHandler(feedService, commentService, classService)
 	commentHandler := handler.NewCommentHandler(commentService)
-
-	notificationRepo := repository.NewNotificationRepository(db)
-	notificationService := service.NewNotificationService(notificationRepo)
-	notificationHandler := handler.NewNotificationHandler(notificationService)
 
 	assignmentRepo := repository.NewAssignmentRepository(db)
 	assignmentService := service.NewAssignmentService(assignmentRepo, attachmentService, notificationService, enrollmentRepo)
