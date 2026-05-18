@@ -2,6 +2,7 @@ package service
 
 import (
 	"backend/internal/domain"
+	"backend/internal/dto"
 	"backend/internal/repository"
 )
 
@@ -14,20 +15,23 @@ type FeedService interface {
 }
 
 type feedService struct {
-	repo       repository.FeedRepository
-	attService AttachmentService
+	repo         repository.FeedRepository
+	attService   AttachmentService
+	notifService NotificationService
+	enrRepo      repository.EnrollmentRepository
 }
 
-func NewFeedService(repo repository.FeedRepository, attService AttachmentService) FeedService {
+func NewFeedService(repo repository.FeedRepository, attService AttachmentService, notifService NotificationService, enrRepo repository.EnrollmentRepository) FeedService {
 	return &feedService{
-		repo:       repo,
-		attService: attService,
+		repo:         repo,
+		attService:   attService,
+		notifService: notifService,
+		enrRepo:      enrRepo,
 	}
 }
 
 func (s *feedService) Create(feed *domain.Feed, mediaIDs []string) error {
-	err := s.repo.Create(feed)
-	if err != nil {
+	if err := s.repo.Create(feed); err != nil {
 		return err
 	}
 
@@ -40,6 +44,23 @@ func (s *feedService) Create(feed *domain.Feed, mediaIDs []string) error {
 		}
 		s.attService.Link(att)
 	}
+
+	// Best-effort: notify all class members except the creator
+	if userIDs, err := s.enrRepo.GetMemberUserIDsByClass(feed.ClassID); err == nil {
+		for _, uid := range userIDs {
+			if uid == feed.CreatedBy {
+				continue
+			}
+			_ = s.notifService.Create(&dto.CreateNotificationDTO{
+				UserID:    uid,
+				Type:      domain.NotifFeedPosted,
+				Title:     "New Announcement",
+				Message:   "A new post has been made in your class.",
+				RelatedID: feed.ID,
+			})
+		}
+	}
+
 	return nil
 }
 
