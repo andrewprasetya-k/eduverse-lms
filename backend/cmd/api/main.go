@@ -100,7 +100,8 @@ func main() {
 	feedRepo := repository.NewFeedRepository(db)
 	feedService := service.NewFeedService(feedRepo, attachmentService, notificationService, enrollmentRepo)
 	commentRepo := repository.NewCommentRepository(db)
-	commentService := service.NewCommentService(commentRepo)
+	contentOwnerRepo := repository.NewContentOwnerRepository(db)
+	commentService := service.NewCommentService(commentRepo, contentOwnerRepo, notificationService)
 	feedHandler := handler.NewFeedHandler(feedService, commentService, classService)
 	commentHandler := handler.NewCommentHandler(commentService)
 
