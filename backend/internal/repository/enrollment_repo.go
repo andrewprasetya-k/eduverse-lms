@@ -13,6 +13,8 @@ type EnrollmentRepository interface {
 	Update(id string, role string) error
 	Delete(id string) error
 	CheckExists(classID, schoolUserID string) (bool, error)
+	GetStudentUserIDsByClass(classID string) ([]string, error)
+	GetMemberUserIDsByClass(classID string) ([]string, error)
 }
 
 type enrollmentRepository struct {
@@ -90,4 +92,22 @@ func (r *enrollmentRepository) CheckExists(classID, schoolUserID string) (bool, 
 		Where("enr_cls_id = ? AND enr_scu_id = ?", classID, schoolUserID).
 		Count(&count).Error
 	return count > 0, err
+}
+
+func (r *enrollmentRepository) GetStudentUserIDsByClass(classID string) ([]string, error) {
+	var userIDs []string
+	err := r.db.Model(&domain.Enrollment{}).
+		Joins("JOIN edv.school_users ON school_users.scu_id = enrollments.enr_scu_id").
+		Where("enrollments.enr_cls_id = ? AND enrollments.enr_role = ?", classID, "student").
+		Pluck("school_users.scu_usr_id", &userIDs).Error
+	return userIDs, err
+}
+
+func (r *enrollmentRepository) GetMemberUserIDsByClass(classID string) ([]string, error) {
+	var userIDs []string
+	err := r.db.Model(&domain.Enrollment{}).
+		Joins("JOIN edv.school_users ON school_users.scu_id = enrollments.enr_scu_id").
+		Where("enrollments.enr_cls_id = ?", classID).
+		Pluck("school_users.scu_usr_id", &userIDs).Error
+	return userIDs, err
 }
