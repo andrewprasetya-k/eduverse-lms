@@ -167,6 +167,7 @@ cls_title varchar(150)
 cls_desc text
 created_by uuid [ref: > users.usr_id]
 is_active boolean [default: true]
+cls_chat_room_id uuid [ref: > chat_rooms.room_id] //NEW COLUMN TO SUPPORT CHAT FEATURE
 created_at timestamp [default: `now()`]
 updated_at timestamp [default: `now()`]
 deleted_at timestamp
@@ -182,6 +183,7 @@ scl_id uuid [pk, default: `gen_random_uuid()`]
 scl_cls_id uuid [ref: > classes.cls_id]
 scl_sub_id uuid [ref: > subjects.sub_id]
 scl_scu_id uuid [ref: > school_users.scu_id]
+scl_chat_room_id uuid [ref: > chat_rooms.room_id] //NEW COLUMN TO SUPPORT CHAT FEATURE
 
 indexes {
 (scl_cls_id, scl_sub_id, scl_scu_id) [unique]
@@ -333,4 +335,107 @@ created_at timestamp [default: `now()`]
 indexes {
 (ntf_usr_id, is_read, created_at) [name: 'idx_notifications_user']
 }
+}
+
+# chat app schema
+
+Enum chat_room_type {
+class  
+ subject  
+ dm  
+ group // NEW — grup bebas antar user dalam satu sekolah
+}
+
+Enum chat_message_type {
+text
+file
+system // "Materi baru ditambahkan", "Siswa baru bergabung"
+}
+
+Table chat_rooms {
+room_id uuid [pk, default: `gen_random_uuid()`]
+room_sch_id uuid [ref: > schools.sch_id]
+room_name varchar(150)
+room_type chat_room_type
+
+// pointer ke konteks akademik Eduverse
+room_ref_type varchar(20) // 'class' | 'subject' | null
+room_ref_id uuid // cls_id atau scl_id, null untuk DM
+
+created_by uuid [ref: > users.usr_id]
+created_at timestamp [default: `now()`]
+deleted_at timestamp
+
+indexes {
+(room_sch_id, room_ref_type, room_ref_id) [unique, name: 'idx_chat_room_ref']
+}
+}
+
+Table chat_room_members {
+  crm_id uuid [pk, default: `gen_random_uuid()`]
+  crm_room_id uuid [ref: > chat_rooms.room_id]
+  crm_usr_id uuid [ref: > users.usr_id]
+  crm_enr_id uuid [ref: > enrollments.enr_id]
+  crm_role varchar(20) [default: 'member']  // NEW — 'admin' | 'member'
+  joined_at timestamp [default: `now()`]
+  left_at timestamp
+
+  indexes {
+    (crm_room_id, crm_usr_id) [unique]
+  }
+}
+
+Table chat_messages {
+msg_id uuid [pk, default: `gen_random_uuid()`]
+msg_room_id uuid [ref: > chat_rooms.room_id]
+msg_usr_id uuid [ref: > users.usr_id]
+msg_content text
+msg_type chat_message_type
+
+// thread/reply
+msg_reply_to uuid [ref: > chat_messages.msg_id]
+
+// link ke konteks akademik (opsional)
+// guru share tugas/materi langsung dari chat
+msg_ref_type source_type // pakai enum source_type yang sudah ada
+msg_ref_id uuid
+
+created_at timestamp [default: `now()`]
+deleted_at timestamp
+}
+
+Table chat_attachments {
+cat_id uuid [pk, default: `gen_random_uuid()`]
+cat_msg_id uuid [ref: > chat_messages.msg_id]
+
+// pakai medias yang sudah ada di Eduverse
+cat_med_id uuid [ref: > medias.med_id]
+
+created_at timestamp [default: `now()`]
+}
+
+Table chat_read_receipts {
+rct_id uuid [pk, default: `gen_random_uuid()`]
+rct_room_id uuid [ref: > chat_rooms.room_id]
+rct_usr_id uuid [ref: > users.usr_id]
+last_read_msg_id uuid [ref: > chat_messages.msg_id]
+last_read_at timestamp
+
+indexes {
+(rct_room_id, rct_usr_id) [unique]
+}
+}
+
+Table student_notes {
+  snt_id uuid [pk, default: `gen_random_uuid()`]
+  snt_sch_id uuid [ref: > schools.sch_id]
+  snt_usr_id uuid [ref: > users.usr_id]
+  snt_mat_id uuid [ref: > materials.mat_id]
+  snt_content text
+  created_at timestamp [default: `now()`]
+  updated_at timestamp [default: `now()`]
+
+  indexes {
+    (snt_usr_id, snt_mat_id) [unique]
+  }
 }
