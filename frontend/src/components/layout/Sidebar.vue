@@ -1,25 +1,21 @@
 <script setup lang="ts">
-import {
-  PhBookOpen,
-  PhCalendarBlank,
-  PhChartBar,
-  PhChatCircle,
-  PhHouse,
-  PhNotebook,
-  PhSignOut,
-} from "@phosphor-icons/vue";
-import { useAuthStore } from "../../stores/auth";
+import { PhSignOut } from '@phosphor-icons/vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '../../stores/auth'
+import type { NavItem } from '../../types/navigation'
 
-const auth = useAuthStore();
+defineProps<{
+  items: NavItem[]
+  label: string
+}>()
 
-const items = [
-  { label: "Dashboard", icon: PhHouse, active: true },
-  { label: "Classes", icon: PhBookOpen },
-  { label: "Assignments", icon: PhCalendarBlank },
-  { label: "Messages", icon: PhChatCircle, hasDot: true },
-  { label: "Notes", icon: PhNotebook },
-  { label: "Grades", icon: PhChartBar },
-];
+const auth = useAuthStore()
+const router = useRouter()
+
+function logout() {
+  auth.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -34,29 +30,29 @@ const items = [
 
     <nav
       class="flex flex-1 flex-col items-center gap-1"
-      aria-label="Student navigation"
+      :aria-label="label"
     >
-      <button
+      <RouterLink
         v-for="item in items"
         :key="item.label"
         :title="item.label"
         class="relative flex h-10 w-10 items-center justify-center rounded-xl text-[#a3a1aa] transition hover:bg-[#f3f1ec] hover:text-[#3f3a4a]"
-        :class="item.active ? 'bg-[#eef2ff] text-[#4f46e5]' : ''"
-        type="button"
+        active-class="bg-[#eef2ff] text-[#4f46e5]"
+        :to="item.to"
       >
         <component :is="item.icon" :size="20" weight="regular" />
         <span
           v-if="item.hasDot"
           class="absolute right-2 top-2 h-1.5 w-1.5 rounded-full border border-white bg-[#4f46e5]"
         />
-      </button>
+      </RouterLink>
     </nav>
 
     <button
       title="Logout"
       class="mb-3 flex h-10 w-10 items-center justify-center rounded-xl text-[#a3a1aa] transition hover:bg-[#f3f1ec] hover:text-[#3f3a4a]"
       type="button"
-      @click="auth.logout()"
+      @click="logout"
     >
       <PhSignOut :size="19" />
     </button>

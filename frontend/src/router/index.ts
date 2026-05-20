@@ -12,6 +12,7 @@ import StudentDashboard from '../pages/student/StudentDashboard.vue'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard.vue'
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import SuperAdminDashboard from '../pages/superadmin/SuperAdminDashboard.vue'
+import FeaturePlaceholder from '../components/common/FeaturePlaceholder.vue'
 
 export const dashboardByRole: Record<RoleName, string> = {
   super_admin: '/superadmin/dashboard',
@@ -53,6 +54,72 @@ const router = createRouter({
           name: 'student-dashboard',
           component: StudentDashboard,
         },
+        {
+          path: 'classes',
+          name: 'student-classes',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Student classes',
+            title: 'Ruang kelas siswa',
+            description:
+              'Halaman ini nantinya menampilkan kelas aktif, materi terbaru, dan akses cepat ke detail kelas berdasarkan enrollment siswa.',
+          },
+        },
+        {
+          path: 'assignments',
+          name: 'student-assignments',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Student assignments',
+            title: 'Daftar tugas siswa',
+            description:
+              'Halaman ini nantinya membantu siswa melihat tugas aktif, deadline, status submit, dan hasil penilaian.',
+          },
+        },
+        {
+          path: 'grades',
+          name: 'student-grades',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Student grades',
+            title: 'Nilai dan progress akademik',
+            description:
+              'Halaman ini nantinya merangkum nilai per subject, rata-rata, dan progress belajar dari grade book backend.',
+          },
+        },
+        {
+          path: 'chat',
+          name: 'student-chat',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Realtime chat',
+            title: 'Chat kelas',
+            description:
+              'Fitur chat akan memakai WebSocket untuk percakapan kelas secara realtime. WebSocket belum diimplementasikan pada tahap ini.',
+          },
+        },
+        {
+          path: 'notes',
+          name: 'student-notes',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Learning notes',
+            title: 'Catatan belajar',
+            description:
+              'Notes akan tersedia dari halaman detail material, termasuk catatan per materi. Autosave belum diimplementasikan pada tahap ini.',
+          },
+        },
+        {
+          path: 'profile',
+          name: 'student-profile',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Student profile',
+            title: 'Profil siswa',
+            description:
+              'Halaman ini nantinya menampilkan informasi akun, konteks sekolah aktif, dan preferensi dasar pengguna.',
+          },
+        },
       ],
     },
     {
@@ -64,6 +131,61 @@ const router = createRouter({
           path: 'dashboard',
           name: 'teacher-dashboard',
           component: TeacherDashboard,
+        },
+        {
+          path: 'classes',
+          name: 'teacher-classes',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Teacher classes',
+            title: 'Kelas yang diajar',
+            description:
+              'Halaman ini nantinya menampilkan kelas guru, subject class, material, dan aktivitas siswa.',
+          },
+        },
+        {
+          path: 'assignments',
+          name: 'teacher-assignments',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Teacher assignments',
+            title: 'Manajemen tugas',
+            description:
+              'Halaman ini nantinya dipakai guru untuk membuat, mengubah, dan memantau tugas kelas.',
+          },
+        },
+        {
+          path: 'submissions',
+          name: 'teacher-submissions',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Submission review',
+            title: 'Review submission',
+            description:
+              'Halaman ini nantinya menampilkan submission siswa yang perlu dinilai dan feedback yang sudah diberikan.',
+          },
+        },
+        {
+          path: 'chat',
+          name: 'teacher-chat',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Realtime chat',
+            title: 'Chat kelas',
+            description:
+              'Fitur chat guru akan memakai WebSocket untuk komunikasi realtime dengan kelas. WebSocket belum diimplementasikan pada tahap ini.',
+          },
+        },
+        {
+          path: 'profile',
+          name: 'teacher-profile',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Teacher profile',
+            title: 'Profil guru',
+            description:
+              'Halaman ini nantinya menampilkan informasi akun guru, role aktif, dan konteks sekolah.',
+          },
         },
       ],
     },
@@ -77,6 +199,61 @@ const router = createRouter({
           name: 'admin-dashboard',
           component: AdminDashboard,
         },
+        {
+          path: 'classes',
+          name: 'admin-classes',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'School classes',
+            title: 'Manajemen kelas',
+            description:
+              'Halaman ini nantinya dipakai admin sekolah untuk mengelola kelas, subject class, dan struktur kelas.',
+          },
+        },
+        {
+          path: 'users',
+          name: 'admin-users',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'School users',
+            title: 'Manajemen user sekolah',
+            description:
+              'Halaman ini nantinya dipakai admin untuk mengelola user, membership sekolah, dan role.',
+          },
+        },
+        {
+          path: 'enrollments',
+          name: 'admin-enrollments',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Enrollments',
+            title: 'Enrollment kelas',
+            description:
+              'Halaman ini nantinya mengatur siswa dan guru yang tergabung dalam kelas tertentu.',
+          },
+        },
+        {
+          path: 'academic-years',
+          name: 'admin-academic-years',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Academic setup',
+            title: 'Tahun ajaran dan semester',
+            description:
+              'Halaman ini nantinya mengelola academic year, term, dan status aktif periode akademik.',
+          },
+        },
+        {
+          path: 'profile',
+          name: 'admin-profile',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Admin profile',
+            title: 'Profil admin sekolah',
+            description:
+              'Halaman ini nantinya menampilkan informasi akun admin dan konteks sekolah aktif.',
+          },
+        },
       ],
     },
     {
@@ -88,6 +265,39 @@ const router = createRouter({
           path: 'dashboard',
           name: 'superadmin-dashboard',
           component: SuperAdminDashboard,
+        },
+        {
+          path: 'schools',
+          name: 'superadmin-schools',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Platform schools',
+            title: 'Manajemen sekolah',
+            description:
+              'Halaman ini nantinya mengelola tenant sekolah, status sekolah, dan konfigurasi dasar platform.',
+          },
+        },
+        {
+          path: 'users',
+          name: 'superadmin-users',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Platform users',
+            title: 'User platform',
+            description:
+              'Halaman ini nantinya membantu super admin melihat user lintas sekolah dan setup role platform.',
+          },
+        },
+        {
+          path: 'profile',
+          name: 'superadmin-profile',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Super admin profile',
+            title: 'Profil super admin',
+            description:
+              'Halaman ini nantinya menampilkan informasi akun dan akses platform yang sedang aktif.',
+          },
         },
       ],
     },
