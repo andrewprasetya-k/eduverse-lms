@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { PhSignOut } from '@phosphor-icons/vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
-import type { NavItem } from '../../types/navigation'
+import { PhSignOut } from "@phosphor-icons/vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "../../stores/auth";
+import type { NavItem } from "../../types/navigation";
 
 defineProps<{
-  items: NavItem[]
-  label: string
-}>()
+  items: NavItem[];
+  label: string;
+}>();
 
-const auth = useAuthStore()
-const router = useRouter()
+const auth = useAuthStore();
+const router = useRouter();
 
 function logout() {
-  auth.logout()
-  router.push('/login')
+  auth.logout();
+  router.push("/login");
 }
 </script>
 
@@ -28,10 +28,7 @@ function logout() {
       Ev
     </div>
 
-    <nav
-      class="flex flex-1 flex-col items-center gap-1"
-      :aria-label="label"
-    >
+    <nav class="flex flex-1 flex-col items-center gap-1" :aria-label="label">
       <RouterLink
         v-for="item in items"
         :key="item.label"
