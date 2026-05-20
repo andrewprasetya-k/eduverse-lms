@@ -1,7 +1,39 @@
-/schema.md
-.env
+# OS specific files
 .DS_Store
-tmp/build-errors.log
+Thumbs.db
+*.log
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/vendor/
+
+# Build outputs
+dist/
+build/
+frontend/dist/
+frontend/dist-ssr/
+backend/bin/
+tmp/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+frontend/.env.local
+frontend/.env.*.local
+backend/.env
+
+# IDEs and Editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# Project specific
+/schema.md
 .kiro/settings/lsp.json
 backend/AGENT.md
 backend/prompt.md
+tmp/build-errors.log
