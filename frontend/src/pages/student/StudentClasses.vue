@@ -49,7 +49,10 @@ async function loadClasses() {
 
 function openClass(item: StudentClassEnrollment) {
   if (!item.classId) return
-  router.push(`/student/classes/${item.classId}`)
+  router.push({
+    path: `/student/classes/${item.classId}`,
+    query: item.classTitle ? { title: item.classTitle } : undefined,
+  })
 }
 
 function classTitle(item: StudentClassEnrollment) {
