@@ -365,16 +365,28 @@ func corsMiddleware() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
-		if allowedOriginSet[origin] {
+		isAllowed := allowedOriginSet[origin]
+
+		if isAllowed {
 			c.Header("Access-Control-Allow-Origin", origin)
 			c.Header("Vary", "Origin")
 			c.Header("Access-Control-Allow-Credentials", "true")
 			c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, SchoolId, schoolid")
 			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			c.Header("Access-Control-Max-Age", "86400")
 		}
 
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+			if !isAllowed {
+				c.AbortWithStatus(403)
+			} else {
+				c.AbortWithStatus(204)
+			}
+			return
+		}
+
+		if !isAllowed && origin != "" {
+			c.AbortWithStatus(403)
 			return
 		}
 
@@ -383,26 +395,34 @@ func corsMiddleware() gin.HandlerFunc {
 }
 
 func parseAllowedOrigins(raw string) []string {
-	defaultOrigins := []string{"http://localhost:5173", "http://127.0.0.1:5173"}
+	defaultOrigins := []string{}
+
 	if strings.TrimSpace(raw) == "" {
 		return defaultOrigins
 	}
 
-	seen := make(map[string]bool, len(defaultOrigins))
-	origins := make([]string, 0, len(defaultOrigins)+1)
+	// Use a map to avoid duplicates
+	seen := make(map[string]bool)
+	origins := make([]string, 0)
+
+	// Add default origins first
 	for _, origin := range defaultOrigins {
-		seen[origin] = true
-		origins = append(origins, origin)
+		if !seen[origin] {
+			seen[origin] = true
+			origins = append(origins, origin)
+		}
 	}
 
+	// Parse and add environment-configured origins
 	parts := strings.Split(raw, ",")
 	for _, part := range parts {
 		origin := strings.TrimSpace(part)
 		if origin != "" && !seen[origin] {
-			origins = append(origins, origin)
 			seen[origin] = true
+			origins = append(origins, origin)
 		}
 	}
+
 	return origins
 }
 
