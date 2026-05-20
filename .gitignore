@@ -37,3 +37,4 @@ backend/.env
 backend/AGENT.md
 backend/prompt.md
 tmp/build-errors.log
+frontend/.env.example
