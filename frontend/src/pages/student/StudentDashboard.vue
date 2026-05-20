@@ -258,9 +258,6 @@ onMounted(loadDashboard);
               <p class="text-sm font-medium text-[#171322]">
                 Aktivitas akademik
               </p>
-              <p class="text-xs text-[#8b8592]">
-                Diambil dari dashboard siswa backend
-              </p>
             </div>
             <PhBell :size="20" class="text-[#4f46e5]" />
           </div>

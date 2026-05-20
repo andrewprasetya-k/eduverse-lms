@@ -8,6 +8,8 @@ import AdminLayout from '../layouts/AdminLayout.vue'
 import SuperAdminLayout from '../layouts/SuperAdminLayout.vue'
 import LoginPage from '../pages/auth/LoginPage.vue'
 import UnauthorizedPage from '../pages/auth/UnauthorizedPage.vue'
+import StudentClassDetail from '../pages/student/StudentClassDetail.vue'
+import StudentClasses from '../pages/student/StudentClasses.vue'
 import StudentDashboard from '../pages/student/StudentDashboard.vue'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard.vue'
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
@@ -57,13 +59,12 @@ const router = createRouter({
         {
           path: 'classes',
           name: 'student-classes',
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: 'Student classes',
-            title: 'Ruang kelas siswa',
-            description:
-              'Halaman ini nantinya menampilkan kelas aktif, materi terbaru, dan akses cepat ke detail kelas berdasarkan enrollment siswa.',
-          },
+          component: StudentClasses,
+        },
+        {
+          path: 'classes/:classId',
+          name: 'student-class-detail',
+          component: StudentClassDetail,
         },
         {
           path: 'assignments',
