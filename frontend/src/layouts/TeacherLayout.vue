@@ -4,7 +4,6 @@ import {
   PhCalendarBlank,
   PhChatCircle,
   PhHouse,
-  PhStack,
   PhTray,
   PhUserCircle,
 } from '@phosphor-icons/vue'
@@ -17,7 +16,6 @@ const items = [
   { label: 'Submissions', icon: PhTray, to: '/teacher/submissions' },
   { label: 'Chat', icon: PhChatCircle, to: '/teacher/chat', hasDot: true },
   { label: 'Profile', icon: PhUserCircle, to: '/teacher/profile' },
-  { label: 'Workspace', icon: PhStack, to: '/teacher/dashboard' },
 ]
 </script>
 
