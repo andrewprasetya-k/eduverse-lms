@@ -28,6 +28,7 @@ const notifications = ref<NotificationItem[]>([]);
 const unreadCount = ref(0);
 const isLoading = ref(true);
 const errorMessage = ref("");
+const viewDate = ref(new Date());
 
 const activeMembership = computed(() => {
   const activeSchoolId = auth.activeSchoolId;
@@ -50,10 +51,16 @@ const materialProgress = computed(() => {
 });
 const currentMonth = computed(() =>
   new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(
-    new Date(),
+    viewDate.value,
   ),
 );
-const calendarDays = computed(() => buildCalendarDays(new Date()));
+const calendarDays = computed(() => buildCalendarDays(viewDate.value));
+
+function changeMonth(step: number) {
+  const newDate = new Date(viewDate.value);
+  newDate.setMonth(newDate.getMonth() + step);
+  viewDate.value = newDate;
+}
 
 async function loadDashboard() {
   if (!auth.user?.id) {
@@ -124,6 +131,10 @@ function buildCalendarDays(date: Date) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const days = [];
 
+  const realToday = new Date();
+  const isCurrentMonth =
+    realToday.getMonth() === month && realToday.getFullYear() === year;
+
   for (let i = 0; i < startOffset; i += 1) {
     days.push({
       key: `empty-${i}`,
@@ -143,7 +154,7 @@ function buildCalendarDays(date: Date) {
     days.push({
       key: String(day),
       label: String(day),
-      isToday: day === date.getDate(),
+      isToday: isCurrentMonth && day === realToday.getDate(),
       hasEvent: eventDays.has(day),
     });
   }
@@ -376,14 +387,16 @@ onMounted(loadDashboard);
           <p class="text-sm font-medium text-[#171322]">{{ currentMonth }}</p>
           <div class="flex gap-1">
             <button
-              class="rounded-lg border border-[#ebe7df] p-1.5 text-[#7a7385]"
+              class="rounded-lg border border-[#ebe7df] p-1.5 text-[#7a7385] transition hover:bg-[#fbfaf8]"
               type="button"
+              @click="changeMonth(-1)"
             >
               <PhCaretLeft :size="14" />
             </button>
             <button
-              class="rounded-lg border border-[#ebe7df] p-1.5 text-[#7a7385]"
+              class="rounded-lg border border-[#ebe7df] p-1.5 text-[#7a7385] transition hover:bg-[#fbfaf8]"
               type="button"
+              @click="changeMonth(1)"
             >
               <PhCaretRight :size="14" />
             </button>
