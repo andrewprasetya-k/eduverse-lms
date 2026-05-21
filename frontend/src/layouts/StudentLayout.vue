@@ -5,6 +5,7 @@ import {
   PhChartBar,
   PhChatCircle,
   PhHouse,
+  PhMegaphone,
   PhNotebook,
   PhUserCircle,
 } from '@phosphor-icons/vue'
@@ -12,11 +13,12 @@ import SlimSidebar from '../components/layout/Sidebar.vue'
 
 const items = [
   { label: 'Dashboard', icon: PhHouse, to: '/student/dashboard' },
-  { label: 'Classes', icon: PhBookOpen, to: '/student/classes' },
+  { label: 'Subjects', icon: PhBookOpen, to: '/student/subjects' },
+  { label: 'Feed', icon: PhMegaphone, to: '/student/feed' },
   { label: 'Assignments', icon: PhCalendarBlank, to: '/student/assignments' },
+  { label: 'Grades', icon: PhChartBar, to: '/student/grades' },
   { label: 'Chat', icon: PhChatCircle, to: '/student/chat', hasDot: true },
   { label: 'Notes', icon: PhNotebook, to: '/student/notes' },
-  { label: 'Grades', icon: PhChartBar, to: '/student/grades' },
   { label: 'Profile', icon: PhUserCircle, to: '/student/profile' },
 ]
 </script>

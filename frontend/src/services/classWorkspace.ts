@@ -17,6 +17,20 @@ export async function getMaterialsBySubjectClass(subjectClassId: string) {
   return data
 }
 
+export async function getSubjectMaterials(subjectClassId: string) {
+  const response = await getMaterialsBySubjectClass(subjectClassId)
+  return {
+    subjectClass: response.subjectClass,
+    materials: response.data.data || [],
+    pagination: {
+      totalItems: response.data.totalItems,
+      page: response.data.page,
+      limit: response.data.limit,
+      totalPages: response.data.totalPages,
+    },
+  }
+}
+
 export async function getClassMaterials(classId: string) {
   const subjectClasses = await getSubjectClassesByClass(classId)
   const materialResponses = await Promise.all(

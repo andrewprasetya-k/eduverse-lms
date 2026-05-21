@@ -8,9 +8,10 @@ import AdminLayout from '../layouts/AdminLayout.vue'
 import SuperAdminLayout from '../layouts/SuperAdminLayout.vue'
 import LoginPage from '../pages/auth/LoginPage.vue'
 import UnauthorizedPage from '../pages/auth/UnauthorizedPage.vue'
-import StudentClassDetail from '../pages/student/StudentClassDetail.vue'
-import StudentClasses from '../pages/student/StudentClasses.vue'
 import StudentDashboard from '../pages/student/StudentDashboard.vue'
+import StudentFeed from '../pages/student/StudentFeed.vue'
+import StudentSubjectDetail from '../pages/student/StudentSubjectDetail.vue'
+import StudentSubjects from '../pages/student/StudentSubjects.vue'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard.vue'
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import SuperAdminDashboard from '../pages/superadmin/SuperAdminDashboard.vue'
@@ -58,13 +59,26 @@ const router = createRouter({
         },
         {
           path: 'classes',
-          name: 'student-classes',
-          component: StudentClasses,
+          redirect: '/student/subjects',
         },
         {
           path: 'classes/:classId',
-          name: 'student-class-detail',
-          component: StudentClassDetail,
+          redirect: '/student/subjects',
+        },
+        {
+          path: 'subjects',
+          name: 'student-subjects',
+          component: StudentSubjects,
+        },
+        {
+          path: 'subjects/:sclId',
+          name: 'student-subject-detail',
+          component: StudentSubjectDetail,
+        },
+        {
+          path: 'feed',
+          name: 'student-feed',
+          component: StudentFeed,
         },
         {
           path: 'assignments',
@@ -94,9 +108,9 @@ const router = createRouter({
           component: FeaturePlaceholder,
           props: {
             eyebrow: 'Realtime chat',
-            title: 'Chat kelas',
+            title: 'Chat sedang dikembangkan',
             description:
-              'Fitur chat akan memakai WebSocket untuk percakapan kelas secara realtime. WebSocket belum diimplementasikan pada tahap ini.',
+              'Chat akan menjadi fitur DM, group, atau subject realtime. WebSocket belum diimplementasikan pada tahap ini.',
           },
         },
         {
