@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { getActiveSchoolId, getStoredToken } from './session'
+import { clearStoredSession, getActiveSchoolId, getStoredToken } from './session'
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api',
@@ -24,7 +24,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && window.location.pathname !== '/login') {
-      localStorage.removeItem('edv_token')
+      clearStoredSession()
       window.location.assign('/login')
     }
     return Promise.reject(error)
