@@ -23,3 +23,12 @@ export interface AssignmentListResponse {
   subjectClass: SubjectClassHeader
   data: PaginatedResponse<AssignmentItem>
 }
+
+export interface SubmitAssignmentPayload {
+  schoolId: string
+  mediaIds: string[]
+}
+
+export interface SubmitAssignmentResponse {
+  message: string
+}

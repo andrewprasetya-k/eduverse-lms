@@ -6,12 +6,17 @@ import {
   PhCalendarBlank,
   PhClipboardText,
   PhFileText,
+  PhPaperclip,
+  PhTrash,
   PhWarningCircle,
 } from '@phosphor-icons/vue'
-import { getSubjectAssignmentDetail } from '../../services/assignment'
+import { useAuthStore } from '../../stores/auth'
+import { getSubjectAssignmentDetail, submitAssignment } from '../../services/assignment'
+import { uploadMediaFile } from '../../services/media'
 import type { AssignmentItem, SubjectClassHeader } from '../../types/assignment'
 
 const route = useRoute()
+const auth = useAuthStore()
 const subjectClassId = computed(() => String(route.params.sclId ?? ''))
 const assignmentId = computed(() => String(route.params.asgId ?? ''))
 const assignment = ref<AssignmentItem | null>(null)
@@ -19,6 +24,12 @@ const subjectClass = ref<SubjectClassHeader | null>(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
 const didLoad = ref(false)
+const selectedFiles = ref<File[]>([])
+const submitError = ref('')
+const submitSuccess = ref('')
+const isSubmitting = ref(false)
+
+const schoolId = computed(() => auth.activeSchoolId ?? auth.defaultContext?.schoolId ?? '')
 
 async function loadAssignment() {
   if (!subjectClassId.value || !assignmentId.value) {
@@ -44,6 +55,71 @@ async function loadAssignment() {
 }
 
 onMounted(loadAssignment)
+
+function handleFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = Array.from(input.files ?? [])
+  selectedFiles.value = [...selectedFiles.value, ...files]
+  submitError.value = ''
+  submitSuccess.value = ''
+  input.value = ''
+}
+
+function removeFile(index: number) {
+  selectedFiles.value = selectedFiles.value.filter((_, itemIndex) => itemIndex !== index)
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024) return `${size} B`
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function getErrorMessage(error: unknown) {
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = (error as { response?: { data?: { error?: string; message?: string } } })
+      .response
+    return response?.data?.error ?? response?.data?.message
+  }
+  return undefined
+}
+
+async function handleSubmit() {
+  if (!assignment.value) return
+  if (!schoolId.value) {
+    submitError.value = 'Konteks sekolah belum tersedia. Silakan login ulang.'
+    return
+  }
+  if (selectedFiles.value.length === 0) {
+    submitError.value = 'Pilih minimal satu file untuk dikumpulkan.'
+    return
+  }
+
+  isSubmitting.value = true
+  submitError.value = ''
+  submitSuccess.value = ''
+
+  try {
+    const uploaded = []
+    for (const file of selectedFiles.value) {
+      uploaded.push(await uploadMediaFile(file, schoolId.value, 'submission'))
+    }
+
+    await submitAssignment(assignment.value.assignmentId, {
+      schoolId: schoolId.value,
+      mediaIds: uploaded.map((item) => item.mediaId),
+    })
+
+    selectedFiles.value = []
+    submitSuccess.value = 'Tugas berhasil dikumpulkan. Status detail akan tersedia setelah endpoint submission siswa siap.'
+  } catch (error) {
+    submitError.value =
+      getErrorMessage(error) ??
+      'Pengumpulan tugas gagal. Pastikan file valid dan coba lagi nanti.'
+  } finally {
+    isSubmitting.value = false
+  }
+}
 </script>
 
 <template>
@@ -165,14 +241,62 @@ onMounted(loadAssignment)
       <article class="rounded-3xl border border-[#ebe7df] bg-white p-5">
         <p class="text-sm font-medium text-[#171322]">Pengumpulan tugas</p>
         <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-          Pengumpulan tugas akan tersedia pada tahap berikutnya.
+          Upload file tugas, lalu kirim submission. Identitas siswa diambil dari token login.
         </p>
+
+        <div class="mt-4 rounded-2xl border border-dashed border-[#d8d2c8] bg-[#fbfaf8] p-4">
+          <label
+            class="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
+          >
+            <PhPaperclip :size="18" />
+            Pilih file
+            <input class="hidden" multiple type="file" @change="handleFileChange" />
+          </label>
+
+          <p class="mt-3 text-xs leading-5 text-[#8b8592]">
+            File akan diupload ke storage backend terlebih dahulu, lalu media ID dikirim ke endpoint submission.
+          </p>
+        </div>
+
+        <div v-if="selectedFiles.length > 0" class="mt-4 space-y-2">
+          <div
+            v-for="(file, index) in selectedFiles"
+            :key="`${file.name}-${file.size}-${index}`"
+            class="flex items-center justify-between gap-3 rounded-2xl bg-[#fbfaf8] px-4 py-3"
+          >
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-[#3f3a4a]">{{ file.name }}</p>
+              <p class="mt-1 text-xs text-[#8b8592]">{{ formatFileSize(file.size) }}</p>
+            </div>
+            <button
+              class="shrink-0 rounded-xl p-2 text-[#f2756a] transition hover:bg-[#fff1f0]"
+              type="button"
+              @click="removeFile(index)"
+            >
+              <PhTrash :size="17" />
+            </button>
+          </div>
+        </div>
+
+        <p v-if="submitError" class="mt-4 rounded-2xl bg-[#fff1f0] p-3 text-sm text-[#b42318]">
+          {{ submitError }}
+        </p>
+        <p v-if="submitSuccess" class="mt-4 rounded-2xl bg-[#ecfdf3] p-3 text-sm text-[#027a48]">
+          {{ submitSuccess }}
+        </p>
+
         <button
-          class="mt-4 rounded-2xl bg-[#d8d5dd] px-4 py-2 text-sm font-medium text-white"
-          disabled
+          class="mt-4 rounded-2xl px-4 py-2 text-sm font-medium text-white transition"
+          :class="
+            isSubmitting || selectedFiles.length === 0
+              ? 'bg-[#d8d5dd]'
+              : 'bg-[#4f46e5] hover:bg-[#4338ca]'
+          "
+          :disabled="isSubmitting || selectedFiles.length === 0"
           type="button"
+          @click="handleSubmit"
         >
-          Submit belum tersedia
+          {{ isSubmitting ? 'Mengumpulkan...' : 'Kumpulkan tugas' }}
         </button>
       </article>
     </section>

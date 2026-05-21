@@ -1,5 +1,10 @@
 import { api } from './api'
-import type { AssignmentItem, AssignmentListResponse } from '../types/assignment'
+import type {
+  AssignmentItem,
+  AssignmentListResponse,
+  SubmitAssignmentPayload,
+  SubmitAssignmentResponse,
+} from '../types/assignment'
 
 export async function getSubjectAssignments(subjectClassId: string, page = 1, limit = 20) {
   const { data } = await api.get<AssignmentListResponse>(
@@ -21,4 +26,12 @@ export async function getSubjectAssignmentDetail(subjectClassId: string, assignm
     subjectClass: response.subjectClass,
     assignment,
   }
+}
+
+export async function submitAssignment(assignmentId: string, payload: SubmitAssignmentPayload) {
+  const { data } = await api.post<SubmitAssignmentResponse>(
+    `/assignments/submit/${assignmentId}`,
+    payload,
+  )
+  return data
 }
