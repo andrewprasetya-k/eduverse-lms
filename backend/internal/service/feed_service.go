@@ -4,7 +4,10 @@ import (
 	"backend/internal/domain"
 	"backend/internal/dto"
 	"backend/internal/repository"
+	"errors"
 	"fmt"
+
+	"gorm.io/gorm"
 )
 
 type FeedService interface {
@@ -39,7 +42,10 @@ func (s *feedService) Create(feed *domain.Feed, mediaIDs []string, userID string
 
 	classSchoolID, err := s.classRepo.GetSchoolIDByClass(feed.ClassID)
 	if err != nil {
-		return fmt.Errorf("class not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return gorm.ErrRecordNotFound
+		}
+		return err
 	}
 	if classSchoolID != feed.SchoolID {
 		return fmt.Errorf("class does not belong to this school")
