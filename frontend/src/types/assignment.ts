@@ -1,4 +1,4 @@
-import type { PaginatedResponse } from './classWorkspace'
+import type { MediaAttachment, PaginatedResponse } from './classWorkspace'
 
 export interface SubjectClassHeader {
   subjectClassId: string
@@ -16,6 +16,7 @@ export interface AssignmentItem {
   categoryName?: string
   createdAt?: string
   allowLateSubmission?: boolean
+  attachments?: MediaAttachment[]
 }
 
 export interface AssignmentListResponse {
