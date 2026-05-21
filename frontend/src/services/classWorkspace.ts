@@ -31,6 +31,11 @@ export async function getSubjectMaterials(subjectClassId: string) {
   }
 }
 
+export async function getMaterialById(materialId: string) {
+  const { data } = await api.get<MaterialItem>(`/materials/${materialId}`)
+  return data
+}
+
 export async function getClassMaterials(classId: string) {
   const subjectClasses = await getSubjectClassesByClass(classId)
   const materialResponses = await Promise.all(

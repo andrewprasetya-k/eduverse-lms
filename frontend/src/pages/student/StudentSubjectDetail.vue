@@ -197,7 +197,12 @@ onMounted(loadSubject);
               <article
                 v-for="material in materials"
                 :key="material.materialId"
-                class="rounded-md bg-white p-4"
+                class="cursor-pointer rounded-md bg-white p-4 transition hover:bg-[#f8f7f4]"
+                @click="
+                  router.push(
+                    `/student/subjects/${subjectClassId}/materials/${material.materialId}`,
+                  )
+                "
               >
                 <div class="flex items-start gap-3">
                   <div
