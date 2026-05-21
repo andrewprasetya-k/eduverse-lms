@@ -1,180 +1,165 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import {
   PhBell,
+  PhBookOpen,
   PhCaretLeft,
   PhCaretRight,
   PhChatCircleText,
-} from "@phosphor-icons/vue";
-import { useAuthStore } from "../../stores/auth";
+  PhNotebook,
+  PhWarningCircle,
+} from '@phosphor-icons/vue'
+import { useAuthStore } from '../../stores/auth'
+import { useActiveClassStore } from '../../stores/activeClass'
+import { getSubjectClassesByClass } from '../../services/classWorkspace'
+import { getClassFeed } from '../../services/feed'
 import {
-  getMemberClasses,
   getRecentNotifications,
-  getStudentDashboard,
   getUnreadNotificationCount,
-} from "../../services/studentDashboard";
-import type {
-  EnrollmentClass,
-  NotificationItem,
-  StudentDashboardSummary,
-} from "../../types/dashboard";
+} from '../../services/studentDashboard'
+import type { SubjectClassItem } from '../../types/classWorkspace'
+import type { FeedPost } from '../../types/feed'
+import type { NotificationItem } from '../../types/dashboard'
 
-const auth = useAuthStore();
+const auth = useAuthStore()
+const activeClassStore = useActiveClassStore()
 
-const palette = ["#4f8ef7", "#f2756a", "#c673d8", "#f0a05a", "#4f46e5"];
-const summary = ref<StudentDashboardSummary | null>(null);
-const classes = ref<EnrollmentClass[]>([]);
-const notifications = ref<NotificationItem[]>([]);
-const unreadCount = ref(0);
-const isLoading = ref(true);
-const errorMessage = ref("");
-const viewDate = ref(new Date());
+const palette = ['#4f8ef7', '#f2756a', '#c673d8', '#f0a05a', '#4f46e5']
+const subjects = ref<SubjectClassItem[]>([])
+const feedPosts = ref<FeedPost[]>([])
+const notifications = ref<NotificationItem[]>([])
+const unreadCount = ref(0)
+const isLoading = ref(true)
+const errorMessage = ref('')
+const viewDate = ref(new Date())
 
 const activeMembership = computed(() => {
-  const activeSchoolId = auth.activeSchoolId;
+  const activeSchoolId = auth.activeSchoolId
   return (
-    auth.memberships.find(
-      (membership) => membership.school.id === activeSchoolId,
-    ) ?? auth.memberships[0]
-  );
-});
+    auth.memberships.find((membership) => membership.school.id === activeSchoolId) ??
+    auth.memberships[0]
+  )
+})
 
-const schoolName = computed(
-  () => activeMembership.value?.school.name ?? "Eduverse",
-);
-const firstName = computed(() => auth.user?.fullName?.split(" ")[0] ?? "Siswa");
-const materialProgress = computed(() => {
-  if (!summary.value?.totalMaterials) return 0;
-  return Math.round(
-    (summary.value.completedMaterials / summary.value.totalMaterials) * 100,
-  );
-});
+const schoolUserId = computed(
+  () => activeMembership.value?.schoolUserId ?? auth.defaultContext?.schoolUserId ?? '',
+)
+const schoolName = computed(() => activeMembership.value?.school.name ?? 'Eduverse')
+const firstName = computed(() => auth.user?.fullName?.split(' ')[0] ?? 'Siswa')
+const activeClassTitle = computed(
+  () => activeClassStore.activeClassTitle || activeClassStore.activeClass?.classTitle || '',
+)
 const currentMonth = computed(() =>
-  new Intl.DateTimeFormat("id-ID", { month: "long", year: "numeric" }).format(
-    viewDate.value,
-  ),
-);
-const calendarDays = computed(() => buildCalendarDays(viewDate.value));
+  new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(viewDate.value),
+)
+const calendarDays = computed(() => buildCalendarDays(viewDate.value))
 
 function changeMonth(step: number) {
-  const newDate = new Date(viewDate.value);
-  newDate.setMonth(newDate.getMonth() + step);
-  viewDate.value = newDate;
+  const newDate = new Date(viewDate.value)
+  newDate.setMonth(newDate.getMonth() + step)
+  viewDate.value = newDate
 }
 
 async function loadDashboard() {
   if (!auth.user?.id) {
-    errorMessage.value = "Sesi login belum lengkap. Silakan login ulang.";
-    isLoading.value = false;
-    return;
+    errorMessage.value = 'Sesi login belum lengkap. Silakan login ulang.'
+    isLoading.value = false
+    return
   }
 
-  isLoading.value = true;
-  errorMessage.value = "";
+  if (!schoolUserId.value) {
+    errorMessage.value = 'Konteks sekolah belum tersedia.'
+    isLoading.value = false
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
 
   try {
-    const schoolUserId =
-      auth.defaultContext?.schoolUserId ?? activeMembership.value?.schoolUserId;
-    const [dashboardData, notificationData, unreadData, classData] =
-      await Promise.all([
-        getStudentDashboard(auth.user.id),
-        getRecentNotifications(),
-        getUnreadNotificationCount(),
-        schoolUserId ? getMemberClasses(schoolUserId) : Promise.resolve([]),
-      ]);
+    await activeClassStore.loadClasses(schoolUserId.value)
 
-    summary.value = dashboardData;
-    notifications.value = notificationData.data ?? [];
-    unreadCount.value =
-      unreadData.unreadCount ?? notificationData.unreadCount ?? 0;
-    classes.value = classData ?? [];
+    const activeClassId = activeClassStore.activeClassId
+    const [notificationData, unreadData] = await Promise.all([
+      getRecentNotifications(),
+      getUnreadNotificationCount(),
+    ])
+
+    notifications.value = notificationData.data ?? []
+    unreadCount.value = unreadData.unreadCount ?? notificationData.unreadCount ?? 0
+
+    if (!activeClassId) {
+      subjects.value = []
+      feedPosts.value = []
+      return
+    }
+
+    const [subjectData, feedData] = await Promise.all([
+      getSubjectClassesByClass(activeClassId),
+      getClassFeed(activeClassId),
+    ])
+
+    subjects.value = subjectData.subjects ?? []
+    feedPosts.value = feedData.data.data ?? []
   } catch {
-    errorMessage.value =
-      "Dashboard belum bisa dimuat. Periksa koneksi atau coba lagi nanti.";
+    errorMessage.value = 'Dashboard belum bisa dimuat. Periksa koneksi atau coba lagi nanti.'
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
 
-function classTitle(item: EnrollmentClass) {
-  return item.subjectName || item.classTitle || item.classCode || "Kelas";
-}
-
-function classSubtitle(item: EnrollmentClass) {
-  return [item.classCode, item.classTitle].filter(Boolean).join(" - ");
-}
-
-function nearestDeadlineFor(subjectName?: string) {
-  const deadlines = summary.value?.upcomingDeadlines ?? [];
-  if (!subjectName) return deadlines[0];
-  return (
-    deadlines.find((deadline) => deadline.subjectName === subjectName) ??
-    deadlines[0]
-  );
+function handleActiveClassChange(event: Event) {
+  const classId = (event.target as HTMLSelectElement).value
+  activeClassStore.setActiveClass(classId)
+  loadDashboard()
 }
 
 function initials(value: string) {
   return value
-    .split(" ")
+    .split(' ')
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+    .join('')
+    .toUpperCase()
 }
 
 function buildCalendarDays(date: Date) {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const startOffset = firstDay.getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const days = [];
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  const firstDay = new Date(year, month, 1)
+  const startOffset = firstDay.getDay()
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const days = []
 
-  const realToday = new Date();
-  const isCurrentMonth =
-    realToday.getMonth() === month && realToday.getFullYear() === year;
+  const realToday = new Date()
+  const isCurrentMonth = realToday.getMonth() === month && realToday.getFullYear() === year
 
   for (let i = 0; i < startOffset; i += 1) {
     days.push({
       key: `empty-${i}`,
-      label: "",
+      label: '',
       isToday: false,
-      hasEvent: false,
-    });
+    })
   }
-
-  const eventDays = new Set(
-    (summary.value?.upcomingDeadlines ?? [])
-      .map((deadline) => parseDeadlineDay(deadline.deadline))
-      .filter((day): day is number => Boolean(day)),
-  );
 
   for (let day = 1; day <= daysInMonth; day += 1) {
     days.push({
       key: String(day),
       label: String(day),
       isToday: isCurrentMonth && day === realToday.getDate(),
-      hasEvent: eventDays.has(day),
-    });
+    })
   }
 
-  return days;
+  return days
 }
 
-function parseDeadlineDay(value: string) {
-  const match = value.match(/^(\d{1,2})[-/\s]/);
-  if (!match) return null;
-  return Number(match[1]);
-}
-
-onMounted(loadDashboard);
+onMounted(loadDashboard)
 </script>
 
 <template>
-  <main
-    class="grid min-h-screen flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[1fr_320px]"
-  >
+  <main class="grid min-h-screen flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[1fr_320px]">
     <section class="flex flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
       <header class="flex flex-col gap-2">
         <p class="text-sm text-[#7a7385]">{{ schoolName }}</p>
@@ -182,143 +167,157 @@ onMounted(loadDashboard);
           Selamat datang, {{ firstName }}
         </h1>
         <p class="text-sm text-[#7a7385]">
-          Ringkasan akademik dari kelas, tugas, materi, dan notifikasi terbaru.
+          Ruang belajar hari ini mengikuti kelas aktif dan subject di dalamnya.
         </p>
       </header>
 
-      <div
-        v-if="errorMessage"
-        class="soft-card rounded-[22px] p-5 text-sm text-[#b42318]"
-      >
-        {{ errorMessage }}
+      <div v-if="errorMessage" class="soft-card rounded-[22px] p-5">
+        <div class="flex items-start gap-3 text-sm text-[#b42318]">
+          <PhWarningCircle :size="20" class="mt-0.5" weight="duotone" />
+          <p>{{ errorMessage }}</p>
+        </div>
       </div>
 
-      <section
-        v-if="isLoading"
-        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-      >
+      <section class="soft-card rounded-[22px] p-5">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p class="text-sm font-medium text-[#171322]">Kelas aktif</p>
+            <p class="mt-2 text-2xl font-medium tracking-normal text-[#171322]">
+              {{ activeClassTitle || 'Belum ada kelas aktif' }}
+            </p>
+            <p class="mt-2 max-w-xl text-sm leading-6 text-[#7a7385]">
+              Class menjadi konteks akademik. Materi dan tugas harian dibuka dari subject.
+            </p>
+          </div>
+
+          <select
+            v-if="activeClassStore.classes.length > 1"
+            class="rounded-2xl border border-[#ebe7df] bg-white px-4 py-2 text-sm text-[#3f3a4a] outline-none"
+            :value="activeClassStore.activeClassId ?? ''"
+            @change="handleActiveClassChange"
+          >
+            <option
+              v-for="item in activeClassStore.classes"
+              :key="item.classId"
+              :value="item.classId"
+            >
+              {{ item.classTitle || item.classId }}
+            </option>
+          </select>
+        </div>
+      </section>
+
+      <section v-if="isLoading" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <div
           v-for="item in 3"
           :key="item"
-          class="h-44 animate-pulse rounded-[18px] border border-[#ebe7df] bg-white"
+          class="h-36 animate-pulse rounded-[18px] border border-[#ebe7df] bg-white"
         />
       </section>
 
-      <section
-        v-else-if="classes.length > 0"
-        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-      >
-        <article
-          v-for="(item, index) in classes"
-          :key="item.classId ?? item.classCode ?? index"
-          class="overflow-hidden rounded-[18px] border border-[#ebe7df] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
-        >
-          <div
-            class="flex h-24 flex-col justify-end px-4 pb-4 text-white"
-            :style="{ backgroundColor: palette[index % palette.length] }"
-          >
-            <h2 class="text-base font-medium">{{ classTitle(item) }}</h2>
-          </div>
-          <div class="space-y-3 px-4 py-4">
-            <p class="min-h-9 text-xs leading-5 text-[#7a7385]">
-              <template v-if="nearestDeadlineFor(item.subjectName)">
-                <strong class="font-medium text-[#3f3a4a]">
-                  {{ nearestDeadlineFor(item.subjectName)?.deadline }}
-                </strong>
-                <span>
-                  -
-                  {{
-                    nearestDeadlineFor(item.subjectName)?.assignmentTitle
-                  }}</span
-                >
-              </template>
-              <template v-else>
-                {{ classSubtitle(item) || "Belum ada deadline terdekat" }}
-              </template>
-            </p>
-            <div class="flex items-center gap-2">
-              <div class="h-1 flex-1 overflow-hidden rounded-full bg-[#f0ede8]">
-                <div
-                  class="h-full rounded-full"
-                  :style="{
-                    width: `${materialProgress}%`,
-                    backgroundColor: palette[index % palette.length],
-                  }"
-                />
-              </div>
-              <span class="w-8 text-right text-[11px] text-[#9a95a3]"
-                >{{ materialProgress }}%</span
-              >
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section v-else class="soft-card rounded-[22px] p-6">
+      <section v-else-if="!activeClassStore.activeClassId" class="soft-card rounded-[22px] p-6">
         <p class="text-sm font-medium text-[#171322]">Belum ada kelas aktif</p>
         <p class="mt-2 text-sm text-[#7a7385]">
-          Kelas akan muncul setelah akunmu terdaftar sebagai member kelas di
-          sekolah aktif.
+          Kelas akan muncul setelah akunmu terdaftar sebagai member kelas di sekolah aktif.
         </p>
+      </section>
+
+      <section v-else class="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <article class="soft-card rounded-[22px] p-5">
+          <div class="mb-5 flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-[#171322]">Subject hari ini</p>
+              <p class="mt-1 text-xs text-[#8b8592]">
+                Buka subject untuk melihat materi dan tugas.
+              </p>
+            </div>
+            <RouterLink class="text-sm font-medium text-[#4f46e5]" to="/student/subjects">
+              Lihat semua
+            </RouterLink>
+          </div>
+
+          <div v-if="subjects.length > 0" class="grid gap-3 sm:grid-cols-2">
+            <RouterLink
+              v-for="(subject, index) in subjects.slice(0, 4)"
+              :key="subject.subjectClassId"
+              class="rounded-[18px] border border-[#ebe7df] bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
+              :to="`/student/subjects/${subject.subjectClassId}`"
+            >
+              <div
+                class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl text-white"
+                :style="{ backgroundColor: palette[index % palette.length] }"
+              >
+                <PhBookOpen :size="21" weight="duotone" />
+              </div>
+              <p class="text-sm font-medium text-[#171322]">
+                {{ subject.subjectName || subject.subjectCode || 'Subject' }}
+              </p>
+              <p class="mt-2 text-xs leading-5 text-[#7a7385]">
+                {{ subject.teacherName || 'Guru belum tersedia' }}
+              </p>
+            </RouterLink>
+          </div>
+
+          <div v-else class="rounded-2xl bg-[#fbfaf8] p-4">
+            <p class="text-sm font-medium text-[#171322]">Belum ada subject</p>
+            <p class="mt-2 text-sm leading-6 text-[#7a7385]">
+              Subject akan tampil setelah kelas aktif memiliki subject class.
+            </p>
+          </div>
+        </article>
+
+        <article class="soft-card rounded-[22px] p-5">
+          <p class="text-sm font-medium text-[#171322]">Ringkasan tugas</p>
+          <p class="mt-3 rounded-2xl bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]">
+            Ringkasan tugas akan tersedia setelah endpoint agregat siap. Untuk sekarang,
+            buka detail subject untuk melihat tugas real.
+          </p>
+        </article>
       </section>
 
       <section class="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <article class="soft-card rounded-[22px] p-5">
           <div class="mb-4 flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-[#171322]">
-                Aktivitas akademik
-              </p>
-            </div>
-            <PhBell :size="20" class="text-[#4f46e5]" />
+            <p class="text-sm font-medium text-[#171322]">Feed kelas</p>
+            <RouterLink class="text-sm font-medium text-[#4f46e5]" to="/student/feed">
+              Buka feed
+            </RouterLink>
           </div>
-          <div class="grid gap-3 sm:grid-cols-3">
-            <div class="rounded-2xl bg-[#eef2ff] p-4">
-              <p class="text-2xl font-medium text-[#4f46e5]">
-                {{ summary?.pendingAssignments ?? 0 }}
+
+          <div v-if="feedPosts.length > 0" class="space-y-3">
+            <article
+              v-for="post in feedPosts.slice(0, 3)"
+              :key="post.feedId"
+              class="rounded-2xl bg-[#fbfaf8] p-4"
+            >
+              <p class="text-sm leading-6 text-[#3f3a4a]">{{ post.content }}</p>
+              <p class="mt-2 text-xs text-[#a09aa8]">
+                {{ post.creatorName || 'Creator tidak tersedia' }} · {{ post.createdAt }}
               </p>
-              <p class="mt-1 text-xs text-[#6b6475]">tugas pending</p>
-            </div>
-            <div class="rounded-2xl bg-[#fff1f0] p-4">
-              <p class="text-2xl font-medium text-[#f2756a]">
-                {{ summary?.averageScore ?? 0 }}
-              </p>
-              <p class="mt-1 text-xs text-[#6b6475]">rata-rata nilai</p>
-            </div>
-            <div class="rounded-2xl bg-[#f3ecff] p-4">
-              <p class="text-2xl font-medium text-[#9d5bd2]">
-                {{ materialProgress }}%
-              </p>
-              <p class="mt-1 text-xs text-[#6b6475]">progress materi</p>
-            </div>
+            </article>
           </div>
+
+          <p v-else class="rounded-2xl bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]">
+            Belum ada posting feed untuk kelas aktif.
+          </p>
         </article>
 
         <article class="soft-card rounded-[22px] p-5">
-          <p class="text-sm font-medium text-[#171322]">Deadline terdekat</p>
-          <div
-            v-if="summary?.upcomingDeadlines?.length"
-            class="mt-4 space-y-3 text-sm text-[#6b6475]"
-          >
-            <div
-              v-for="deadline in summary.upcomingDeadlines.slice(0, 2)"
-              :key="deadline.assignmentId"
-              class="rounded-2xl bg-[#fbfaf8] p-3"
-            >
-              <p class="font-medium text-[#3f3a4a]">
-                {{ deadline.subjectName }}
+          <p class="text-sm font-medium text-[#171322]">Chat dan notes</p>
+          <div class="mt-4 space-y-3">
+            <div class="flex gap-3 rounded-2xl bg-[#eef2ff] p-4">
+              <PhChatCircleText :size="20" class="mt-0.5 shrink-0 text-[#4f46e5]" />
+              <p class="text-sm leading-6 text-[#6b6475]">
+                Chat realtime masih fitur future. Tidak ada data chat yang ditampilkan sebagai real.
               </p>
-              <p class="mt-1 text-xs">
-                {{ deadline.assignmentTitle }} - {{ deadline.deadline }}
+            </div>
+            <div class="flex gap-3 rounded-2xl bg-[#f3ecff] p-4">
+              <PhNotebook :size="20" class="mt-0.5 shrink-0 text-[#7c3aed]" />
+              <p class="text-sm leading-6 text-[#6b6475]">
+                Notes akan tersedia per material. Autosave belum diimplementasikan.
               </p>
             </div>
           </div>
-          <p
-            v-else
-            class="mt-4 rounded-2xl bg-[#fbfaf8] p-3 text-sm text-[#7a7385]"
-          >
-            Tidak ada deadline terdekat.
-          </p>
         </article>
       </section>
     </section>
@@ -329,8 +328,8 @@ onMounted(loadDashboard);
           class="flex items-center gap-2 border-b-2 border-[#4f46e5] px-1 py-4 text-sm font-medium text-[#4f46e5]"
           type="button"
         >
-          <PhChatCircleText :size="18" />
-          Aktivitas
+          <PhBell :size="18" />
+          Notifikasi
         </button>
         <button class="px-5 py-4 text-sm text-[#a09aa8]" type="button">
           {{ unreadCount }} belum dibaca
@@ -341,7 +340,7 @@ onMounted(loadDashboard);
         <div
           v-for="item in 3"
           :key="item"
-          class="h-16 animate-pulse rounded-2xl bg-[#bdbdbd]"
+          class="h-16 animate-pulse rounded-2xl bg-[#f0ede8]"
         />
       </div>
       <div v-else-if="notifications.length > 0" class="space-y-1 p-4">
@@ -362,9 +361,7 @@ onMounted(loadDashboard);
               <p class="truncate text-sm font-medium text-[#171322]">
                 {{ item.title }}
               </p>
-              <span class="shrink-0 text-[10px] text-[#a09aa8]">{{
-                item.createdAt
-              }}</span>
+              <span class="shrink-0 text-[10px] text-[#a09aa8]">{{ item.createdAt }}</span>
             </div>
             <p class="truncate text-xs text-[#7a7385]">{{ item.message }}</p>
             <span
@@ -414,14 +411,10 @@ onMounted(loadDashboard);
           <span
             v-for="day in calendarDays"
             :key="day.key"
-            class="relative rounded-lg py-1.5 text-xs text-[#4a4356]"
+            class="rounded-lg py-1.5 text-xs text-[#4a4356]"
             :class="day.isToday ? 'bg-[#4f46e5] font-medium text-white' : ''"
           >
             {{ day.label }}
-            <span
-              v-if="day.hasEvent"
-              class="absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[#f0a05a]"
-            />
           </span>
         </div>
       </section>
