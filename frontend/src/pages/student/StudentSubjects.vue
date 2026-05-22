@@ -12,19 +12,12 @@ import { getSubjectClassesByClass } from "../../services/classWorkspace";
 import { useActiveClassStore } from "../../stores/activeClass";
 import { useAuthStore } from "../../stores/auth";
 import type { SubjectClassItem } from "../../types/classWorkspace";
+import { getSubjectColor } from "../../utils/color";
 
 const auth = useAuthStore();
 const activeClassStore = useActiveClassStore();
 const router = useRouter();
 
-const palette = [
-  "#4f8ef7",
-  "#f2756a",
-  "#c673d8",
-  "#f0a05a",
-  "#34d399",
-  "#4f46e5",
-];
 const subjects = ref<SubjectClassItem[]>([]);
 const isLoading = ref(true);
 const errorMessage = ref("");
@@ -236,7 +229,7 @@ onMounted(loadSubjects);
 
       <section v-else class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <article
-          v-for="(subject, index) in subjects"
+          v-for="subject in subjects"
           :key="subject.subjectClassId"
           class="group overflow-hidden rounded-[18px] border border-[#ebe7df] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
         >
@@ -247,7 +240,13 @@ onMounted(loadSubjects);
           >
             <div
               class="relative flex h-24 flex-col justify-end px-4 pb-4 text-white"
-              :style="{ backgroundColor: palette[index % palette.length] }"
+              :style="{
+                backgroundColor: getSubjectColor(
+                  subject.subjectClassId ||
+                    subject.subjectName ||
+                    subject.subjectCode,
+                ),
+              }"
             >
               <span class="text-base font-medium">
                 {{

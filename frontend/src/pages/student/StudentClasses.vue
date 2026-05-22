@@ -6,11 +6,11 @@ import { useAuthStore } from '../../stores/auth'
 import { getStudentClasses } from '../../services/studentClasses'
 import type { StudentClassEnrollment } from '../../types/studentClasses'
 import { formatDate } from '../../utils/date'
+import { getSubjectColor } from '../../utils/color'
 
 const auth = useAuthStore()
 const router = useRouter()
 
-const palette = ['#4f8ef7', '#f2756a', '#c673d8', '#f0a05a', '#4f46e5']
 const classes = ref<StudentClassEnrollment[]>([])
 const isLoading = ref(true)
 const errorMessage = ref('')
@@ -98,14 +98,14 @@ onMounted(loadClasses)
 
     <section v-else-if="classes.length > 0" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       <article
-        v-for="(item, index) in classes"
+        v-for="item in classes"
         :key="item.enrollmentId"
         class="group overflow-hidden rounded-[18px] border border-[#ebe7df] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
       >
         <button class="block w-full text-left" type="button" @click="openClass(item)">
           <div
             class="flex h-24 flex-col justify-end px-4 pb-4 text-white"
-            :style="{ backgroundColor: palette[index % palette.length] }"
+            :style="{ backgroundColor: getSubjectColor(item.classId || item.classTitle) }"
           >
             <h2 class="text-base font-medium">{{ classTitle(item) }}</h2>
           </div>

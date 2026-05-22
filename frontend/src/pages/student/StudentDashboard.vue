@@ -22,11 +22,11 @@ import type { SubjectClassItem } from "../../types/classWorkspace";
 import type { FeedPost } from "../../types/feed";
 import type { NotificationItem } from "../../types/dashboard";
 import { formatDateTime } from "../../utils/date";
+import { getSubjectColor } from "../../utils/color";
 
 const auth = useAuthStore();
 const activeClassStore = useActiveClassStore();
 
-const palette = ["#4f8ef7", "#f2756a", "#c673d8", "#f0a05a", "#4f46e5"];
 const subjects = ref<SubjectClassItem[]>([]);
 const feedPosts = ref<FeedPost[]>([]);
 const notifications = ref<NotificationItem[]>([]);
@@ -121,12 +121,6 @@ async function loadDashboard(selectedClassId?: string) {
   } finally {
     isLoading.value = false;
   }
-}
-
-function handleActiveClassChange(event: Event) {
-  const classId = (event.target as HTMLSelectElement).value;
-  activeClassStore.setActiveClass(classId);
-  loadDashboard(classId);
 }
 
 function initials(value: string) {
@@ -262,14 +256,20 @@ onMounted(loadDashboard);
 
           <div v-if="subjects.length > 0" class="grid gap-3 sm:grid-cols-2">
             <RouterLink
-              v-for="(subject, index) in subjects.slice(0, 4)"
+              v-for="subject in subjects.slice(0, 4)"
               :key="subject.subjectClassId"
               class="rounded-[18px] border border-[#ebe7df] bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
               :to="`/student/subjects/${subject.subjectClassId}`"
             >
               <div
                 class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl text-white"
-                :style="{ backgroundColor: palette[index % palette.length] }"
+                :style="{
+                  backgroundColor: getSubjectColor(
+                    subject.subjectClassId ||
+                      subject.subjectName ||
+                      subject.subjectCode,
+                  ),
+                }"
               >
                 <PhBookOpen :size="21" weight="duotone" />
               </div>
@@ -383,14 +383,14 @@ onMounted(loadDashboard);
       </div>
       <div v-else-if="notifications.length > 0" class="space-y-1 p-4">
         <article
-          v-for="(item, index) in notifications"
+          v-for="item in notifications"
           :key="item.notificationId"
           class="flex gap-3 rounded-2xl p-3 transition hover:bg-[#f8f7f4]"
           :class="!item.isRead ? 'bg-[#f5f7ff]' : ''"
         >
           <div
             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-medium text-white"
-            :style="{ backgroundColor: palette[index % palette.length] }"
+            :style="{ backgroundColor: getSubjectColor(item.notificationId || item.title) }"
           >
             {{ initials(item.title) }}
           </div>
