@@ -161,13 +161,17 @@ const router = createRouter({
         },
         {
           path: 'classes',
-          name: 'teacher-classes',
+          redirect: '/teacher/subjects',
+        },
+        {
+          path: 'subjects',
+          name: 'teacher-subjects',
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Teacher classes',
-            title: 'Kelas yang diajar',
+            eyebrow: 'Teaching workspace',
+            title: 'Subject yang diajar',
             description:
-              'Halaman ini nantinya menampilkan kelas guru, subject class, material, dan aktivitas siswa.',
+              'Halaman ini nantinya menampilkan subject class yang diampu guru sebagai ruang kerja untuk materi, tugas, dan review siswa.',
           },
         },
         {
@@ -190,6 +194,28 @@ const router = createRouter({
             title: 'Review submission',
             description:
               'Halaman ini nantinya menampilkan submission siswa yang perlu dinilai dan feedback yang sudah diberikan.',
+          },
+        },
+        {
+          path: 'create',
+          name: 'teacher-create',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Create content',
+            title: 'Buat konten pembelajaran',
+            description:
+              'Guru nantinya bisa membuat material, assignment, dan pengumuman feed dari subject atau class context yang sesuai.',
+          },
+        },
+        {
+          path: 'feed',
+          name: 'teacher-feed',
+          component: FeaturePlaceholder,
+          props: {
+            eyebrow: 'Class feed',
+            title: 'Pengumuman kelas',
+            description:
+              'Feed adalah komunikasi level class. UI create dan list feed untuk guru akan dibangun setelah pemilihan class/subject context siap.',
           },
         },
         {

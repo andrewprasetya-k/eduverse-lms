@@ -4,6 +4,8 @@ import {
   PhCalendarBlank,
   PhChatCircle,
   PhHouse,
+  PhMegaphone,
+  PhPlusCircle,
   PhTray,
   PhUserCircle,
 } from '@phosphor-icons/vue'
@@ -11,9 +13,11 @@ import SlimSidebar from '../components/layout/Sidebar.vue'
 
 const items = [
   { label: 'Dashboard', icon: PhHouse, to: '/teacher/dashboard' },
-  { label: 'Classes', icon: PhBookOpen, to: '/teacher/classes' },
+  { label: 'Subjects', icon: PhBookOpen, to: '/teacher/subjects' },
   { label: 'Assignments', icon: PhCalendarBlank, to: '/teacher/assignments' },
   { label: 'Submissions', icon: PhTray, to: '/teacher/submissions' },
+  { label: 'Create', icon: PhPlusCircle, to: '/teacher/create' },
+  { label: 'Feed', icon: PhMegaphone, to: '/teacher/feed' },
   { label: 'Chat', icon: PhChatCircle, to: '/teacher/chat', hasDot: true },
   { label: 'Profile', icon: PhUserCircle, to: '/teacher/profile' },
 ]
