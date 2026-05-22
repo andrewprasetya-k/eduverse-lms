@@ -372,17 +372,17 @@ indexes {
 }
 
 Table chat_room_members {
-  crm_id uuid [pk, default: `gen_random_uuid()`]
-  crm_room_id uuid [ref: > chat_rooms.room_id]
-  crm_usr_id uuid [ref: > users.usr_id]
-  crm_enr_id uuid [ref: > enrollments.enr_id]
-  crm_role varchar(20) [default: 'member']  // NEW — 'admin' | 'member'
-  joined_at timestamp [default: `now()`]
-  left_at timestamp
+crm_id uuid [pk, default: `gen_random_uuid()`]
+crm_room_id uuid [ref: > chat_rooms.room_id]
+crm_usr_id uuid [ref: > users.usr_id]
+crm_enr_id uuid [ref: > enrollments.enr_id]
+crm_role varchar(20) [default: 'member'] // NEW — 'admin' | 'member'
+joined_at timestamp [default: `now()`]
+left_at timestamp
 
-  indexes {
-    (crm_room_id, crm_usr_id) [unique]
-  }
+indexes {
+(crm_room_id, crm_usr_id) [unique]
+}
 }
 
 Table chat_messages {
@@ -427,15 +427,15 @@ indexes {
 }
 
 Table student_notes {
-  snt_id uuid [pk, default: `gen_random_uuid()`]
-  snt_sch_id uuid [ref: > schools.sch_id]
-  snt_usr_id uuid [ref: > users.usr_id]
-  snt_mat_id uuid [ref: > materials.mat_id]
-  snt_content text
-  created_at timestamp [default: `now()`]
-  updated_at timestamp [default: `now()`]
+snt_id uuid [pk, default: `gen_random_uuid()`]
+snt_sch_id uuid [ref: > schools.sch_id]
+snt_usr_id uuid [ref: > users.usr_id]
+snt_mat_id uuid [ref: > materials.mat_id]
+snt_content text
+created_at timestamp [default: `now()`]
+updated_at timestamp [default: `now()`]
 
-  indexes {
-    (snt_usr_id, snt_mat_id) [unique]
-  }
+indexes {
+(snt_usr_id, snt_mat_id) [unique]
+}
 }
