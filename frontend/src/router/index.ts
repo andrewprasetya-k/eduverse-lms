@@ -15,6 +15,8 @@ import StudentAssignmentDetail from '../pages/student/StudentAssignmentDetail.vu
 import StudentMaterialDetail from '../pages/student/StudentMaterialDetail.vue'
 import StudentSubjects from '../pages/student/StudentSubjects.vue'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard.vue'
+import TeacherSubjectDetail from '../pages/teacher/TeacherSubjectDetail.vue'
+import TeacherSubjects from '../pages/teacher/TeacherSubjects.vue'
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import SuperAdminDashboard from '../pages/superadmin/SuperAdminDashboard.vue'
 import FeaturePlaceholder from '../components/common/FeaturePlaceholder.vue'
@@ -166,13 +168,12 @@ const router = createRouter({
         {
           path: 'subjects',
           name: 'teacher-subjects',
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: 'Teaching workspace',
-            title: 'Subject yang diajar',
-            description:
-              'Halaman ini nantinya menampilkan subject class yang diampu guru sebagai ruang kerja untuk materi, tugas, dan review siswa.',
-          },
+          component: TeacherSubjects,
+        },
+        {
+          path: 'subjects/:subjectClassId',
+          name: 'teacher-subject-detail',
+          component: TeacherSubjectDetail,
         },
         {
           path: 'assignments',

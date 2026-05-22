@@ -221,8 +221,8 @@ onMounted(loadDashboard)
             <div v-else class="mt-6 rounded-[28px] bg-[#faf8f4] p-6">
               <h3 class="text-lg font-medium text-[#171322]">Belum ada ringkasan subject</h3>
               <p class="mt-2 text-sm leading-6 text-[#6b6475]">
-                Endpoint dashboard guru tersedia, tetapi belum ada endpoint khusus untuk daftar
-                subject_classes yang diajar current teacher. Halaman ini tidak menampilkan data palsu.
+                Ringkasan dashboard belum memiliki data untuk school aktif. Buka teaching workspace
+                untuk melihat daftar subject class yang diajar dari endpoint current teacher.
               </p>
             </div>
           </section>
