@@ -19,6 +19,7 @@ import {
 } from '../../services/assignment'
 import { deleteMedia, uploadMediaFile } from '../../services/media'
 import type { AssignmentItem, MySubmissionResponse, SubjectClassHeader } from '../../types/assignment'
+import { formatDateTime } from '../../utils/date'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -231,7 +232,7 @@ async function handleSubmit() {
               <p class="text-xs font-medium">Deadline</p>
             </div>
             <p class="text-sm text-[#3f3a4a]">
-              {{ assignment.deadline || 'Belum tersedia' }}
+              {{ formatDateTime(assignment.deadline) }}
             </p>
           </div>
           <div class="rounded-2xl bg-[#fbfaf8] p-4">
@@ -243,7 +244,7 @@ async function handleSubmit() {
           <div class="rounded-2xl bg-[#fbfaf8] p-4">
             <p class="text-xs font-medium text-[#7a7385]">Dibuat</p>
             <p class="mt-2 text-sm text-[#3f3a4a]">
-              {{ assignment.createdAt || 'Belum tersedia' }}
+              {{ formatDateTime(assignment.createdAt) }}
             </p>
           </div>
         </div>
@@ -314,7 +315,7 @@ async function handleSubmit() {
                   }}
                 </p>
                 <p class="mt-1 text-sm text-[#667085]">
-                  Dikumpulkan: {{ submissionStatus.submission?.submittedAt || 'Waktu tidak tersedia' }}
+                  Dikumpulkan: {{ formatDateTime(submissionStatus.submission?.submittedAt) }}
                 </p>
               </div>
             </div>
@@ -357,7 +358,7 @@ async function handleSubmit() {
             </p>
             <p class="mt-3 text-xs text-[#8b8592]">
               Dinilai oleh {{ submissionStatus.submission.assessment.assessorName || 'Guru' }}
-              · {{ submissionStatus.submission.assessment.assessedAt }}
+              · {{ formatDateTime(submissionStatus.submission.assessment.assessedAt) }}
             </p>
           </div>
 

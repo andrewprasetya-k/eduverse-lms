@@ -16,6 +16,7 @@ import type {
   MaterialItem,
   SubjectClassItem,
 } from "../../types/classWorkspace";
+import { formatDateTime } from "../../utils/date";
 
 const route = useRoute();
 const classId = computed(() => String(route.params.classId ?? ""));
@@ -227,7 +228,7 @@ onMounted(loadMaterials);
                     </p>
                     <p class="mt-2 text-xs text-[#a09aa8]">
                       {{ material.creatorName || "Creator tidak tersedia" }} ·
-                      {{ material.createdAt }}
+                      {{ formatDateTime(material.createdAt) }}
                     </p>
                   </div>
                 </div>

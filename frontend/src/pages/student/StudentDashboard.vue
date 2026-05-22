@@ -21,6 +21,7 @@ import {
 import type { SubjectClassItem } from '../../types/classWorkspace'
 import type { FeedPost } from '../../types/feed'
 import type { NotificationItem } from '../../types/dashboard'
+import { formatDateTime } from '../../utils/date'
 
 const auth = useAuthStore()
 const activeClassStore = useActiveClassStore()
@@ -292,7 +293,7 @@ onMounted(loadDashboard)
             >
               <p class="text-sm leading-6 text-[#3f3a4a]">{{ post.content }}</p>
               <p class="mt-2 text-xs text-[#a09aa8]">
-                {{ post.creatorName || 'Creator tidak tersedia' }} · {{ post.createdAt }}
+                {{ post.creatorName || 'Creator tidak tersedia' }} · {{ formatDateTime(post.createdAt) }}
               </p>
             </article>
           </div>
@@ -361,7 +362,7 @@ onMounted(loadDashboard)
               <p class="truncate text-sm font-medium text-[#171322]">
                 {{ item.title }}
               </p>
-              <span class="shrink-0 text-[10px] text-[#a09aa8]">{{ item.createdAt }}</span>
+              <span class="shrink-0 text-[10px] text-[#a09aa8]">{{ formatDateTime(item.createdAt) }}</span>
             </div>
             <p class="truncate text-xs text-[#7a7385]">{{ item.message }}</p>
             <span

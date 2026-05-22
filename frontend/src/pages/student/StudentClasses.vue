@@ -5,6 +5,7 @@ import { PhArrowRight, PhBooks, PhWarningCircle } from '@phosphor-icons/vue'
 import { useAuthStore } from '../../stores/auth'
 import { getStudentClasses } from '../../services/studentClasses'
 import type { StudentClassEnrollment } from '../../types/studentClasses'
+import { formatDate } from '../../utils/date'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -120,7 +121,7 @@ onMounted(loadClasses)
               />
             </div>
             <p class="text-xs leading-5 text-[#7a7385]">
-              <span v-if="item.joinedAt">Bergabung {{ item.joinedAt }}</span>
+              <span v-if="item.joinedAt">Bergabung {{ formatDate(item.joinedAt) }}</span>
               <span v-else>Detail segera tersedia</span>
             </p>
           </div>

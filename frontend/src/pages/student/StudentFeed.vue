@@ -5,6 +5,7 @@ import { getClassFeed } from '../../services/feed'
 import { useActiveClassStore } from '../../stores/activeClass'
 import { useAuthStore } from '../../stores/auth'
 import type { FeedClassHeader, FeedPost } from '../../types/feed'
+import { formatDateTime } from '../../utils/date'
 
 const auth = useAuthStore()
 const activeClassStore = useActiveClassStore()
@@ -129,7 +130,7 @@ onMounted(loadContext)
               <p class="text-sm font-medium text-[#171322]">
                 {{ post.creatorName || 'Pengirim tidak tersedia' }}
               </p>
-              <span class="text-xs text-[#a09aa8]">{{ post.createdAt }}</span>
+              <span class="text-xs text-[#a09aa8]">{{ formatDateTime(post.createdAt) }}</span>
             </div>
             <p class="mt-3 whitespace-pre-line text-sm leading-6 text-[#4a4356]">
               {{ post.content }}

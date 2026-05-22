@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/vue'
 import { getMaterialById } from '../../services/classWorkspace'
 import type { MaterialItem } from '../../types/classWorkspace'
+import { formatDateTime } from '../../utils/date'
 
 const route = useRoute()
 const subjectClassId = computed(() => String(route.params.sclId ?? ''))
@@ -115,7 +116,7 @@ onMounted(loadMaterial)
           <div class="rounded-2xl bg-[#fbfaf8] p-4">
             <p class="text-xs font-medium text-[#7a7385]">Dibuat</p>
             <p class="mt-2 text-sm text-[#3f3a4a]">
-              {{ material.createdAt || 'Belum tersedia' }}
+              {{ formatDateTime(material.createdAt) }}
             </p>
           </div>
         </div>

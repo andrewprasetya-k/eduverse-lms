@@ -12,6 +12,7 @@ import { getSubjectMaterials } from "../../services/classWorkspace";
 import { getSubjectAssignments } from "../../services/assignment";
 import type { MaterialItem } from "../../types/classWorkspace";
 import type { AssignmentItem } from "../../types/assignment";
+import { formatDateTime } from "../../utils/date";
 
 const route = useRoute();
 const router = useRouter();
@@ -229,7 +230,7 @@ onMounted(loadSubject);
                     </p>
                     <p class="mt-2 text-xs text-[#a09aa8]">
                       {{ material.creatorName || "Creator tidak tersedia" }} ·
-                      {{ material.createdAt }}
+                      {{ formatDateTime(material.createdAt) }}
                     </p>
                   </div>
                 </div>
@@ -325,7 +326,7 @@ onMounted(loadSubject);
                     <div
                       class="mt-3 flex flex-wrap items-center gap-3 text-xs text-[#a09aa8]"
                     >
-                      <span>Deadline: {{ assignment.deadline }}</span>
+                      <span>Deadline: {{ formatDateTime(assignment.deadline) }}</span>
                       <span
                         v-if="assignment.allowLateSubmission"
                         class="rounded-full bg-[#fef3c7] px-2 py-0.5 text-[#92400e]"
