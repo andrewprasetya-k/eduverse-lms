@@ -105,14 +105,6 @@ onMounted(loadSubject);
           terpisah sebagai komunikasi level class.
         </p>
       </div>
-
-      <!-- <button
-        class="inline-flex items-center gap-2 rounded-2xl border border-[#ebe7df] bg-white px-4 py-2 text-sm font-medium text-[#3f3a4a]"
-        type="button"
-      >
-        <PhChatCircleText :size="18" />
-        Chat subject sedang dikembangkan
-      </button> -->
     </header>
 
     <section class="soft-card overflow-hidden rounded-md">
@@ -326,7 +318,10 @@ onMounted(loadSubject);
                     <div
                       class="mt-3 flex flex-wrap items-center gap-3 text-xs text-[#a09aa8]"
                     >
-                      <span>Deadline: {{ formatDateTime(assignment.deadline) }}</span>
+                      <span
+                        >Deadline:
+                        {{ formatDateTime(assignment.deadline) }}</span
+                      >
                       <span
                         v-if="assignment.allowLateSubmission"
                         class="rounded-full bg-[#fef3c7] px-2 py-0.5 text-[#92400e]"
