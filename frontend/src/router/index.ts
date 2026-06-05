@@ -1,382 +1,394 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-import type { RoleName } from '../types/auth'
-import AuthLayout from '../layouts/AuthLayout.vue'
-import StudentLayout from '../layouts/StudentLayout.vue'
-import TeacherLayout from '../layouts/TeacherLayout.vue'
-import AdminLayout from '../layouts/AdminLayout.vue'
-import SuperAdminLayout from '../layouts/SuperAdminLayout.vue'
-import LoginPage from '../pages/auth/LoginPage.vue'
-import UnauthorizedPage from '../pages/auth/UnauthorizedPage.vue'
-import StudentDashboard from '../pages/student/StudentDashboard.vue'
-import StudentFeed from '../pages/student/StudentFeed.vue'
-import StudentSubjectDetail from '../pages/student/StudentSubjectDetail.vue'
-import StudentAssignmentDetail from '../pages/student/StudentAssignmentDetail.vue'
-import StudentMaterialDetail from '../pages/student/StudentMaterialDetail.vue'
-import StudentSubjects from '../pages/student/StudentSubjects.vue'
-import TeacherDashboard from '../pages/teacher/TeacherDashboard.vue'
-import TeacherSubjectDetail from '../pages/teacher/TeacherSubjectDetail.vue'
-import TeacherSubjects from '../pages/teacher/TeacherSubjects.vue'
-import AdminDashboard from '../pages/admin/AdminDashboard.vue'
-import SuperAdminDashboard from '../pages/superadmin/SuperAdminDashboard.vue'
-import FeaturePlaceholder from '../components/common/FeaturePlaceholder.vue'
+import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "../stores/auth";
+import type { RoleName } from "../types/auth";
+import AuthLayout from "../layouts/AuthLayout.vue";
+import StudentLayout from "../layouts/StudentLayout.vue";
+import TeacherLayout from "../layouts/TeacherLayout.vue";
+import AdminLayout from "../layouts/AdminLayout.vue";
+import SuperAdminLayout from "../layouts/SuperAdminLayout.vue";
+import LoginPage from "../pages/auth/LoginPage.vue";
+import UnauthorizedPage from "../pages/auth/UnauthorizedPage.vue";
+import StudentDashboard from "../pages/student/StudentDashboard.vue";
+import StudentFeed from "../pages/student/StudentFeed.vue";
+import StudentSubjectDetail from "../pages/student/StudentSubjectDetail.vue";
+import StudentAssignmentDetail from "../pages/student/StudentAssignmentDetail.vue";
+import StudentMaterialDetail from "../pages/student/StudentMaterialDetail.vue";
+import StudentSubjects from "../pages/student/StudentSubjects.vue";
+import TeacherDashboard from "../pages/teacher/TeacherDashboard.vue";
+import TeacherSubjectDetail from "../pages/teacher/TeacherSubjectDetail.vue";
+import TeacherSubjects from "../pages/teacher/TeacherSubjects.vue";
+import AdminDashboard from "../pages/admin/AdminDashboard.vue";
+import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard.vue";
+import FeaturePlaceholder from "../components/common/FeaturePlaceholder.vue";
+import TeacherContentCreate from "../pages/teacher/TeacherContentCreate.vue";
+import TeacherAssignmentReview from "../pages/teacher/TeacherAssignmentReview.vue";
 
 export const dashboardByRole: Record<RoleName, string> = {
-  super_admin: '/superadmin/dashboard',
-  admin: '/admin/dashboard',
-  teacher: '/teacher/dashboard',
-  student: '/student/dashboard',
-}
+  super_admin: "/superadmin/dashboard",
+  admin: "/admin/dashboard",
+  teacher: "/teacher/dashboard",
+  student: "/student/dashboard",
+};
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
-      path: '/',
-      redirect: '/login',
+      path: "/",
+      redirect: "/login",
     },
     {
-      path: '/',
+      path: "/",
       component: AuthLayout,
       children: [
         {
-          path: 'login',
-          name: 'login',
+          path: "login",
+          name: "login",
           component: LoginPage,
         },
         {
-          path: 'unauthorized',
-          name: 'unauthorized',
+          path: "unauthorized",
+          name: "unauthorized",
           component: UnauthorizedPage,
         },
       ],
     },
     {
-      path: '/student',
+      path: "/student",
       component: StudentLayout,
-      meta: { requiresAuth: true, roles: ['student'] },
+      meta: { requiresAuth: true, roles: ["student"] },
       children: [
         {
-          path: 'dashboard',
-          name: 'student-dashboard',
+          path: "dashboard",
+          name: "student-dashboard",
           component: StudentDashboard,
         },
         {
-          path: 'classes',
-          redirect: '/student/subjects',
+          path: "classes",
+          redirect: "/student/subjects",
         },
         {
-          path: 'classes/:classId',
-          redirect: '/student/subjects',
+          path: "classes/:classId",
+          redirect: "/student/subjects",
         },
         {
-          path: 'subjects',
-          name: 'student-subjects',
+          path: "subjects",
+          name: "student-subjects",
           component: StudentSubjects,
         },
         {
-          path: 'subjects/:sclId',
-          name: 'student-subject-detail',
+          path: "subjects/:sclId",
+          name: "student-subject-detail",
           component: StudentSubjectDetail,
         },
         {
-          path: 'subjects/:sclId/materials/:matId',
-          name: 'student-material-detail',
+          path: "subjects/:sclId/materials/:matId",
+          name: "student-material-detail",
           component: StudentMaterialDetail,
         },
         {
-          path: 'subjects/:sclId/assignments/:asgId',
-          name: 'student-assignment-detail',
+          path: "subjects/:sclId/assignments/:asgId",
+          name: "student-assignment-detail",
           component: StudentAssignmentDetail,
         },
         {
-          path: 'feed',
-          name: 'student-feed',
+          path: "feed",
+          name: "student-feed",
           component: StudentFeed,
         },
         {
-          path: 'assignments',
-          name: 'student-assignments',
+          path: "assignments",
+          name: "student-assignments",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Student assignments',
-            title: 'Daftar tugas siswa',
+            eyebrow: "Student assignments",
+            title: "Daftar tugas siswa",
             description:
-              'Halaman ini nantinya membantu siswa melihat tugas aktif, deadline, status submit, dan hasil penilaian.',
+              "Halaman ini nantinya membantu siswa melihat tugas aktif, deadline, status submit, dan hasil penilaian.",
           },
         },
         {
-          path: 'grades',
-          name: 'student-grades',
+          path: "grades",
+          name: "student-grades",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Student grades',
-            title: 'Nilai dan progress akademik',
+            eyebrow: "Student grades",
+            title: "Nilai dan progress akademik",
             description:
-              'Halaman ini nantinya merangkum nilai per subject, rata-rata, dan progress belajar dari grade book backend.',
+              "Halaman ini nantinya merangkum nilai per subject, rata-rata, dan progress belajar dari grade book backend.",
           },
         },
         {
-          path: 'chat',
-          name: 'student-chat',
+          path: "chat",
+          name: "student-chat",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Realtime chat',
-            title: 'Chat sedang dikembangkan',
+            eyebrow: "Realtime chat",
+            title: "Chat sedang dikembangkan",
             description:
-              'Chat akan menjadi fitur DM, group, atau subject realtime. WebSocket belum diimplementasikan pada tahap ini.',
+              "Chat akan menjadi fitur DM, group, atau subject realtime. WebSocket belum diimplementasikan pada tahap ini.",
           },
         },
         {
-          path: 'notes',
-          name: 'student-notes',
+          path: "notes",
+          name: "student-notes",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Learning notes',
-            title: 'Catatan belajar',
+            eyebrow: "Learning notes",
+            title: "Catatan belajar",
             description:
-              'Notes akan tersedia dari halaman detail material, termasuk catatan per materi. Autosave belum diimplementasikan pada tahap ini.',
+              "Notes akan tersedia dari halaman detail material, termasuk catatan per materi. Autosave belum diimplementasikan pada tahap ini.",
           },
         },
         {
-          path: 'profile',
-          name: 'student-profile',
+          path: "profile",
+          name: "student-profile",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Student profile',
-            title: 'Profil siswa',
+            eyebrow: "Student profile",
+            title: "Profil siswa",
             description:
-              'Halaman ini nantinya menampilkan informasi akun, konteks sekolah aktif, dan preferensi dasar pengguna.',
+              "Halaman ini nantinya menampilkan informasi akun, konteks sekolah aktif, dan preferensi dasar pengguna.",
           },
         },
       ],
     },
     {
-      path: '/teacher',
+      path: "/teacher",
       component: TeacherLayout,
-      meta: { requiresAuth: true, roles: ['teacher'] },
+      meta: { requiresAuth: true, roles: ["teacher"] },
       children: [
         {
-          path: 'dashboard',
-          name: 'teacher-dashboard',
+          path: "dashboard",
+          name: "teacher-dashboard",
           component: TeacherDashboard,
         },
         {
-          path: 'classes',
-          redirect: '/teacher/subjects',
+          path: "classes",
+          redirect: "/teacher/subjects",
         },
         {
-          path: 'subjects',
-          name: 'teacher-subjects',
+          path: "subjects",
+          name: "teacher-subjects",
           component: TeacherSubjects,
         },
         {
-          path: 'subjects/:subjectClassId',
-          name: 'teacher-subject-detail',
+          path: "subjects/:subjectClassId",
+          name: "teacher-subject-detail",
           component: TeacherSubjectDetail,
         },
         {
-          path: 'assignments',
-          name: 'teacher-assignments',
+          path: "subjects/:subjectClassId/create",
+          name: "teacher-content-create",
+          component: () => TeacherContentCreate,
+        },
+        {
+          path: "assignments/:assignmentId/review",
+          name: "teacher-assignment-review",
+          component: () => TeacherAssignmentReview,
+        },
+        {
+          path: "assignments",
+          name: "teacher-assignments",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Teacher assignments',
-            title: 'Manajemen tugas',
+            eyebrow: "Teacher assignments",
+            title: "Manajemen tugas",
             description:
-              'Halaman ini nantinya dipakai guru untuk membuat, mengubah, dan memantau tugas kelas.',
+              "Halaman ini nantinya dipakai guru untuk membuat, mengubah, dan memantau tugas kelas.",
           },
         },
         {
-          path: 'submissions',
-          name: 'teacher-submissions',
+          path: "submissions",
+          name: "teacher-submissions",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Submission review',
-            title: 'Review submission',
+            eyebrow: "Submission review",
+            title: "Review submission",
             description:
-              'Halaman ini nantinya menampilkan submission siswa yang perlu dinilai dan feedback yang sudah diberikan.',
+              "Halaman ini nantinya menampilkan submission siswa yang perlu dinilai dan feedback yang sudah diberikan.",
           },
         },
         {
-          path: 'create',
-          name: 'teacher-create',
+          path: "create",
+          name: "teacher-create",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Create content',
-            title: 'Buat konten pembelajaran',
+            eyebrow: "Create content",
+            title: "Buat konten pembelajaran",
             description:
-              'Guru nantinya bisa membuat material, assignment, dan pengumuman feed dari subject atau class context yang sesuai.',
+              "Guru nantinya bisa membuat material, assignment, dan pengumuman feed dari subject atau class context yang sesuai.",
           },
         },
         {
-          path: 'feed',
-          name: 'teacher-feed',
+          path: "feed",
+          name: "teacher-feed",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Class feed',
-            title: 'Pengumuman kelas',
+            eyebrow: "Class feed",
+            title: "Pengumuman kelas",
             description:
-              'Feed adalah komunikasi level class. UI create dan list feed untuk guru akan dibangun setelah pemilihan class/subject context siap.',
+              "Feed adalah komunikasi level class. UI create dan list feed untuk guru akan dibangun setelah pemilihan class/subject context siap.",
           },
         },
         {
-          path: 'chat',
-          name: 'teacher-chat',
+          path: "chat",
+          name: "teacher-chat",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Realtime chat',
-            title: 'Chat kelas',
+            eyebrow: "Realtime chat",
+            title: "Chat kelas",
             description:
-              'Fitur chat guru akan memakai WebSocket untuk komunikasi realtime dengan kelas. WebSocket belum diimplementasikan pada tahap ini.',
+              "Fitur chat guru akan memakai WebSocket untuk komunikasi realtime dengan kelas. WebSocket belum diimplementasikan pada tahap ini.",
           },
         },
         {
-          path: 'profile',
-          name: 'teacher-profile',
+          path: "profile",
+          name: "teacher-profile",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Teacher profile',
-            title: 'Profil guru',
+            eyebrow: "Teacher profile",
+            title: "Profil guru",
             description:
-              'Halaman ini nantinya menampilkan informasi akun guru, role aktif, dan konteks sekolah.',
+              "Halaman ini nantinya menampilkan informasi akun guru, role aktif, dan konteks sekolah.",
           },
         },
       ],
     },
     {
-      path: '/admin',
+      path: "/admin",
       component: AdminLayout,
-      meta: { requiresAuth: true, roles: ['admin'] },
+      meta: { requiresAuth: true, roles: ["admin"] },
       children: [
         {
-          path: 'dashboard',
-          name: 'admin-dashboard',
+          path: "dashboard",
+          name: "admin-dashboard",
           component: AdminDashboard,
         },
         {
-          path: 'classes',
-          name: 'admin-classes',
+          path: "classes",
+          name: "admin-classes",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'School classes',
-            title: 'Manajemen kelas',
+            eyebrow: "School classes",
+            title: "Manajemen kelas",
             description:
-              'Halaman ini nantinya dipakai admin sekolah untuk mengelola kelas, subject class, dan struktur kelas.',
+              "Halaman ini nantinya dipakai admin sekolah untuk mengelola kelas, subject class, dan struktur kelas.",
           },
         },
         {
-          path: 'users',
-          name: 'admin-users',
+          path: "users",
+          name: "admin-users",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'School users',
-            title: 'Manajemen user sekolah',
+            eyebrow: "School users",
+            title: "Manajemen user sekolah",
             description:
-              'Halaman ini nantinya dipakai admin untuk mengelola user, membership sekolah, dan role.',
+              "Halaman ini nantinya dipakai admin untuk mengelola user, membership sekolah, dan role.",
           },
         },
         {
-          path: 'enrollments',
-          name: 'admin-enrollments',
+          path: "enrollments",
+          name: "admin-enrollments",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Enrollments',
-            title: 'Enrollment kelas',
+            eyebrow: "Enrollments",
+            title: "Enrollment kelas",
             description:
-              'Halaman ini nantinya mengatur siswa dan guru yang tergabung dalam kelas tertentu.',
+              "Halaman ini nantinya mengatur siswa dan guru yang tergabung dalam kelas tertentu.",
           },
         },
         {
-          path: 'academic-years',
-          name: 'admin-academic-years',
+          path: "academic-years",
+          name: "admin-academic-years",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Academic setup',
-            title: 'Tahun ajaran dan semester',
+            eyebrow: "Academic setup",
+            title: "Tahun ajaran dan semester",
             description:
-              'Halaman ini nantinya mengelola academic year, term, dan status aktif periode akademik.',
+              "Halaman ini nantinya mengelola academic year, term, dan status aktif periode akademik.",
           },
         },
         {
-          path: 'profile',
-          name: 'admin-profile',
+          path: "profile",
+          name: "admin-profile",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Admin profile',
-            title: 'Profil admin sekolah',
+            eyebrow: "Admin profile",
+            title: "Profil admin sekolah",
             description:
-              'Halaman ini nantinya menampilkan informasi akun admin dan konteks sekolah aktif.',
+              "Halaman ini nantinya menampilkan informasi akun admin dan konteks sekolah aktif.",
           },
         },
       ],
     },
     {
-      path: '/superadmin',
+      path: "/superadmin",
       component: SuperAdminLayout,
-      meta: { requiresAuth: true, roles: ['super_admin'] },
+      meta: { requiresAuth: true, roles: ["super_admin"] },
       children: [
         {
-          path: 'dashboard',
-          name: 'superadmin-dashboard',
+          path: "dashboard",
+          name: "superadmin-dashboard",
           component: SuperAdminDashboard,
         },
         {
-          path: 'schools',
-          name: 'superadmin-schools',
+          path: "schools",
+          name: "superadmin-schools",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Platform schools',
-            title: 'Manajemen sekolah',
+            eyebrow: "Platform schools",
+            title: "Manajemen sekolah",
             description:
-              'Halaman ini nantinya mengelola tenant sekolah, status sekolah, dan konfigurasi dasar platform.',
+              "Halaman ini nantinya mengelola tenant sekolah, status sekolah, dan konfigurasi dasar platform.",
           },
         },
         {
-          path: 'users',
-          name: 'superadmin-users',
+          path: "users",
+          name: "superadmin-users",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Platform users',
-            title: 'User platform',
+            eyebrow: "Platform users",
+            title: "User platform",
             description:
-              'Halaman ini nantinya membantu super admin melihat user lintas sekolah dan setup role platform.',
+              "Halaman ini nantinya membantu super admin melihat user lintas sekolah dan setup role platform.",
           },
         },
         {
-          path: 'profile',
-          name: 'superadmin-profile',
+          path: "profile",
+          name: "superadmin-profile",
           component: FeaturePlaceholder,
           props: {
-            eyebrow: 'Super admin profile',
-            title: 'Profil super admin',
+            eyebrow: "Super admin profile",
+            title: "Profil super admin",
             description:
-              'Halaman ini nantinya menampilkan informasi akun dan akses platform yang sedang aktif.',
+              "Halaman ini nantinya menampilkan informasi akun dan akses platform yang sedang aktif.",
           },
         },
       ],
     },
   ],
-})
+});
 
 router.beforeEach((to) => {
-  const auth = useAuthStore()
-  auth.restoreSession()
+  const auth = useAuthStore();
+  auth.restoreSession();
 
-  if (to.name === 'login' && auth.isAuthenticated) {
-    const role = auth.primaryRole()
-    return role ? dashboardByRole[role] : '/unauthorized'
+  if (to.name === "login" && auth.isAuthenticated) {
+    const role = auth.primaryRole();
+    return role ? dashboardByRole[role] : "/unauthorized";
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    return { name: 'login', query: { redirect: to.fullPath } }
+    return { name: "login", query: { redirect: to.fullPath } };
   }
 
-  const requiredRoles = to.matched.flatMap((record) => record.meta.roles ?? [])
+  const requiredRoles = to.matched.flatMap((record) => record.meta.roles ?? []);
   if (requiredRoles.length > 0 && !auth.hasAnyRole(requiredRoles)) {
-    return { name: 'unauthorized' }
+    return { name: "unauthorized" };
   }
 
-  return true
-})
+  return true;
+});
 
-export default router
+export default router;

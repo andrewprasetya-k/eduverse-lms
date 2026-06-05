@@ -1,0 +1,140 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { PhFile, PhTrash, PhUploadSimple } from '@phosphor-icons/vue'
+import { uploadMediaFile } from '../../services/media'
+
+interface Props {
+  schoolId: string
+  ownerType?: string
+  maxSizeMb?: number
+  limit?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  ownerType: 'material',
+  maxSizeMb: 10,
+  limit: 5,
+})
+
+const emit = defineEmits<{
+  (e: 'update:mediaIds', ids: string[]): void
+}>()
+
+const files = ref<{
+  id?: string
+  name: string
+  size: number
+  progress: number
+  status: 'pending' | 'uploading' | 'success' | 'error'
+  errorMessage?: string
+  mediaId?: string
+}[]>([])
+
+const mediaIds = ref<string[]>([])
+
+async function handleFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  if (!target.files) return
+
+  const newFiles = Array.from(target.files)
+  
+  if (files.value.length + newFiles.length > props.limit) {
+    alert(`Maksimal ${props.limit} file yang dapat diunggah.`)
+    return
+  }
+
+  for (const file of newFiles) {
+    if (file.size > props.maxSizeMb * 1024 * 1024) {
+      alert(`File ${file.name} melebihi batas ${props.maxSizeMb}MB.`)
+      continue
+    }
+
+    const fileItem = {
+      name: file.name,
+      size: file.size,
+      progress: 0,
+      status: 'uploading' as const,
+    }
+    
+    const index = files.value.push(fileItem) - 1
+
+    try {
+      const response = await uploadMediaFile(file, props.schoolId, props.ownerType)
+      files.value[index].status = 'success'
+      files.value[index].mediaId = response.mediaId
+      mediaIds.value.push(response.mediaId)
+      emit('update:mediaIds', [...mediaIds.value])
+    } catch (error) {
+      files.value[index].status = 'error'
+      files.value[index].errorMessage = 'Gagal mengunggah file'
+    }
+  }
+
+  // Reset input
+  target.value = ''
+}
+
+async function removeFile(index: number) {
+  const file = files.value[index]
+  if (file.mediaId) {
+    try {
+      // Optional: Delete from backend/storage if needed
+      // await deleteMedia(file.mediaId)
+      mediaIds.value = mediaIds.value.filter(id => id !== file.mediaId)
+      emit('update:mediaIds', [...mediaIds.value])
+    } catch (error) {
+      console.error('Failed to delete media', error)
+    }
+  }
+  files.value.splice(index, 1)
+}
+
+function formatSize(bytes: number) {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+</script>
+
+<template>
+  <div class="media-uploader">
+    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#EBEBEB] rounded-2xl cursor-pointer hover:bg-[#F9FAFB] transition">
+      <div class="flex flex-col items-center justify-center pt-5 pb-6">
+        <PhUploadSimple :size="32" class="text-[#9CA3AF] mb-2" />
+        <p class="mb-2 text-sm text-[#374151] font-medium">Klik untuk unggah atau seret file</p>
+        <p class="text-xs text-[#9CA3AF]">PDF, Video, atau Dokumen (Maks. {{ maxSizeMb }}MB)</p>
+      </div>
+      <input type="file" class="hidden" multiple @change="handleFileChange" />
+    </label>
+
+    <div v-if="files.length > 0" class="mt-4 space-y-2">
+      <div v-for="(file, index) in files" :key="index" class="flex items-center justify-between p-3 bg-white border border-[#EBEBEB] rounded-xl">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <div class="shrink-0 w-10 h-10 flex items-center justify-center bg-[#F3F4F6] rounded-lg">
+            <PhFile :size="20" class="text-[#6B7280]" />
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-[#111827] truncate">{{ file.name }}</p>
+            <p class="text-xs text-[#6B7280]">{{ formatSize(file.size) }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span v-if="file.status === 'uploading'" class="text-xs text-[#4F46E5] animate-pulse">Mengunggah...</span>
+          <span v-else-if="file.status === 'error'" class="text-xs text-[#DC2626]">{{ file.errorMessage }}</span>
+          
+          <button 
+            type="button" 
+            @click="removeFile(index)" 
+            class="p-1.5 text-[#9CA3AF] hover:text-[#DC2626] transition"
+            title="Hapus"
+          >
+            <PhTrash :size="18" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
