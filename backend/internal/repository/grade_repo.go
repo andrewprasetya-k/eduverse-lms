@@ -56,7 +56,7 @@ func (r *gradeRepository) GetStudentsBySubjectClass(subjectClassID string) ([]*d
 
 func (r *gradeRepository) GetStudentGradebookClass(userID string, schoolID string, classID string) (*dto.StudentGradebookClassRow, error) {
 	var row dto.StudentGradebookClassRow
-	err := r.db.Table("edv.classes c").
+	result := r.db.Table("edv.classes c").
 		Select("c.cls_id AS class_id, c.cls_title AS class_name, c.cls_code AS class_code").
 		Joins("JOIN edv.enrollments e ON e.enr_cls_id = c.cls_id").
 		Joins("JOIN edv.school_users scu ON scu.scu_id = e.enr_scu_id").
@@ -65,9 +65,13 @@ func (r *gradeRepository) GetStudentGradebookClass(userID string, schoolID strin
 		Where("e.enr_sch_id = ?", schoolID).
 		Where("e.enr_role = ?", "student").
 		Where("c.deleted_at IS NULL").
-		First(&row).Error
-	if err != nil {
-		return nil, err
+		Limit(1).
+		Scan(&row)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return nil, gorm.ErrRecordNotFound
 	}
 	return &row, nil
 }
