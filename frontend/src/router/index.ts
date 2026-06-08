@@ -14,6 +14,7 @@ import StudentSubjectDetail from "../pages/student/StudentSubjectDetail.vue";
 import StudentAssignmentDetail from "../pages/student/StudentAssignmentDetail.vue";
 import StudentMaterialDetail from "../pages/student/StudentMaterialDetail.vue";
 import StudentSubjects from "../pages/student/StudentSubjects.vue";
+import StudentGrades from "../pages/student/StudentGrades.vue";
 import TeacherDashboard from "../pages/teacher/TeacherDashboard.vue";
 import TeacherSubjectDetail from "../pages/teacher/TeacherSubjectDetail.vue";
 import TeacherSubjects from "../pages/teacher/TeacherSubjects.vue";
@@ -110,13 +111,7 @@ const router = createRouter({
         {
           path: "grades",
           name: "student-grades",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Student grades",
-            title: "Nilai dan progress akademik",
-            description:
-              "Halaman ini nantinya merangkum nilai per subject, rata-rata, dan progress belajar dari grade book backend.",
-          },
+          component: StudentGrades,
         },
         {
           path: "chat",
