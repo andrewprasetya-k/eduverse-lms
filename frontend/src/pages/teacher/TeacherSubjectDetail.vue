@@ -13,23 +13,17 @@ import {
   PhWarningCircle,
 } from '@phosphor-icons/vue'
 import { getSubjectAssignments } from '../../services/assignment'
-import { getAssignmentDetailWithSubmissions } from '../../services/teacherAssignment'
+import { getSubjectClassSubmissions } from '../../services/teacherAssignment'
 import { getSubjectMaterials } from '../../services/teacherMaterial'
 import { getMyTeachingSubjectClassById } from '../../services/teacherSubjects'
 import type { AssignmentItem } from '../../types/assignment'
-import type { TeacherSubmission } from '../../types/teacherAssignment'
+import type { TeacherSubmissionGroup, TeacherSubmissionSummary } from '../../types/teacherAssignment'
 import type { MaterialItem } from '../../types/teacherMaterial'
 import type { TeacherSubjectClass } from '../../types/teacherSubjects'
 import { getSubjectColor } from '../../utils/color'
 import { formatDate, formatDateTime } from '../../utils/date'
 
 type WorkspaceTab = 'materials' | 'assignments' | 'submissions'
-
-interface SubmissionRow extends TeacherSubmission {
-  assignmentId: string
-  assignmentTitle: string
-  categoryName?: string
-}
 
 const route = useRoute()
 const subjectClassId = computed(() => String(route.params.subjectClassId ?? ''))
@@ -38,16 +32,27 @@ const activeTab = ref<WorkspaceTab>('materials')
 const subject = ref<TeacherSubjectClass | null>(null)
 const materials = ref<MaterialItem[]>([])
 const assignments = ref<AssignmentItem[]>([])
-const submissions = ref<SubmissionRow[]>([])
+const submissionGroups = ref<TeacherSubmissionGroup[]>([])
+const submissionSummary = ref<TeacherSubmissionSummary | null>(null)
 const loading = ref(false)
 const submissionsLoading = ref(false)
 const errorMessage = ref('')
 const submissionsError = ref('')
 
+const submissionCount = computed(
+  () =>
+    submissionSummary.value?.submissionCount ??
+    submissionGroups.value.reduce((total, group) => total + group.submissionCount, 0),
+)
+
+const visibleSubmissionGroups = computed(() =>
+  submissionGroups.value.filter((group) => group.submissions.length > 0),
+)
+
 const tabs = computed(() => [
   { id: 'materials' as const, label: 'Materials', count: materials.value.length },
   { id: 'assignments' as const, label: 'Assignments', count: assignments.value.length },
-  { id: 'submissions' as const, label: 'Submissions', count: submissions.value.length },
+  { id: 'submissions' as const, label: 'Submissions', count: submissionCount.value },
 ])
 
 async function loadWorkspace() {
@@ -57,7 +62,8 @@ async function loadWorkspace() {
   subject.value = null
   materials.value = []
   assignments.value = []
-  submissions.value = []
+  submissionGroups.value = []
+  submissionSummary.value = null
 
   try {
     const subjectData = await getMyTeachingSubjectClassById(subjectClassId.value)
@@ -73,7 +79,7 @@ async function loadWorkspace() {
     materials.value = materialData.data?.data ?? []
     assignments.value = assignmentData.data?.data ?? []
 
-    await loadSubmissions(assignments.value)
+    await loadSubmissions()
   } catch {
     errorMessage.value = 'Workspace subject belum bisa dimuat. Coba lagi beberapa saat.'
   } finally {
@@ -81,29 +87,16 @@ async function loadWorkspace() {
   }
 }
 
-async function loadSubmissions(subjectAssignments: AssignmentItem[]) {
-  if (subjectAssignments.length === 0) return
-
+async function loadSubmissions() {
   submissionsLoading.value = true
   submissionsError.value = ''
   try {
-    const details = await Promise.all(
-      subjectAssignments.map((assignment) =>
-        getAssignmentDetailWithSubmissions(assignment.assignmentId),
-      ),
-    )
-
-    submissions.value = details.flatMap((detail) =>
-      detail.submissions.map((submission) => ({
-        ...submission,
-        assignmentId: detail.assignment.assignmentId,
-        assignmentTitle: detail.assignment.assignmentTitle,
-        categoryName: detail.assignment.categoryName,
-      })),
-    )
+    const data = await getSubjectClassSubmissions(subjectClassId.value)
+    submissionGroups.value = data.assignments ?? []
+    submissionSummary.value = data.summary
   } catch {
     submissionsError.value =
-      'Submission belum bisa dimuat dari detail assignment. Endpoint agregat subject-class submissions belum tersedia.'
+      'Submission belum bisa dimuat dari endpoint agregat subject class. Coba lagi beberapa saat.'
   } finally {
     submissionsLoading.value = false
   }
@@ -342,9 +335,38 @@ onMounted(loadWorkspace)
 
             <div v-else class="space-y-3">
               <div class="rounded-[24px] bg-[#faf8f4] p-5 text-sm leading-6 text-[#6b6475]">
-                Submission dibaca dari endpoint detail assignment per tugas. Endpoint agregat
-                `/assignments/subject-class/:subjectClassId/submissions` belum tersedia, jadi halaman
-                ini tetap read-only dan tidak menampilkan data buatan.
+                Submission dibaca dari endpoint agregat subject class, dikelompokkan berdasarkan tugas.
+                Halaman ini tetap read-only sampai flow grading dibuat lengkap.
+              </div>
+
+              <div
+                v-if="submissionSummary"
+                class="grid gap-3 sm:grid-cols-4"
+              >
+                <article class="rounded-[20px] bg-[#faf8f4] p-4 ring-1 ring-black/5">
+                  <p class="text-xs font-medium text-[#8a8494]">Total submission</p>
+                  <p class="mt-2 text-xl font-medium text-[#171322]">
+                    {{ submissionSummary.submissionCount }}
+                  </p>
+                </article>
+                <article class="rounded-[20px] bg-[#eef7f2] p-4 ring-1 ring-black/5">
+                  <p class="text-xs font-medium text-[#2f7d5c]">Sudah dinilai</p>
+                  <p class="mt-2 text-xl font-medium text-[#171322]">
+                    {{ submissionSummary.gradedCount }}
+                  </p>
+                </article>
+                <article class="rounded-[20px] bg-[#fff7e8] p-4 ring-1 ring-black/5">
+                  <p class="text-xs font-medium text-[#9f6b1d]">Menunggu review</p>
+                  <p class="mt-2 text-xl font-medium text-[#171322]">
+                    {{ submissionSummary.pendingCount }}
+                  </p>
+                </article>
+                <article class="rounded-[20px] bg-[#fff1ed] p-4 ring-1 ring-black/5">
+                  <p class="text-xs font-medium text-[#b86845]">Terlambat</p>
+                  <p class="mt-2 text-xl font-medium text-[#171322]">
+                    {{ submissionSummary.lateCount }}
+                  </p>
+                </article>
               </div>
 
               <div
@@ -363,7 +385,7 @@ onMounted(loadWorkspace)
               </div>
 
               <div
-                v-else-if="submissions.length === 0"
+                v-else-if="submissionCount === 0"
                 class="rounded-[24px] bg-white p-6 text-center ring-1 ring-black/5"
               >
                 <PhCheckCircle :size="30" class="mx-auto text-[#b5afbf]" weight="duotone" />
@@ -374,44 +396,77 @@ onMounted(loadWorkspace)
               </div>
 
               <article
-                v-for="submission in submissions"
+                v-for="group in visibleSubmissionGroups"
                 v-else
-                :key="submission.submissionId"
+                :key="group.assignment.assignmentId"
                 class="rounded-[24px] bg-white p-5 ring-1 ring-black/5"
               >
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div class="flex flex-col gap-3 border-b border-[#ece8df] pb-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p class="text-xs font-medium uppercase tracking-wide text-[#7b61a8]">
-                      {{ submission.assignmentTitle }}
+                      {{ group.assignment.categoryName || 'Assignment' }}
                     </p>
                     <h2 class="mt-2 text-lg font-medium text-[#171322]">
-                      {{ submission.studentName }}
+                      {{ group.assignment.assignmentTitle }}
                     </h2>
-                    <p class="mt-2 text-sm text-[#6b6475]">
-                      Dikumpulkan {{ formatDateTime(submission.submittedAt) }}
+                    <p v-if="group.assignment.deadline" class="mt-2 text-sm text-[#6b6475]">
+                      Deadline {{ formatDate(group.assignment.deadline) }}
                     </p>
                   </div>
-                  <span
-                    class="shrink-0 rounded-2xl px-3 py-2 text-xs font-medium"
-                    :class="
-                      submission.assessment
-                        ? 'bg-[#eef7f2] text-[#2f7d5c]'
-                        : 'bg-[#fff7e8] text-[#9f6b1d]'
-                    "
-                  >
-                    {{ submission.assessment ? 'Sudah dinilai' : 'Menunggu penilaian' }}
-                  </span>
+                  <div class="flex flex-wrap gap-2 text-xs font-medium">
+                    <span class="rounded-2xl bg-[#faf8f4] px-3 py-2 text-[#6b6475]">
+                      {{ group.submissionCount }} submission
+                    </span>
+                    <span class="rounded-2xl bg-[#eef7f2] px-3 py-2 text-[#2f7d5c]">
+                      {{ group.gradedCount }} dinilai
+                    </span>
+                    <span class="rounded-2xl bg-[#fff7e8] px-3 py-2 text-[#9f6b1d]">
+                      {{ group.pendingCount }} pending
+                    </span>
+                  </div>
                 </div>
-                <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-[#6b6475]">
-                  <span class="rounded-2xl bg-[#faf8f4] px-3 py-2">
-                    {{ submission.attachments?.length ?? 0 }} file
-                  </span>
-                  <span v-if="submission.isLate" class="rounded-2xl bg-[#fff1ed] px-3 py-2 text-[#b86845]">
-                    Terlambat
-                  </span>
-                  <span v-if="submission.assessment" class="rounded-2xl bg-[#faf8f4] px-3 py-2">
-                    Nilai {{ submission.assessment.score }}
-                  </span>
+
+                <div class="mt-4 space-y-3">
+                  <div
+                    v-for="submission in group.submissions"
+                    :key="submission.submissionId"
+                    class="rounded-[20px] bg-[#faf8f4] p-4"
+                  >
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h3 class="text-base font-medium text-[#171322]">
+                          {{ submission.studentName }}
+                        </h3>
+                        <p class="mt-1 text-sm text-[#6b6475]">
+                          Dikumpulkan {{ formatDateTime(submission.submittedAt) }}
+                        </p>
+                      </div>
+                      <span
+                        class="shrink-0 rounded-2xl px-3 py-2 text-xs font-medium"
+                        :class="
+                          submission.assessment
+                            ? 'bg-[#eef7f2] text-[#2f7d5c]'
+                            : 'bg-[#fff7e8] text-[#9f6b1d]'
+                        "
+                      >
+                        {{ submission.assessment ? 'Sudah dinilai' : 'Menunggu penilaian' }}
+                      </span>
+                    </div>
+                    <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#6b6475]">
+                      <span class="rounded-2xl bg-white px-3 py-2">
+                        {{ submission.attachments?.length ?? 0 }} file
+                      </span>
+                      <span
+                        v-if="submission.isLate"
+                        class="rounded-2xl bg-[#fff1ed] px-3 py-2 text-[#b86845]"
+                      >
+                        Terlambat
+                      </span>
+                      <span v-if="submission.assessment" class="rounded-2xl bg-white px-3 py-2">
+                        Nilai {{ submission.assessment.score }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </article>
             </div>

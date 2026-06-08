@@ -32,6 +32,7 @@ export interface TeacherSubmissionAssessment {
   score: number
   feedback: string
   assessor?: string
+  assessorName?: string
   assessedAt?: string
 }
 
@@ -53,4 +54,42 @@ export interface AssignmentWithSubmissionsResponse {
     deadline?: string
   }
   submissions: TeacherSubmission[]
+}
+
+export interface TeacherAssignmentHeader {
+  assignmentId: string
+  assignmentTitle: string
+  subjectName?: string
+  categoryName?: string
+  deadline?: string
+}
+
+export interface TeacherSubjectClassHeader {
+  subjectClassId: string
+  subjectCode: string
+  subjectName?: string
+  teacherId: string
+  teacherName?: string
+}
+
+export interface TeacherSubmissionGroup {
+  assignment: TeacherAssignmentHeader
+  submissionCount: number
+  gradedCount: number
+  pendingCount: number
+  submissions: TeacherSubmission[]
+}
+
+export interface TeacherSubmissionSummary {
+  assignmentCount: number
+  submissionCount: number
+  gradedCount: number
+  pendingCount: number
+  lateCount: number
+}
+
+export interface TeacherSubjectClassSubmissionsResponse {
+  subjectClass: TeacherSubjectClassHeader
+  assignments: TeacherSubmissionGroup[]
+  summary: TeacherSubmissionSummary
 }
