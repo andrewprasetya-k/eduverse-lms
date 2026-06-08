@@ -37,3 +37,4 @@ backend/.env
 backend/prompt.md
 tmp/build-errors.log
 frontend/.env.example
+frontend/.design_agent.md
