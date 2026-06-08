@@ -50,9 +50,9 @@ const visibleSubmissionGroups = computed(() =>
 )
 
 const tabs = computed(() => [
-  { id: 'materials' as const, label: 'Materials', count: materials.value.length },
-  { id: 'assignments' as const, label: 'Assignments', count: assignments.value.length },
-  { id: 'submissions' as const, label: 'Submissions', count: submissionCount.value },
+  { id: 'materials' as const, label: 'Materi', count: materials.value.length },
+  { id: 'assignments' as const, label: 'Tugas', count: assignments.value.length },
+  { id: 'submissions' as const, label: 'Pengumpulan', count: submissionCount.value },
 ])
 
 async function loadWorkspace() {
@@ -96,7 +96,7 @@ async function loadSubmissions() {
     submissionSummary.value = data.summary
   } catch {
     submissionsError.value =
-      'Submission belum bisa dimuat dari endpoint agregat subject class. Coba lagi beberapa saat.'
+      'Pengumpulan siswa belum bisa dimuat. Coba lagi beberapa saat.'
   } finally {
     submissionsLoading.value = false
   }
@@ -144,8 +144,7 @@ onMounted(loadWorkspace)
             berada di level subject class.
           </span>
           <span v-else>
-            Detail subject class mengambil data dari endpoint current teacher agar guru hanya melihat
-            subject yang dia ampu.
+            Detail subject class hanya tersedia untuk subject yang terhubung dengan akun guru ini.
           </span>
         </p>
       </header>
@@ -317,7 +316,11 @@ onMounted(loadWorkspace)
                         : 'bg-[#fff1ed] text-[#b86845]'
                     "
                   >
-                    {{ assignment.allowLateSubmission ? 'Late allowed' : 'No late submit' }}
+                    {{
+                      assignment.allowLateSubmission
+                        ? 'Terlambat diizinkan'
+                        : 'Tidak menerima terlambat'
+                    }}
                   </span>
                 </div>
                 <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-[#6b6475]">
@@ -335,52 +338,40 @@ onMounted(loadWorkspace)
 
             <div v-else class="space-y-3">
               <div class="rounded-[24px] bg-[#faf8f4] p-5 text-sm leading-6 text-[#6b6475]">
-                Submission dibaca dari endpoint agregat subject class, dikelompokkan berdasarkan tugas.
-                Halaman ini tetap read-only sampai flow grading dibuat lengkap.
+                Pengumpulan siswa dikelompokkan berdasarkan tugas pada subject ini. Halaman ini
+                masih read-only sampai flow penilaian tersedia penuh.
               </div>
 
               <div
                 v-if="submissionSummary"
-                class="grid gap-3 sm:grid-cols-4"
+                class="flex flex-wrap gap-2 text-sm"
               >
-                <article class="rounded-[20px] bg-[#faf8f4] p-4 ring-1 ring-black/5">
-                  <p class="text-xs font-medium text-[#8a8494]">Total submission</p>
-                  <p class="mt-2 text-xl font-medium text-[#171322]">
-                    {{ submissionSummary.submissionCount }}
-                  </p>
-                </article>
-                <article class="rounded-[20px] bg-[#eef7f2] p-4 ring-1 ring-black/5">
-                  <p class="text-xs font-medium text-[#2f7d5c]">Sudah dinilai</p>
-                  <p class="mt-2 text-xl font-medium text-[#171322]">
-                    {{ submissionSummary.gradedCount }}
-                  </p>
-                </article>
-                <article class="rounded-[20px] bg-[#fff7e8] p-4 ring-1 ring-black/5">
-                  <p class="text-xs font-medium text-[#9f6b1d]">Menunggu review</p>
-                  <p class="mt-2 text-xl font-medium text-[#171322]">
-                    {{ submissionSummary.pendingCount }}
-                  </p>
-                </article>
-                <article class="rounded-[20px] bg-[#fff1ed] p-4 ring-1 ring-black/5">
-                  <p class="text-xs font-medium text-[#b86845]">Terlambat</p>
-                  <p class="mt-2 text-xl font-medium text-[#171322]">
-                    {{ submissionSummary.lateCount }}
-                  </p>
-                </article>
+                <span class="rounded-2xl bg-[#faf8f4] px-3 py-2 text-[#6b6475]">
+                  {{ submissionSummary.submissionCount }} pengumpulan
+                </span>
+                <span class="rounded-2xl bg-[#eef7f2] px-3 py-2 text-[#2f7d5c]">
+                  {{ submissionSummary.gradedCount }} sudah dinilai
+                </span>
+                <span class="rounded-2xl bg-[#fff7e8] px-3 py-2 text-[#9f6b1d]">
+                  {{ submissionSummary.pendingCount }} menunggu review
+                </span>
+                <span class="rounded-2xl bg-[#fff1ed] px-3 py-2 text-[#b86845]">
+                  {{ submissionSummary.lateCount }} terlambat
+                </span>
               </div>
 
               <div
                 v-if="submissionsLoading"
                 class="rounded-[24px] bg-white p-6 text-sm text-[#6b6475] ring-1 ring-black/5"
               >
-                Memuat submissions...
+                Memuat pengumpulan...
               </div>
 
               <div
                 v-else-if="submissionsError"
                 class="rounded-[24px] bg-white p-6 ring-1 ring-black/5"
               >
-                <h2 class="text-lg font-medium text-[#171322]">Submission gagal dimuat</h2>
+                <h2 class="text-lg font-medium text-[#171322]">Pengumpulan gagal dimuat</h2>
                 <p class="mt-2 text-sm leading-6 text-[#6b6475]">{{ submissionsError }}</p>
               </div>
 
@@ -389,9 +380,9 @@ onMounted(loadWorkspace)
                 class="rounded-[24px] bg-white p-6 text-center ring-1 ring-black/5"
               >
                 <PhCheckCircle :size="30" class="mx-auto text-[#b5afbf]" weight="duotone" />
-                <h2 class="mt-3 text-lg font-medium text-[#171322]">Belum ada submission</h2>
+                <h2 class="mt-3 text-lg font-medium text-[#171322]">Belum ada pengumpulan</h2>
                 <p class="mt-2 text-sm leading-6 text-[#6b6475]">
-                  Submission siswa akan tampil setelah ada pengumpulan tugas pada subject ini.
+                  Pengumpulan siswa akan tampil setelah ada tugas yang dikumpulkan pada subject ini.
                 </p>
               </div>
 
@@ -430,29 +421,17 @@ onMounted(loadWorkspace)
                   <div
                     v-for="submission in group.submissions"
                     :key="submission.submissionId"
-                    class="rounded-[20px] bg-[#faf8f4] p-4"
+                    class="flex flex-col gap-3 rounded-[18px] bg-[#faf8f4] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <h3 class="text-base font-medium text-[#171322]">
-                          {{ submission.studentName }}
-                        </h3>
-                        <p class="mt-1 text-sm text-[#6b6475]">
-                          Dikumpulkan {{ formatDateTime(submission.submittedAt) }}
-                        </p>
-                      </div>
-                      <span
-                        class="shrink-0 rounded-2xl px-3 py-2 text-xs font-medium"
-                        :class="
-                          submission.assessment
-                            ? 'bg-[#eef7f2] text-[#2f7d5c]'
-                            : 'bg-[#fff7e8] text-[#9f6b1d]'
-                        "
-                      >
-                        {{ submission.assessment ? 'Sudah dinilai' : 'Menunggu penilaian' }}
-                      </span>
+                    <div class="min-w-0">
+                      <h3 class="truncate text-sm font-medium text-[#171322]">
+                        {{ submission.studentName }}
+                      </h3>
+                      <p class="mt-1 text-xs text-[#6b6475]">
+                        Dikumpulkan {{ formatDateTime(submission.submittedAt) }}
+                      </p>
                     </div>
-                    <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-[#6b6475]">
+                    <div class="flex flex-wrap items-center gap-2 text-xs font-medium text-[#6b6475]">
                       <span class="rounded-2xl bg-white px-3 py-2">
                         {{ submission.attachments?.length ?? 0 }} file
                       </span>
@@ -464,6 +443,16 @@ onMounted(loadWorkspace)
                       </span>
                       <span v-if="submission.assessment" class="rounded-2xl bg-white px-3 py-2">
                         Nilai {{ submission.assessment.score }}
+                      </span>
+                      <span
+                        class="shrink-0 rounded-2xl px-3 py-2 text-xs font-medium"
+                        :class="
+                          submission.assessment
+                            ? 'bg-[#eef7f2] text-[#2f7d5c]'
+                            : 'bg-[#fff7e8] text-[#9f6b1d]'
+                        "
+                      >
+                        {{ submission.assessment ? 'Sudah dinilai' : 'Menunggu penilaian' }}
                       </span>
                     </div>
                   </div>
