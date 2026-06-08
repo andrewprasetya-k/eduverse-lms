@@ -19,6 +19,7 @@ import TeacherDashboard from "../pages/teacher/TeacherDashboard.vue";
 import TeacherSubjectDetail from "../pages/teacher/TeacherSubjectDetail.vue";
 import TeacherSubjects from "../pages/teacher/TeacherSubjects.vue";
 import AdminDashboard from "../pages/admin/AdminDashboard.vue";
+import AdminAcademicYears from "../pages/admin/AdminAcademicYears.vue";
 import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard.vue";
 import FeaturePlaceholder from "../components/common/FeaturePlaceholder.vue";
 import TeacherContentCreate from "../pages/teacher/TeacherContentCreate.vue";
@@ -296,13 +297,7 @@ const router = createRouter({
         {
           path: "academic-years",
           name: "admin-academic-years",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Academic setup",
-            title: "Tahun ajaran dan semester",
-            description:
-              "Halaman ini nantinya mengelola academic year, term, dan status aktif periode akademik.",
-          },
+          component: AdminAcademicYears,
         },
         {
           path: "profile",
