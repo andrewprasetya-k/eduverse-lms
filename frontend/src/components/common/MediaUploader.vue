@@ -20,6 +20,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'update:mediaIds', ids: string[]): void
+  (e: 'update:isUploading', value: boolean): void
+  (e: 'update:hasUploadError', value: boolean): void
 }>()
 
 const files = ref<{
@@ -33,6 +35,11 @@ const files = ref<{
 }[]>([])
 
 const mediaIds = ref<string[]>([])
+
+function emitUploadState() {
+  emit('update:isUploading', files.value.some((file) => file.status === 'uploading'))
+  emit('update:hasUploadError', files.value.some((file) => file.status === 'error'))
+}
 
 async function handleFileChange(event: Event) {
   const target = event.target as HTMLInputElement
@@ -59,6 +66,7 @@ async function handleFileChange(event: Event) {
     }
     
     const index = files.value.push(fileItem) - 1
+    emitUploadState()
 
     try {
       const response = await uploadMediaFile(file, props.schoolId, props.ownerType)
@@ -69,6 +77,8 @@ async function handleFileChange(event: Event) {
     } catch (error) {
       files.value[index].status = 'error'
       files.value[index].errorMessage = 'Gagal mengunggah file'
+    } finally {
+      emitUploadState()
     }
   }
 
@@ -90,6 +100,7 @@ async function removeFile(index: number) {
     }
   }
   files.value.splice(index, 1)
+  emitUploadState()
 }
 
 function formatSize(bytes: number) {

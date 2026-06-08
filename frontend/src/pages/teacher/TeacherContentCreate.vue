@@ -32,6 +32,8 @@ const submitting = ref(false)
 const errorMessage = ref('')
 const categoryErrorMessage = ref('')
 const uploaderKey = ref(0)
+const isUploadingMedia = ref(false)
+const hasMediaUploadError = ref(false)
 const activeSchoolId = computed(() => auth.activeSchoolId ?? auth.defaultContext?.schoolId ?? '')
 const activeSchoolCode = computed(() => {
   const activeMembership = auth.memberships.find(
@@ -44,6 +46,8 @@ const isSubmitDisabled = computed(
   () =>
     submitting.value ||
     !hasRequiredContext.value ||
+    isUploadingMedia.value ||
+    hasMediaUploadError.value ||
     (activeTab.value === 'assignment' && categories.value.length === 0),
 )
 
@@ -118,6 +122,14 @@ async function handleSubmit() {
     errorMessage.value = 'Judul wajib diisi.'
     return
   }
+  if (isUploadingMedia.value) {
+    errorMessage.value = 'Tunggu sampai upload selesai sebelum menerbitkan.'
+    return
+  }
+  if (hasMediaUploadError.value) {
+    errorMessage.value = 'Ada lampiran yang gagal diunggah. Hapus atau unggah ulang file tersebut.'
+    return
+  }
   if (activeTab.value === 'assignment' && !form.value.categoryId) {
     errorMessage.value = 'Kategori tugas belum tersedia. Tambahkan kategori terlebih dahulu sebelum membuat tugas.'
     return
@@ -166,6 +178,8 @@ async function handleSubmit() {
         }),
       )
       form.value.mediaIds = []
+      isUploadingMedia.value = false
+      hasMediaUploadError.value = false
       uploaderKey.value += 1
     }
 
@@ -302,11 +316,25 @@ onMounted(loadInitialData)
               :key="uploaderKey"
               :school-id="activeSchoolId"
               :owner-type="activeTab"
+              v-model:is-uploading="isUploadingMedia"
+              v-model:has-upload-error="hasMediaUploadError"
               cleanup-on-remove
               @update:media-ids="form.mediaIds = $event"
             />
             <p v-else class="rounded-2xl bg-[#FEF2F2] p-4 text-sm leading-6 text-[#B42318]">
               Lampiran belum bisa diunggah sampai konteks school dan subject tersedia.
+            </p>
+            <p
+              v-if="isUploadingMedia"
+              class="mt-3 rounded-2xl bg-[#EEF2FF] p-4 text-sm leading-6 text-[#4338CA]"
+            >
+              Tunggu sampai upload selesai sebelum menerbitkan.
+            </p>
+            <p
+              v-if="hasMediaUploadError"
+              class="mt-3 rounded-2xl bg-[#FEF2F2] p-4 text-sm leading-6 text-[#B42318]"
+            >
+              Ada lampiran yang gagal diunggah. Hapus atau unggah ulang file tersebut.
             </p>
           </section>
         </div>
