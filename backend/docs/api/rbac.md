@@ -249,6 +249,15 @@ Content-Type: application/json
 
 *Teacher material/assignment creation, assignment detail, submission detail, and assessment access is limited to subject classes taught by the current teacher in the active `SchoolId` context.
 
+### Grade Book
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/grades/my-grades/:classId` | GET | ❌ | ❌ | ❌ | 📖* |
+| `/grades/weights/subject/:subjectId` | GET | 📖 | 📖 | 📖 | 📖 |
+| `/grades/class/:classId/subject/:subjectId` | GET | ❌ | 📖 | 📖 | ❌ |
+
+*Student gradebook access is current-user only. The student identity comes from JWT, the school context comes from `SchoolId`, and the class must be a class where the current student is enrolled.
+
 ### User Management
 | Endpoint | Method | super_admin | admin | teacher | student |
 |----------|--------|-------------|-------|---------|---------|

@@ -82,7 +82,79 @@ Retrieve konfigurasi bobot untuk mata pelajaran.
 
 ---
 
-## 3. Get Class Grade Report
+## 3. Get My Gradebook by Class
+Retrieve gradebook current student untuk active class context.
+
+- **URL:** `/my-grades/:classId`
+- **Method:** `GET`
+- **Auth:** Required (student)
+- **Headers:**
+```http
+Authorization: Bearer <token>
+SchoolId: uuid-school-id
+```
+
+**Notes:**
+- Identity student diambil dari JWT, bukan dari path/body/query.
+- `SchoolId` header menentukan active school context.
+- Student hanya bisa melihat gradebook untuk class tempat dia ter-enroll sebagai student.
+- Response dikelompokkan berdasarkan `subjectClassId`.
+- `finalGrade` dan `letterGrade` bernilai `null` jika bobot nilai belum dikonfigurasi atau belum ada nilai yang bisa dihitung.
+
+**Response (200 OK):**
+```json
+{
+  "class": {
+    "classId": "uuid",
+    "className": "Kelas 10 A",
+    "classCode": "10A"
+  },
+  "subjects": [
+    {
+      "subjectClassId": "uuid",
+      "subjectId": "uuid",
+      "subjectName": "Matematika",
+      "subjectCode": "MTK",
+      "finalGrade": 90,
+      "letterGrade": "A",
+      "gradedCount": 2,
+      "submittedCount": 3,
+      "pendingCount": 1,
+      "assignments": [
+        {
+          "assignmentId": "uuid",
+          "assignmentTitle": "Quiz Aljabar",
+          "categoryName": "Quiz",
+          "deadline": "2026-03-01T23:59:59Z",
+          "status": "graded",
+          "submittedAt": "02-03-2026 10:30:00",
+          "score": 90,
+          "feedback": "Bagus",
+          "assessedAt": "03-03-2026 09:00:00",
+          "assessorName": "Nama Guru"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "subjectCount": 1,
+    "gradedAssignmentCount": 2,
+    "submittedAssignmentCount": 3,
+    "pendingAssessmentCount": 1
+  }
+}
+```
+
+**When student is not enrolled in class (403 Forbidden):**
+```json
+{
+  "error": "Forbidden: student is not enrolled in this class"
+}
+```
+
+---
+
+## 4. Get Class Grade Report
 Retrieve final grades untuk seluruh student di kelas untuk mata pelajaran tertentu.
 
 - **URL:** `/class/:classId/subject/:subjectId`
@@ -158,7 +230,8 @@ Retrieve final grades untuk seluruh student di kelas untuk mata pelajaran terten
 1. **Admin/Teacher configure weights** per subject
 2. **Teacher grade assignments** (via assignment endpoints)
 3. **System auto-calculate final grades** based on weights
-4. **Students/Teachers view final grades** with breakdown
+4. **Students view their own gradebook** via `/api/grades/my-grades/:classId`
+5. **Teachers view final grades** with breakdown
 
 ---
 

@@ -6,13 +6,19 @@ import (
 	"backend/internal/repository"
 	"errors"
 	"fmt"
+	"time"
+
+	"gorm.io/gorm"
 )
+
+var ErrStudentNotEnrolledInClass = errors.New("student is not enrolled in this class")
 
 type GradeService interface {
 	ConfigureWeights(req *dto.ConfigureWeightsDTO) error
 	GetWeightsBySubject(subjectID string) (*dto.WeightResponseDTO, error)
 	CalculateFinalGrade(studentID string, subjectID string) (*dto.GradeReportDTO, error)
 	GetClassGradeReport(classID, subjectID string) (*dto.ClassGradeReportDTO, error)
+	GetMyGradebookByClass(userID string, schoolID string, classID string) (*dto.MyGradebookResponseDTO, error)
 }
 
 type gradeService struct {
@@ -205,6 +211,96 @@ func (s *gradeService) GetClassGradeReport(classID, subjectID string) (*dto.Clas
 	}, nil
 }
 
+func (s *gradeService) GetMyGradebookByClass(userID string, schoolID string, classID string) (*dto.MyGradebookResponseDTO, error) {
+	class, err := s.gradeRepo.GetStudentGradebookClass(userID, schoolID, classID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrStudentNotEnrolledInClass
+		}
+		return nil, err
+	}
+
+	rows, err := s.gradeRepo.GetStudentGradebookRows(userID, schoolID, classID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &dto.MyGradebookResponseDTO{
+		Class: dto.MyGradebookClassDTO{
+			ClassID:   class.ClassID,
+			ClassName: class.ClassName,
+			ClassCode: class.ClassCode,
+		},
+		Subjects: []dto.MyGradebookSubjectDTO{},
+		Summary:  dto.MyGradebookSummaryDTO{},
+	}
+
+	subjectIndexes := make(map[string]int)
+	categoryScoresBySubject := make(map[string]map[string][]float64)
+
+	for _, row := range rows {
+		subjectIndex, exists := subjectIndexes[row.SubjectClassID]
+		if !exists {
+			response.Subjects = append(response.Subjects, dto.MyGradebookSubjectDTO{
+				SubjectClassID: row.SubjectClassID,
+				SubjectID:      row.SubjectID,
+				SubjectName:    row.SubjectName,
+				SubjectCode:    row.SubjectCode,
+				Assignments:    []dto.MyGradebookAssignmentDTO{},
+			})
+			subjectIndex = len(response.Subjects) - 1
+			subjectIndexes[row.SubjectClassID] = subjectIndex
+			categoryScoresBySubject[row.SubjectClassID] = make(map[string][]float64)
+		}
+
+		if row.AssignmentID == nil {
+			continue
+		}
+
+		status := "not_submitted"
+		if row.SubmissionID != nil {
+			status = "submitted"
+			response.Subjects[subjectIndex].SubmittedCount++
+			response.Summary.SubmittedAssignmentCount++
+			response.Subjects[subjectIndex].PendingCount++
+			response.Summary.PendingAssessmentCount++
+		}
+		if row.Score != nil {
+			status = "graded"
+			response.Subjects[subjectIndex].GradedCount++
+			response.Summary.GradedAssignmentCount++
+			response.Subjects[subjectIndex].PendingCount--
+			response.Summary.PendingAssessmentCount--
+			if row.CategoryID != nil {
+				categoryScoresBySubject[row.SubjectClassID][*row.CategoryID] = append(categoryScoresBySubject[row.SubjectClassID][*row.CategoryID], *row.Score)
+			}
+		}
+
+		response.Subjects[subjectIndex].Assignments = append(response.Subjects[subjectIndex].Assignments, dto.MyGradebookAssignmentDTO{
+			AssignmentID:    *row.AssignmentID,
+			AssignmentTitle: stringValue(row.AssignmentTitle),
+			CategoryName:    stringValue(row.CategoryName),
+			Deadline:        row.Deadline,
+			Status:          status,
+			SubmittedAt:     formatTimePointer(row.SubmittedAt),
+			Score:           row.Score,
+			Feedback:        row.Feedback,
+			AssessedAt:      formatTimePointer(row.AssessedAt),
+			AssessorName:    row.AssessorName,
+		})
+	}
+
+	for i := range response.Subjects {
+		subject := &response.Subjects[i]
+		response.Summary.SubjectCount++
+		finalGrade, letterGrade := s.calculateSubjectFinalGrade(subject.SubjectID, categoryScoresBySubject[subject.SubjectClassID])
+		subject.FinalGrade = finalGrade
+		subject.LetterGrade = letterGrade
+	}
+
+	return response, nil
+}
+
 func calculateAverage(scores []float64) float64 {
 	if len(scores) == 0 {
 		return 0.0
@@ -215,6 +311,50 @@ func calculateAverage(scores []float64) float64 {
 		sum += score
 	}
 	return sum / float64(len(scores))
+}
+
+func (s *gradeService) calculateSubjectFinalGrade(subjectID string, categoryScores map[string][]float64) (*float64, *string) {
+	if len(categoryScores) == 0 {
+		return nil, nil
+	}
+
+	weights, err := s.weightRepo.GetBySubject(subjectID)
+	if err != nil || len(weights) == 0 {
+		return nil, nil
+	}
+
+	finalGrade := 0.0
+	hasWeightedScore := false
+	for _, weight := range weights {
+		scores := categoryScores[weight.CategoryID]
+		if len(scores) == 0 {
+			continue
+		}
+		finalGrade += calculateAverage(scores) * (weight.Weight / 100.0)
+		hasWeightedScore = true
+	}
+
+	if !hasWeightedScore {
+		return nil, nil
+	}
+
+	letterGrade := convertToLetterGrade(finalGrade)
+	return &finalGrade, &letterGrade
+}
+
+func formatTimePointer(value *time.Time) *string {
+	if value == nil {
+		return nil
+	}
+	formatted := value.Format("02-01-2006 15:04:05")
+	return &formatted
+}
+
+func stringValue(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
 }
 
 func convertToLetterGrade(score float64) string {

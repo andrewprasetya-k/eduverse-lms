@@ -330,6 +330,7 @@ func main() {
 			gradeAPI.POST("/weights", middleware.RequireRole(schoolService, "admin", "teacher"), gradeHandler.ConfigureWeights)
 			gradeAPI.GET("/weights/subject/:subjectId", middleware.RequireSchoolMember(schoolService), gradeHandler.GetWeightsBySubject)
 			gradeAPI.GET("/class/:classId/subject/:subjectId", middleware.RequireRole(schoolService, "teacher", "admin"), gradeHandler.GetClassGradeReport)
+			gradeAPI.GET("/my-grades/:classId", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "student"), gradeHandler.GetMyGradebookByClass)
 		}
 
 		notificationAPI := api.Group("/notifications")

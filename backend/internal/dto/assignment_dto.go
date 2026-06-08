@@ -213,6 +213,75 @@ type StudentGradeSummaryDTO struct {
 	LetterGrade  string  `json:"letterGrade"`
 }
 
+type MyGradebookResponseDTO struct {
+	Class    MyGradebookClassDTO     `json:"class"`
+	Subjects []MyGradebookSubjectDTO `json:"subjects"`
+	Summary  MyGradebookSummaryDTO   `json:"summary"`
+}
+
+type MyGradebookClassDTO struct {
+	ClassID   string `json:"classId"`
+	ClassName string `json:"className"`
+	ClassCode string `json:"classCode"`
+}
+
+type MyGradebookSubjectDTO struct {
+	SubjectClassID string                     `json:"subjectClassId"`
+	SubjectID      string                     `json:"subjectId"`
+	SubjectName    string                     `json:"subjectName"`
+	SubjectCode    string                     `json:"subjectCode"`
+	FinalGrade     *float64                   `json:"finalGrade"`
+	LetterGrade    *string                    `json:"letterGrade"`
+	GradedCount    int                        `json:"gradedCount"`
+	SubmittedCount int                        `json:"submittedCount"`
+	PendingCount   int                        `json:"pendingCount"`
+	Assignments    []MyGradebookAssignmentDTO `json:"assignments"`
+}
+
+type MyGradebookAssignmentDTO struct {
+	AssignmentID    string     `json:"assignmentId"`
+	AssignmentTitle string     `json:"assignmentTitle"`
+	CategoryName    string     `json:"categoryName"`
+	Deadline        *time.Time `json:"deadline,omitempty"`
+	Status          string     `json:"status"`
+	SubmittedAt     *string    `json:"submittedAt"`
+	Score           *float64   `json:"score"`
+	Feedback        *string    `json:"feedback"`
+	AssessedAt      *string    `json:"assessedAt"`
+	AssessorName    *string    `json:"assessorName"`
+}
+
+type MyGradebookSummaryDTO struct {
+	SubjectCount             int `json:"subjectCount"`
+	GradedAssignmentCount    int `json:"gradedAssignmentCount"`
+	SubmittedAssignmentCount int `json:"submittedAssignmentCount"`
+	PendingAssessmentCount   int `json:"pendingAssessmentCount"`
+}
+
+type StudentGradebookClassRow struct {
+	ClassID   string `gorm:"column:class_id"`
+	ClassName string `gorm:"column:class_name"`
+	ClassCode string `gorm:"column:class_code"`
+}
+
+type StudentGradebookRow struct {
+	SubjectClassID  string     `gorm:"column:subject_class_id"`
+	SubjectID       string     `gorm:"column:subject_id"`
+	SubjectName     string     `gorm:"column:subject_name"`
+	SubjectCode     string     `gorm:"column:subject_code"`
+	AssignmentID    *string    `gorm:"column:assignment_id"`
+	AssignmentTitle *string    `gorm:"column:assignment_title"`
+	CategoryID      *string    `gorm:"column:category_id"`
+	CategoryName    *string    `gorm:"column:category_name"`
+	Deadline        *time.Time `gorm:"column:deadline"`
+	SubmissionID    *string    `gorm:"column:submission_id"`
+	SubmittedAt     *time.Time `gorm:"column:submitted_at"`
+	Score           *float64   `gorm:"column:score"`
+	Feedback        *string    `gorm:"column:feedback"`
+	AssessedAt      *time.Time `gorm:"column:assessed_at"`
+	AssessorName    *string    `gorm:"column:assessor_name"`
+}
+
 type SubjectHeaderDTO struct {
 	SubjectID   string `json:"subjectId"`
 	SubjectName string `json:"subjectName"`

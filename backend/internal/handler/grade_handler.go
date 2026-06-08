@@ -2,7 +2,9 @@ package handler
 
 import (
 	"backend/internal/dto"
+	"backend/internal/middleware"
 	"backend/internal/service"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -49,6 +51,39 @@ func (h *GradeHandler) GetClassGradeReport(c *gin.Context) {
 
 	report, err := h.service.GetClassGradeReport(classID, subjectID)
 	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, report)
+}
+
+func (h *GradeHandler) GetMyGradebookByClass(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	schoolID, ok := c.Get("school_id")
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required (SchoolId header or schoolCode param)"})
+		return
+	}
+
+	schoolIDString, ok := schoolID.(string)
+	if !ok || schoolIDString == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required (SchoolId header or schoolCode param)"})
+		return
+	}
+
+	classID := c.Param("classId")
+	report, err := h.service.GetMyGradebookByClass(userID, schoolIDString, classID)
+	if err != nil {
+		if errors.Is(err, service.ErrStudentNotEnrolledInClass) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: student is not enrolled in this class"})
+			return
+		}
 		HandleError(c, err)
 		return
 	}
