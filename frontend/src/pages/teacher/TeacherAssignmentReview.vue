@@ -3,31 +3,38 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   PhArrowLeft,
-  PhUser,
-  PhFile,
-  PhDownloadSimple,
+  PhCaretLeft,
+  PhCaretRight,
   PhCheckCircle,
   PhClock,
+  PhDownloadSimple,
+  PhFile,
   PhPaperPlaneTilt,
-
+  PhUser,
 } from "@phosphor-icons/vue";
 import {
   getAssignmentDetailWithSubmissions,
   assessSubmission,
 } from "../../services/teacherAssignment";
+import type {
+  AssignmentWithSubmissionsResponse,
+  TeacherSubmission,
+} from "../../types/teacherAssignment";
+import { formatDateTime } from "../../utils/date";
 
 const route = useRoute();
 const router = useRouter();
 
 const assignmentId = computed(() => String(route.params.assignmentId ?? ""));
-const assignment = ref<any>(null);
-const submissions = ref<any[]>([]);
+const assignment = ref<AssignmentWithSubmissionsResponse["assignment"] | null>(null);
+const submissions = ref<TeacherSubmission[]>([]);
 const loading = ref(false);
 const submitting = ref(false);
+const errorMessage = ref("");
 const activeIndex = ref(0);
 
-const currentSubmission = computed(
-  () => submissions.value[activeIndex.value] || null,
+const currentSubmission = computed<TeacherSubmission | null>(
+  () => submissions.value[activeIndex.value] ?? null,
 );
 
 // Grading form state
@@ -36,20 +43,31 @@ const feedback = ref("");
 
 async function loadData() {
   loading.value = true;
+  errorMessage.value = "";
   try {
     const data = await getAssignmentDetailWithSubmissions(assignmentId.value);
-    assignment.value = data;
-    submissions.value = data.submissions || [];
-
-    // Set initial grading state for the first student
-    if (currentSubmission.value) {
-      updateGradingForm();
+    assignment.value = data.assignment;
+    submissions.value = data.submissions ?? [];
+    if (activeIndex.value >= submissions.value.length) {
+      activeIndex.value = Math.max(submissions.value.length - 1, 0);
     }
+
+    updateGradingForm();
   } catch (err) {
     console.error("Failed to load assignment review", err);
+    errorMessage.value = getLoadErrorMessage(err);
   } finally {
     loading.value = false;
   }
+}
+
+function getLoadErrorMessage(error: unknown) {
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const status = (error as { response?: { status?: number } }).response?.status;
+    if (status === 403) return "Anda tidak memiliki akses ke tugas ini.";
+    if (status === 404) return "Tugas tidak ditemukan.";
+  }
+  return "Data review belum bisa dimuat.";
 }
 
 function updateGradingForm() {
@@ -63,6 +81,13 @@ function updateGradingForm() {
 }
 
 watch(activeIndex, updateGradingForm);
+
+function formatFileSize(size?: number) {
+  if (!size || size <= 0) return "Ukuran tidak tersedia";
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+}
 
 async function handleGrade() {
   if (!currentSubmission.value) return;
@@ -78,13 +103,7 @@ async function handleGrade() {
       feedback: feedback.value,
     });
 
-    // Update local state
-    currentSubmission.value.assessment = {
-      score: Number(score.value),
-      feedback: feedback.value,
-      assessedAt: new Date().toISOString(),
-    };
-
+    await loadData();
     alert("Nilai berhasil disimpan");
   } catch (err) {
     alert("Gagal menyimpan nilai");
@@ -131,7 +150,7 @@ onMounted(loadData);
             :disabled="activeIndex === 0"
             class="p-2 border border-[#EBEBEB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-30 transition"
           >
-            <PhChevronLeft :size="16" />
+            <PhCaretLeft :size="16" />
           </button>
           <span class="text-xs font-medium text-[#374151]">
             {{ submissions.length > 0 ? activeIndex + 1 : 0 }} /
@@ -142,14 +161,29 @@ onMounted(loadData);
             :disabled="activeIndex === submissions.length - 1"
             class="p-2 border border-[#EBEBEB] rounded-lg hover:bg-[#F9FAFB] disabled:opacity-30 transition"
           >
-            <PhChevronRight :size="16" />
+            <PhCaretRight :size="16" />
           </button>
         </div>
       </div>
     </header>
 
     <div v-if="loading" class="flex-1 flex items-center justify-center">
-      <p class="text-sm text-[#6B7280]">Memuat submission...</p>
+      <p class="text-sm text-[#6B7280]">Memuat pengumpulan...</p>
+    </div>
+
+    <div
+      v-else-if="errorMessage"
+      class="flex-1 flex flex-col items-center justify-center text-center p-8"
+    >
+      <div
+        class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4"
+      >
+        <PhFile :size="32" class="text-[#D1D5DB]" />
+      </div>
+      <h2 class="text-lg font-semibold text-[#111827]">Review belum tersedia</h2>
+      <p class="text-sm text-[#6B7280] mt-2 max-w-xs">
+        {{ errorMessage }}
+      </p>
     </div>
 
     <div
@@ -161,7 +195,7 @@ onMounted(loadData);
       >
         <PhUser :size="32" class="text-[#D1D5DB]" />
       </div>
-      <h2 class="text-lg font-semibold text-[#111827]">Belum Ada Submission</h2>
+      <h2 class="text-lg font-semibold text-[#111827]">Belum Ada Pengumpulan</h2>
       <p class="text-sm text-[#6B7280] mt-2 max-w-xs">
         Belum ada siswa yang mengumpulkan tugas ini.
       </p>
@@ -189,11 +223,7 @@ onMounted(loadData);
               >
                 <PhClock :size="14" />
                 Dikumpulkan pada
-                {{
-                  new Date(currentSubmission?.submittedAt).toLocaleString(
-                    "id-ID",
-                  )
-                }}
+                {{ formatDateTime(currentSubmission?.submittedAt) }}
                 <span
                   v-if="currentSubmission?.isLate"
                   class="ml-2 px-2 py-0.5 bg-[#FEF2F2] text-[#DC2626] rounded-full text-[10px] font-bold"
@@ -249,7 +279,7 @@ onMounted(loadData);
                       {{ file.mediaName }}
                     </p>
                     <p class="text-[11px] text-[#9CA3AF]">
-                      {{ (file.fileSize / 1024 / 1024).toFixed(2) }} MB
+                      {{ formatFileSize(file.fileSize) }}
                     </p>
                   </div>
                 </div>
