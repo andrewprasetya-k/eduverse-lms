@@ -95,6 +95,9 @@ func (h *AssignmentHandler) CreateAssignment(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+	if !h.authorizeTeacherForSubjectClass(c, input.SubjectClassID) {
+		return
+	}
 
 	asg := domain.Assignment{
 		SchoolID:            input.SchoolID,

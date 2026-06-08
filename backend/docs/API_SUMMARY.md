@@ -115,7 +115,7 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /medias/:id` - Delete media record
 
 ## 📖 Materials (Learning Content)
-- `POST /materials` - Create material (JSON or multipart form)
+- `POST /materials` - Create material for current teacher-owned subject class (JSON or multipart form)
 - `GET /materials` - List materials (with pagination & search)
 - `GET /materials/:id` - Get material by ID
 - `PATCH /materials/:id` - Update material
@@ -142,7 +142,7 @@ Authorization: Bearer <your-jwt-token>
 - `GET /assignments/categories/school/:schoolCode` - Get categories by school
 
 ### Assignments
-- `POST /assignments` - Create assignment
+- `POST /assignments` - Create assignment for current teacher-owned subject class
 - `GET /assignments/subject-class/:subjectClassId` - Get by subject class
 - `GET /assignments/subject-class/submissions/:subjectClassId` - Get submissions grouped by assignment for current teacher subject class
 - `GET /assignments/:assignmentId` - Get assignment with submissions for current teacher-owned subject class

@@ -21,7 +21,11 @@ Base URL: `/api/assignments`
 ### 3. Create Assignment
 - **URL:** `(base URL)`
 - **Method:** `POST`
-- **Auth Note:** Actor identity is taken from the JWT token. Sending identity fields in the body is ignored or no longer required.
+- **Auth:** Required
+- **Role:** `teacher`
+- **School Context:** Requires `SchoolId` header
+- **Auth Note:** Teacher identity is taken from the JWT token. Sending identity fields in the body is ignored or no longer required.
+- **Authorization:** The current teacher must teach the requested `subjectClassId`. Returns `403` if not.
 - **Body:**
 ```json
 {

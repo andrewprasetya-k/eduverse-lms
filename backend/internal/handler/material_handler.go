@@ -42,6 +42,9 @@ func (h *MaterialHandler) Create(c *gin.Context) {
 			HandleBindingError(c, err)
 			return
 		}
+		if !h.authorizeTeacherForSubjectClass(c, input.SubjectClassID) {
+			return
+		}
 
 		mat := domain.Material{
 			SchoolID:       input.SchoolID,
@@ -77,6 +80,9 @@ func (h *MaterialHandler) Create(c *gin.Context) {
 
 	if schoolID == "" || subjectClassID == "" || title == "" || materialType == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Required fields: schoolId, subjectClassId, materialTitle, materialType"})
+		return
+	}
+	if !h.authorizeTeacherForSubjectClass(c, subjectClassID) {
 		return
 	}
 
@@ -130,6 +136,40 @@ func (h *MaterialHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Material created successfully with files"})
+}
+
+func (h *MaterialHandler) getSchoolContext(c *gin.Context) string {
+	if sid, exists := c.Get("school_id"); exists {
+		if value, ok := sid.(string); ok {
+			return value
+		}
+	}
+	return c.GetHeader("SchoolId")
+}
+
+func (h *MaterialHandler) authorizeTeacherForSubjectClass(c *gin.Context, subjectClassID string) bool {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return false
+	}
+
+	schoolID := h.getSchoolContext(c)
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required (SchoolId header)"})
+		return false
+	}
+
+	ownsSubjectClass, err := h.subjectClassService.TeacherOwnsSubjectClass(userID, schoolID, subjectClassID)
+	if err != nil {
+		HandleError(c, err)
+		return false
+	}
+	if !ownsSubjectClass {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: teacher does not teach this subject class"})
+		return false
+	}
+	return true
 }
 
 func (h *MaterialHandler) FindAll(c *gin.Context) {

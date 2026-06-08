@@ -7,10 +7,14 @@ Create a new learning material for a class with optional attachments.
 
 - **URL:** `(base URL)`
 - **Method:** `POST`
+- **Auth:** Required
+- **Role:** `teacher`
+- **School Context:** Requires `SchoolId` header
+- **Authorization:** The current teacher must teach the requested `subjectClassId`. Returns `403` if not.
 
 ### Option A: JSON (with existing media IDs or inline media data)
 - **Content-Type:** `application/json`
-- **Auth Note:** Actor identity is taken from the JWT token. Sending identity fields in the body is ignored or no longer required.
+- **Auth Note:** Teacher identity is taken from the JWT token. Sending identity fields in the body is ignored or no longer required.
 - **Body:**
 | Field | Type | Required | Note |
 | :--- | :--- | :--- | :--- |
@@ -39,7 +43,7 @@ Files are uploaded to the configured storage provider (same as `POST /api/medias
 Each file is uploaded to storage first. If upload succeeds but DB record fails, the storage object is deleted (best-effort cleanup). Max file size per file: **10MB**.
 
 - **Content-Type:** `multipart/form-data`
-- **Auth Note:** Actor identity is taken from the JWT token. Sending identity fields in the body is ignored or no longer required.
+- **Auth Note:** Teacher identity is taken from the JWT token. Sending identity fields in the body is ignored or no longer required.
 - **Form Fields:**
 | Field | Type | Required | Note |
 | :--- | :--- | :--- | :--- |
