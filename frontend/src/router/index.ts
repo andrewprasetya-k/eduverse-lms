@@ -215,9 +215,9 @@ const router = createRouter({
           component: FeaturePlaceholder,
           props: {
             eyebrow: "Create content",
-            title: "Buat konten pembelajaran",
+            title: "Pilih subject terlebih dahulu",
             description:
-              "Guru nantinya bisa membuat material, assignment, dan pengumuman feed dari subject atau class context yang sesuai.",
+              "Material dan tugas harus dibuat dari subject workspace agar selalu terhubung ke subject class yang benar.",
           },
         },
         {

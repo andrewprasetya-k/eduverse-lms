@@ -9,6 +9,7 @@ import {
   PhClipboardText,
   PhFileText,
   PhPaperclip,
+  PhPlusCircle,
   PhUsersThree,
   PhWarningCircle,
 } from '@phosphor-icons/vue'
@@ -134,19 +135,32 @@ onMounted(loadWorkspace)
         >
           <PhBookOpen :size="28" weight="duotone" />
         </div>
-        <p class="text-sm font-medium text-[#7b61a8]">Subject workspace</p>
-        <h1 class="mt-3 text-3xl font-medium text-[#171322]">
-          {{ subject?.subjectName ?? (loading ? 'Memuat subject...' : 'Workspace subject') }}
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-6 text-[#6b6475]">
-          <span v-if="subject">
-            {{ subject.className }} menjadi konteks class untuk subject ini. Material dan tugas
-            berada di level subject class.
-          </span>
-          <span v-else>
-            Detail subject class hanya tersedia untuk subject yang terhubung dengan akun guru ini.
-          </span>
-        </p>
+        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p class="text-sm font-medium text-[#7b61a8]">Subject workspace</p>
+            <h1 class="mt-3 text-3xl font-medium text-[#171322]">
+              {{ subject?.subjectName ?? (loading ? 'Memuat subject...' : 'Workspace subject') }}
+            </h1>
+            <p class="mt-3 max-w-2xl text-sm leading-6 text-[#6b6475]">
+              <span v-if="subject">
+                {{ subject.className }} menjadi konteks class untuk subject ini. Material dan tugas
+                berada di level subject class.
+              </span>
+              <span v-else>
+                Detail subject class hanya tersedia untuk subject yang terhubung dengan akun guru ini.
+              </span>
+            </p>
+          </div>
+
+          <RouterLink
+            v-if="subject"
+            :to="`/teacher/subjects/${subjectClassId}/create`"
+            class="inline-flex items-center gap-2 self-start rounded-2xl bg-[#171322] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#2f2b3a] lg:self-auto"
+          >
+            <PhPlusCircle :size="18" weight="duotone" />
+            Buat Konten
+          </RouterLink>
+        </div>
       </header>
 
       <section v-if="loading" class="rounded-[28px] bg-white p-6 shadow-sm ring-1 ring-black/5">

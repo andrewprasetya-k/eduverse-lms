@@ -114,11 +114,11 @@ onMounted(loadDashboard);
           </div>
 
           <RouterLink
-            to="/teacher/create"
+            to="/teacher/subjects"
             class="inline-flex items-center gap-2 self-start rounded-2xl bg-[#171322] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#2f2b3a] lg:self-auto"
           >
             <PhPlusCircle :size="18" weight="duotone" />
-            Buat konten
+            Pilih subject
           </RouterLink>
         </div>
       </div>

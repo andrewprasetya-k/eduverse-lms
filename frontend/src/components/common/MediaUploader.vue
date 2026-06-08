@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { PhFile, PhTrash, PhUploadSimple } from '@phosphor-icons/vue'
-import { uploadMediaFile } from '../../services/media'
+import { deleteMedia, uploadMediaFile } from '../../services/media'
 
 interface Props {
   schoolId: string
@@ -78,8 +78,7 @@ async function removeFile(index: number) {
   const file = files.value[index]
   if (file.mediaId) {
     try {
-      // Optional: Delete from backend/storage if needed
-      // await deleteMedia(file.mediaId)
+      await deleteMedia(file.mediaId)
       mediaIds.value = mediaIds.value.filter(id => id !== file.mediaId)
       emit('update:mediaIds', [...mediaIds.value])
     } catch (error) {

@@ -14,6 +14,7 @@ import { useAuthStore } from '../../stores/auth'
 import { getMyTeachingSubjectClassById } from '../../services/teacherSubjects'
 import { getAssignmentCategories, createAssignment } from '../../services/teacherAssignment'
 import { createMaterial } from '../../services/teacherMaterial'
+import { deleteMedia } from '../../services/media'
 import MediaUploader from '../../components/common/MediaUploader.vue'
 import type { TeacherSubjectClass } from '../../types/teacherSubjects'
 import type { AssignmentCategory } from '../../types/teacherAssignment'
@@ -29,12 +30,22 @@ const activeTab = ref<'material' | 'assignment'>('material')
 const loading = ref(false)
 const submitting = ref(false)
 const errorMessage = ref('')
+const categoryErrorMessage = ref('')
+const uploaderKey = ref(0)
+const activeSchoolId = computed(() => auth.activeSchoolId ?? auth.defaultContext?.schoolId ?? '')
 const activeSchoolCode = computed(() => {
   const activeMembership = auth.memberships.find(
-    (membership) => membership.school.id === auth.activeSchoolId,
+    (membership) => membership.school.id === activeSchoolId.value,
   )
-  return activeMembership?.school.code ?? auth.memberships[0]?.school.code ?? ''
+  return activeMembership?.school.code ?? ''
 })
+const hasRequiredContext = computed(() => Boolean(activeSchoolId.value && subjectClassId.value && subject.value))
+const isSubmitDisabled = computed(
+  () =>
+    submitting.value ||
+    !hasRequiredContext.value ||
+    (activeTab.value === 'assignment' && categories.value.length === 0),
+)
 
 // Form State
 const form = ref({
@@ -50,16 +61,40 @@ const form = ref({
 
 async function loadInitialData() {
   loading.value = true
+  errorMessage.value = ''
+  categoryErrorMessage.value = ''
+
   try {
-    const [subjectData, categoriesData] = await Promise.all([
-      getMyTeachingSubjectClassById(subjectClassId.value),
-      getAssignmentCategories(activeSchoolCode.value)
-    ])
+    if (!subjectClassId.value) {
+      errorMessage.value = 'Konteks subject belum tersedia. Pilih subject terlebih dahulu.'
+      return
+    }
+    if (!activeSchoolId.value) {
+      errorMessage.value = 'Konteks sekolah belum tersedia. Silakan login ulang.'
+      return
+    }
+
+    const subjectData = await getMyTeachingSubjectClassById(subjectClassId.value)
+    if (!subjectData) {
+      errorMessage.value = 'Subject ini tidak tersedia untuk akun guru pada school aktif.'
+      return
+    }
     subject.value = subjectData
-    categories.value = categoriesData.data
-    
-    if (categories.value.length > 0) {
-      form.value.categoryId = categories.value[0].asc_id
+
+    if (!activeSchoolCode.value) {
+      categoryErrorMessage.value = 'Kode sekolah aktif belum tersedia. Kategori tugas tidak bisa dimuat.'
+      return
+    }
+
+    try {
+      const categoriesData = await getAssignmentCategories(activeSchoolCode.value)
+      categories.value = categoriesData.data
+      if (categories.value.length > 0) {
+        form.value.categoryId = categories.value[0].asc_id
+      }
+    } catch {
+      categories.value = []
+      categoryErrorMessage.value = 'Kategori tugas belum bisa dimuat.'
     }
   } catch (err) {
     errorMessage.value = 'Gagal memuat data pendukung. Coba refresh halaman.'
@@ -69,8 +104,22 @@ async function loadInitialData() {
 }
 
 async function handleSubmit() {
+  errorMessage.value = ''
+
+  if (!activeSchoolId.value) {
+    errorMessage.value = 'Konteks sekolah belum tersedia. Silakan login ulang.'
+    return
+  }
+  if (!subjectClassId.value || !subject.value) {
+    errorMessage.value = 'Konteks subject belum tersedia. Pilih subject terlebih dahulu.'
+    return
+  }
   if (!form.value.title.trim()) {
-    alert('Judul wajib diisi')
+    errorMessage.value = 'Judul wajib diisi.'
+    return
+  }
+  if (activeTab.value === 'assignment' && !form.value.categoryId) {
+    errorMessage.value = 'Kategori tugas belum tersedia. Tambahkan kategori terlebih dahulu sebelum membuat tugas.'
     return
   }
 
@@ -78,7 +127,7 @@ async function handleSubmit() {
   try {
     if (activeTab.value === 'material') {
       await createMaterial({
-        schoolId: auth.activeSchoolId!,
+        schoolId: activeSchoolId.value,
         subjectClassId: subjectClassId.value,
         materialTitle: form.value.title,
         materialDesc: form.value.description,
@@ -92,7 +141,7 @@ async function handleSubmit() {
       }
 
       await createAssignment({
-        schoolId: auth.activeSchoolId!,
+        schoolId: activeSchoolId.value,
         subjectClassId: subjectClassId.value,
         categoryId: form.value.categoryId,
         assignmentTitle: form.value.title,
@@ -104,11 +153,37 @@ async function handleSubmit() {
     }
     
     router.push(`/teacher/subjects/${subjectClassId.value}`)
-  } catch (err: any) {
-    alert(err.response?.data?.error || 'Gagal menyimpan konten')
+  } catch (err) {
+    const uploadedMediaIds = [...form.value.mediaIds]
+    if (uploadedMediaIds.length > 0) {
+      await Promise.allSettled(
+        uploadedMediaIds.map(async (mediaId) => {
+          try {
+            await deleteMedia(mediaId)
+          } catch (cleanupError) {
+            console.warn('Failed to cleanup uploaded teacher content media', mediaId, cleanupError)
+          }
+        }),
+      )
+      form.value.mediaIds = []
+      uploaderKey.value += 1
+    }
+
+    errorMessage.value =
+      getErrorMessage(err) ??
+      'Gagal menyimpan konten. Jika lampiran sudah terunggah, lampiran perlu dipilih ulang.'
   } finally {
     submitting.value = false
   }
+}
+
+function getErrorMessage(error: unknown) {
+  if (typeof error === 'object' && error !== null && 'response' in error) {
+    const response = (error as { response?: { data?: { error?: string; message?: string } } })
+      .response
+    return response?.data?.error ?? response?.data?.message
+  }
+  return undefined
 }
 
 onMounted(loadInitialData)
@@ -140,7 +215,7 @@ onMounted(loadInitialData)
           </button>
           <button 
             @click="handleSubmit"
-            :disabled="submitting"
+            :disabled="isSubmitDisabled"
             class="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-[#4F46E5] rounded-xl hover:bg-[#4338CA] transition disabled:opacity-50"
           >
             <PhPaperPlaneTilt v-if="!submitting" :size="18" weight="bold" />
@@ -149,8 +224,19 @@ onMounted(loadInitialData)
         </div>
       </div>
 
+      <div
+        v-if="errorMessage"
+        class="mb-6 rounded-3xl border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm leading-6 text-[#B42318]"
+      >
+        {{ errorMessage }}
+      </div>
+
+      <div v-if="loading" class="rounded-3xl bg-white p-6 text-sm text-[#6B7280] shadow-sm ring-1 ring-black/5">
+        Memuat data pendukung...
+      </div>
+
       <!-- Type Switcher -->
-      <div class="flex gap-2 p-1.5 bg-[#F3F4F6] rounded-2xl mb-8 w-fit">
+      <div v-if="!loading" class="flex gap-2 p-1.5 bg-[#F3F4F6] rounded-2xl mb-8 w-fit">
         <button 
           @click="activeTab = 'material'"
           :class="[
@@ -173,7 +259,7 @@ onMounted(loadInitialData)
         </button>
       </div>
 
-      <div class="grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div v-if="!loading" class="grid gap-8 lg:grid-cols-[1fr_320px]">
         <!-- Main Form -->
         <div class="space-y-6">
           <section class="bg-white rounded-3xl p-6 border border-[#EBEBEB] shadow-sm">
@@ -211,11 +297,16 @@ onMounted(loadInitialData)
               Lampiran & Media
             </h2>
             
-            <MediaUploader 
-              :school-id="auth.activeSchoolId!" 
+            <MediaUploader
+              v-if="hasRequiredContext"
+              :key="uploaderKey"
+              :school-id="activeSchoolId"
               :owner-type="activeTab"
               @update:media-ids="form.mediaIds = $event"
             />
+            <p v-else class="rounded-2xl bg-[#FEF2F2] p-4 text-sm leading-6 text-[#B42318]">
+              Lampiran belum bisa diunggah sampai konteks school dan subject tersedia.
+            </p>
           </section>
         </div>
 
@@ -244,12 +335,19 @@ onMounted(loadInitialData)
                 <label class="block text-xs font-medium text-[#6B7280] mb-2">Kategori Tugas</label>
                 <select 
                   v-model="form.categoryId"
+                  :disabled="categories.length === 0"
                   class="w-full px-3 py-2.5 bg-[#F9FAFB] border border-[#EBEBEB] rounded-xl outline-none text-sm"
                 >
                   <option v-for="cat in categories" :key="cat.asc_id" :value="cat.asc_id">
                     {{ cat.asc_name }}
                   </option>
                 </select>
+                <p
+                  v-if="categoryErrorMessage || categories.length === 0"
+                  class="mt-2 text-xs leading-5 text-[#B42318]"
+                >
+                  {{ categoryErrorMessage || 'Kategori tugas belum tersedia.' }}
+                </p>
               </div>
 
               <div>
