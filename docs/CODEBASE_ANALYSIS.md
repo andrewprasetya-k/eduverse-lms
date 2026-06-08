@@ -164,7 +164,6 @@ DELETE /api/comments/:id                    - Delete
 ```
 POST   /api/grades/weights                  - Configure weights (admin/teacher)
 GET    /api/grades/weights/subject/:subjectId - Get weights by subject (school member)
-GET    /api/grades/student/:userId/subject/:subjectId - Get student grade (school member)
 GET    /api/grades/class/:classId/subject/:subjectId - Get class report (teacher/admin)
 ```
 
@@ -1327,4 +1326,3 @@ Reorder routes: specific → generic
 3. ✅ **Best-Effort Notifications**: Don't cascade on failure
 4. ✅ **Manual Attachment Linking**: No auto-cascade, manual link/unlink
 5. ✅ **Polymorphic Comments**: SourceType + SourceID, no foreign key constraint
-

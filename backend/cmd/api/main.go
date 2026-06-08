@@ -329,7 +329,6 @@ func main() {
 		{
 			gradeAPI.POST("/weights", middleware.RequireRole(schoolService, "admin", "teacher"), gradeHandler.ConfigureWeights)
 			gradeAPI.GET("/weights/subject/:subjectId", middleware.RequireSchoolMember(schoolService), gradeHandler.GetWeightsBySubject)
-			gradeAPI.GET("/student/:userId/subject/:subjectId", middleware.RequireSchoolMember(schoolService), gradeHandler.GetStudentGrade)
 			gradeAPI.GET("/class/:classId/subject/:subjectId", middleware.RequireRole(schoolService, "teacher", "admin"), gradeHandler.GetClassGradeReport)
 		}
 

@@ -82,46 +82,7 @@ Retrieve konfigurasi bobot untuk mata pelajaran.
 
 ---
 
-## 3. Get Student Final Grade
-Calculate dan retrieve final grade untuk student di mata pelajaran tertentu.
-
-- **URL:** `/student/:userId/subject/:subjectId`
-- **Method:** `GET`
-- **Auth:** Required (school member)
-
-**Response (200 OK):**
-```json
-{
-  "studentId": "uuid",
-  "studentName": "John Doe",
-  "subjectId": "uuid",
-  "subjectName": "Matematika",
-  "breakdown": [
-    {
-      "categoryId": "uuid",
-      "categoryName": "Quiz",
-      "weight": 20.00,
-      "averageScore": 85.00,
-      "weightedScore": 17.00,
-      "assignmentCount": 3
-    },
-    {
-      "categoryId": "uuid",
-      "categoryName": "UTS", 
-      "weight": 30.00,
-      "averageScore": 90.00,
-      "weightedScore": 27.00,
-      "assignmentCount": 1
-    }
-  ],
-  "finalGrade": 82.50,
-  "letterGrade": "A"
-}
-```
-
----
-
-## 4. Get Class Grade Report
+## 3. Get Class Grade Report
 Retrieve final grades untuk seluruh student di kelas untuk mata pelajaran tertentu.
 
 - **URL:** `/class/:classId/subject/:subjectId`

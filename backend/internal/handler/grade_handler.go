@@ -43,19 +43,6 @@ func (h *GradeHandler) GetWeightsBySubject(c *gin.Context) {
 	c.JSON(http.StatusOK, weights)
 }
 
-func (h *GradeHandler) GetStudentGrade(c *gin.Context) {
-	userID := c.Param("userId")
-	subjectID := c.Param("subjectId")
-
-	grade, err := h.service.CalculateFinalGrade(userID, subjectID)
-	if err != nil {
-		HandleError(c, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, grade)
-}
-
 func (h *GradeHandler) GetClassGradeReport(c *gin.Context) {
 	classID := c.Param("classId")
 	subjectID := c.Param("subjectId")

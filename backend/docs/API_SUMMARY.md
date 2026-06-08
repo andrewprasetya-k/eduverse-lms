@@ -167,7 +167,6 @@ Authorization: Bearer <your-jwt-token>
 ## 📊 Grade Book
 - `POST /grades/weights` - Configure assessment weights
 - `GET /grades/weights/subject/:subjectId` - Get weights by subject
-- `GET /grades/student/:userId/subject/:subjectId` - Get student final grade
 - `GET /grades/class/:classId/subject/:subjectId` - Get class grade report
 
 ## 🔔 Notifications
