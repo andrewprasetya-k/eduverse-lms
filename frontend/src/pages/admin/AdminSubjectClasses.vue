@@ -318,7 +318,7 @@ async function submitSubjectClass() {
   }
   if (teacherCandidates.value.length === 0) {
     actionError.value =
-      "Belum ada teacher yang eligible. Atur role teacher di Users dan enrollment teacher di Enrollments.";
+      "Belum ada guru yang eligible. Atur role teacher di Warga Sekolah dan penempatan teacher di Penempatan Kelas.";
     return;
   }
   if (!selectedTeacherSchoolUserId.value) {
@@ -361,10 +361,10 @@ onMounted(async () => {
       <header class="soft-card rounded-[22px] p-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">School admin</p>
-            <h1 class="mt-2 text-2xl font-medium text-[#111827]">Subject class assignment</h1>
+            <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">Admin sekolah</p>
+            <h1 class="mt-2 text-2xl font-medium text-[#111827]">Penugasan Mengajar</h1>
             <p class="mt-2 max-w-3xl text-sm leading-6 text-[#6B7280]">
-              Hubungkan subject, kelas, dan teacher school_user. Assignment ini membuat teacher workspace; student access mengikuti enrollment kelas.
+              Hubungkan guru, kelas, dan mata pelajaran untuk membuat teacher workspace. Akses student mengikuti penempatan kelas.
             </p>
           </div>
           <div class="flex flex-wrap gap-2 text-xs">
@@ -512,9 +512,9 @@ onMounted(async () => {
           <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">Assign teacher</p>
-              <h2 class="mt-2 text-base font-medium text-[#111827]">Buat subject class</h2>
+              <h2 class="mt-2 text-base font-medium text-[#111827]">Buat penugasan mengajar</h2>
               <p class="mt-1 text-sm leading-6 text-[#6B7280]">
-                Teacher harus punya role teacher di Users dan sudah enrolled sebagai teacher kelas di Enrollments.
+                Guru harus punya role teacher di Warga Sekolah dan sudah ditempatkan sebagai teacher kelas di Penempatan Kelas.
               </p>
             </div>
             <div class="inline-flex items-center gap-2 rounded-lg bg-[#EEF2FF] px-3 py-2 text-xs font-medium text-[#4F46E5]">
@@ -594,7 +594,7 @@ onMounted(async () => {
               <p v-if="subjectsLoading" class="text-[#6B7280]">Memuat subject...</p>
               <p v-else-if="subjectsError" class="text-[#DC2626]">{{ subjectsError }}</p>
               <p v-else-if="subjects.length === 0" class="text-[#6B7280]">
-                Belum ada subject. Buat subject di Academic Setup terlebih dahulu.
+                Belum ada subject. Buat subject di Struktur Akademik terlebih dahulu.
               </p>
               <p v-else-if="selectedClassId && availableSubjects.length === 0" class="text-[#6B7280]">
                 Semua subject sudah ditugaskan untuk kelas ini.

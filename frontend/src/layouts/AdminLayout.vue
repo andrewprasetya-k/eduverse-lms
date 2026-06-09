@@ -12,20 +12,20 @@ import Sidebar from "../components/layout/Sidebar.vue";
 
 const items = [
   { label: "Dashboard", icon: PhHouse, to: "/admin/dashboard" },
-  { label: "Classes", icon: PhBookOpen, to: "/admin/classes" },
-  { label: "Users", icon: PhUsers, to: "/admin/users" },
-  { label: "Enrollments", icon: PhStudent, to: "/admin/enrollments" },
   {
-    label: "Subject Classes",
-    icon: PhChalkboardTeacher,
-    to: "/admin/subject-classes",
-  },
-  {
-    label: "Academic Years",
+    label: "Struktur Akademik",
     icon: PhCalendarBlank,
     to: "/admin/academic-years",
   },
-  { label: "Profile", icon: PhUserCircle, to: "/admin/profile" },
+  { label: "Kelas", icon: PhBookOpen, to: "/admin/classes" },
+  { label: "Warga Sekolah", icon: PhUsers, to: "/admin/users" },
+  { label: "Penempatan Kelas", icon: PhStudent, to: "/admin/enrollments" },
+  {
+    label: "Penugasan Mengajar",
+    icon: PhChalkboardTeacher,
+    to: "/admin/subject-classes",
+  },
+  { label: "Profil", icon: PhUserCircle, to: "/admin/profile" },
 ];
 </script>
 

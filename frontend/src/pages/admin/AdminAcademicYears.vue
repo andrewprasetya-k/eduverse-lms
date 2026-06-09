@@ -350,11 +350,13 @@ onMounted(async () => {
   <main class="min-h-screen flex-1 px-5 py-8 md:px-8 lg:px-10">
     <section class="mx-auto flex max-w-6xl flex-col gap-6">
       <header class="soft-card rounded-4xl p-6 md:p-8">
-        <p class="text-sm font-medium text-[#4f46e5]">School admin workspace</p>
-        <h1 class="mt-3 text-3xl font-medium text-[#171322]">Academic setup</h1>
+        <p class="text-sm font-medium text-[#4f46e5]">Admin sekolah</p>
+        <h1 class="mt-3 text-3xl font-medium text-[#171322]">
+          Struktur Akademik
+        </h1>
         <p class="mt-3 max-w-3xl text-sm leading-6 text-[#6b6475]">
-          Kelola tahun ajaran, semester, mata pelajaran, dan kategori tugas agar
-          alur teacher dan student bisa berjalan tanpa seed manual.
+          Kelola tahun ajaran, semester, mata pelajaran, dan kategori tugas
+          sebagai fondasi kelas, konten belajar, dan penilaian.
         </p>
 
         <div class="mt-5 flex flex-wrap gap-2 text-sm">
@@ -401,7 +403,7 @@ onMounted(async () => {
         <article class="soft-card rounded-[28px] p-6">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <p class="text-sm font-medium text-[#4f46e5]">Academic Years</p>
+              <p class="text-sm font-medium text-[#4f46e5]">Struktur akademik</p>
               <h2 class="mt-2 text-xl font-medium text-[#171322]">
                 Tahun ajaran
               </h2>

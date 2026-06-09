@@ -347,14 +347,14 @@ onMounted(async () => {
         >
           <div>
             <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">
-              School admin
+              Admin sekolah
             </p>
             <h1 class="mt-2 text-2xl font-medium text-[#111827]">
-              Enrollment kelas
+              Penempatan Kelas
             </h1>
             <p class="mt-2 max-w-3xl text-sm leading-6 text-[#6B7280]">
-              Tambahkan member sekolah ke kelas sebagai student atau teacher.
-              Role sekolah tetap dikelola di halaman Users.
+              Tempatkan member sekolah ke kelas sebagai student atau teacher.
+              Role sekolah tetap dikelola di halaman Warga Sekolah.
             </p>
           </div>
           <div class="flex flex-wrap gap-2 text-xs">

@@ -187,10 +187,10 @@ onMounted(async () => {
       <header class="soft-card rounded-[22px] p-5">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">School admin</p>
-            <h1 class="mt-2 text-2xl font-medium text-[#111827]">Manajemen kelas</h1>
+            <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">Admin sekolah</p>
+            <h1 class="mt-2 text-2xl font-medium text-[#111827]">Kelas</h1>
             <p class="mt-2 max-w-3xl text-sm leading-6 text-[#6B7280]">
-              Buat dan lihat kelas berdasarkan tahun ajaran serta semester aktif sebelum enrollment dan subject assignment.
+              Buat dan lihat kelas berdasarkan tahun ajaran serta semester yang dipilih sebelum penempatan kelas dan penugasan mengajar.
             </p>
           </div>
           <div class="flex flex-wrap gap-2 text-xs">
@@ -274,7 +274,7 @@ onMounted(async () => {
             <p v-if="yearsLoading" class="text-[#6B7280]">Memuat tahun ajaran...</p>
             <p v-else-if="yearsError" class="text-[#DC2626]">{{ yearsError }}</p>
             <p v-else-if="academicYears.length === 0" class="text-[#6B7280]">
-              Belum ada tahun ajaran. Buat tahun ajaran di Academic Setup terlebih dahulu.
+              Belum ada tahun ajaran. Buat tahun ajaran di Struktur Akademik terlebih dahulu.
             </p>
 
             <p v-if="termsLoading" class="text-[#6B7280]">Memuat semester...</p>
@@ -346,7 +346,7 @@ onMounted(async () => {
       <section class="bg-white border border-[#EBEBEB] rounded-[18px] p-5">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">Classes</p>
+            <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">Kelas</p>
             <h2 class="mt-2 text-base font-medium text-[#111827]">Daftar kelas</h2>
             <p class="mt-1 text-sm text-[#6B7280]">
               Ditampilkan berdasarkan sekolah dan semester yang sedang dipilih.

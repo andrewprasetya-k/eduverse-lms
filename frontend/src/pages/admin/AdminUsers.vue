@@ -287,15 +287,14 @@ onMounted(async () => {
         >
           <div>
             <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">
-              School admin
+              Admin sekolah
             </p>
             <h1 class="mt-2 text-2xl font-medium text-[#111827]">
-              User, membership, dan role
+              Warga Sekolah
             </h1>
             <p class="mt-2 max-w-3xl text-sm leading-6 text-[#6B7280]">
               Kelola membership sekolah dari akun global yang sudah ada, lalu
-              beri satu role dalam konteks sekolah aktif sebelum enrollment
-              kelas.
+              beri satu role sekolah sebelum penempatan kelas.
             </p>
           </div>
           <div class="flex flex-wrap gap-2 text-xs">
@@ -339,13 +338,13 @@ onMounted(async () => {
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="text-[11px] font-medium uppercase text-[#9CA3AF]">
-                Existing global account
+                Akun global yang sudah ada
               </p>
               <h2 class="mt-2 text-base font-medium text-[#111827]">
                 Tambah user yang sudah ada
               </h2>
               <p class="mt-1 max-w-2xl text-sm leading-6 text-[#6B7280]">
-                Akun user bersifat global. School admin hanya menghubungkan akun
+                Akun user bersifat global. Admin sekolah hanya menghubungkan akun
                 yang sudah ada sebagai membership sekolah aktif, lalu memberi
                 satu role sekolah.
               </p>
