@@ -30,6 +30,10 @@ Register a new global user profile. Password will be securely hashed.
 
 - **URL:** `(base URL)`
 - **Method:** `POST`
+- **Auth:** Required (`super_admin` on system school `sch_code = "0000"` only)
+- **Scope:** Global platform account creation. School admins must not create global users
+  directly; they can add existing global users to their school through school membership
+  and assign school roles through RBAC.
 - **Body:**
 | Field | Type | Required | Note |
 | :--- | :--- | :--- | :--- |

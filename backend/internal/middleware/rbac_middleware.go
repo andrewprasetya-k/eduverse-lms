@@ -160,3 +160,49 @@ func RequireRole(schoolService interface {
 		c.Next()
 	}
 }
+
+// RequireSystemSuperAdmin checks whether the current user has super_admin role
+// on the system school (sch_code = 0000), regardless of the active SchoolId header.
+func RequireSystemSuperAdmin(schoolService interface {
+	ConvertCodeToID(code string) (string, error)
+}) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID := GetUserID(c)
+		if userID == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+		if rbacRepo == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "RBAC middleware is not initialized"})
+			c.Abort()
+			return
+		}
+
+		systemSchoolID, err := schoolService.ConvertCodeToID("0000")
+		if err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: system super admin context not available"})
+			c.Abort()
+			return
+		}
+
+		roles, err := rbacRepo.GetUserRoleNamesInSchool(userID, systemSchoolID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify roles"})
+			c.Abort()
+			return
+		}
+
+		for _, role := range roles {
+			if role == "super_admin" {
+				c.Set("school_id", systemSchoolID)
+				c.Set("user_roles", roles)
+				c.Next()
+				return
+			}
+		}
+
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: insufficient permissions"})
+		c.Abort()
+	}
+}

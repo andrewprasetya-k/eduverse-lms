@@ -186,7 +186,7 @@ func main() {
 
 		userAPI := api.Group("/users")
 		{
-			userAPI.POST("", middleware.RequireRole(schoolService, "admin", "super_admin"), userHandler.Create)
+			userAPI.POST("", middleware.RequireSystemSuperAdmin(schoolService), userHandler.Create)
 			userAPI.GET("", middleware.RequireRole(schoolService, "admin", "super_admin"), userHandler.FindAll)
 			userAPI.GET("/:id", userHandler.GetByID)
 			userAPI.PATCH("/:id", userHandler.Update)

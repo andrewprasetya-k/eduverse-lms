@@ -49,7 +49,7 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /terms/:id` - Delete term
 
 ## 👤 Users
-- `POST /users` - Create user
+- `POST /users` - Create global user (system super_admin only)
 - `GET /users` - List all users (with pagination & search)
 - `GET /users/:id` - Get user by ID
 - `PATCH /users/:id` - Update user

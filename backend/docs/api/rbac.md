@@ -261,9 +261,14 @@ Content-Type: application/json
 ### User Management
 | Endpoint | Method | super_admin | admin | teacher | student |
 |----------|--------|-------------|-------|---------|---------|
-| `/users` | POST | 📖 | ✅ | ❌ | ❌ |
+| `/users` | POST | ✅ | ❌ | ❌ | ❌ |
 | `/users` | GET | 📖 | ✅ | ❌ | ❌ |
 | `/users/:id` | DELETE | 📖 | ✅ | ❌ | ❌ |
+
+Global user creation is platform scope and only allowed for a `super_admin` membership
+on the system school where `schools.sch_code = "0000"`.
+School admins manage existing global users as school memberships and assign roles in
+their active school context.
 
 ### Enrollment
 | Endpoint | Method | super_admin | admin | teacher | student |
