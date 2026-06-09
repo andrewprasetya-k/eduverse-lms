@@ -22,18 +22,10 @@ const gradebook = ref<MyGradebookResponse | null>(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
 
-const activeMembership = computed(() => {
-  const activeSchoolId = auth.activeSchoolId
-  return (
-    auth.memberships.find((membership) => membership.school.id === activeSchoolId) ??
-    auth.memberships[0]
-  )
-})
+const activeMembership = computed(() => auth.activeMembership)
 
 const schoolName = computed(() => activeMembership.value?.school.name ?? 'Sekolah aktif')
-const schoolUserId = computed(
-  () => activeMembership.value?.schoolUserId ?? auth.defaultContext?.schoolUserId ?? '',
-)
+const schoolUserId = computed(() => auth.activeSchoolUserId)
 const activeClass = computed(() => activeClassStore.activeClass)
 const subjects = computed(() => gradebook.value?.subjects ?? [])
 const hasAssignments = computed(() =>

@@ -14,17 +14,7 @@ const posts = ref<FeedPost[]>([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 
-const activeMembership = computed(() => {
-  const activeSchoolId = auth.activeSchoolId
-  return (
-    auth.memberships.find((membership) => membership.school.id === activeSchoolId) ??
-    auth.memberships[0]
-  )
-})
-
-const schoolUserId = computed(
-  () => activeMembership.value?.schoolUserId ?? auth.defaultContext?.schoolUserId ?? '',
-)
+const schoolUserId = computed(() => auth.activeSchoolUserId)
 const activeClass = computed(() => activeClassStore.activeClass)
 
 async function loadContext() {

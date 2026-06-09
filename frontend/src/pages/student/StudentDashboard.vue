@@ -35,21 +35,8 @@ const isLoading = ref(true);
 const errorMessage = ref("");
 const viewDate = ref(new Date());
 
-const activeMembership = computed(() => {
-  const activeSchoolId = auth.activeSchoolId;
-  return (
-    auth.memberships.find(
-      (membership) => membership.school.id === activeSchoolId,
-    ) ?? auth.memberships[0]
-  );
-});
-
-const schoolUserId = computed(
-  () =>
-    activeMembership.value?.schoolUserId ??
-    auth.defaultContext?.schoolUserId ??
-    "",
-);
+const activeMembership = computed(() => auth.activeMembership);
+const schoolUserId = computed(() => auth.activeSchoolUserId);
 const schoolName = computed(
   () => activeMembership.value?.school.name ?? "Eduverse",
 );

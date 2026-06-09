@@ -25,10 +25,53 @@ export const useAuthStore = defineStore('auth', () => {
   const isRestored = ref(false)
 
   const isAuthenticated = computed(() => Boolean(token.value))
+  const activeMembership = computed(() => {
+    const activeId = activeSchoolId.value ?? defaultContext.value?.schoolId ?? null
+    if (activeId) {
+      return memberships.value.find((membership) => membership.school.id === activeId) ?? null
+    }
+
+    if (defaultContext.value?.schoolUserId) {
+      return (
+        memberships.value.find(
+          (membership) => membership.schoolUserId === defaultContext.value?.schoolUserId,
+        ) ?? null
+      )
+    }
+
+    return memberships.value.find((membership) => membership.isDefault) ?? memberships.value[0] ?? null
+  })
+  const activeSchoolUserId = computed(() => activeMembership.value?.schoolUserId ?? '')
   const allRoles = computed<RoleName[]>(() => {
     const roles = new Set<RoleName>([...globalRoles.value, ...activeRoles.value])
     return [...roles]
   })
+
+  function resolveActiveSchoolId(
+    preferredSchoolId: string | null | undefined,
+    nextDefaultContext?: DefaultContext,
+    nextMemberships: MembershipInfo[] = [],
+  ) {
+    if (
+      preferredSchoolId &&
+      nextMemberships.some((membership) => membership.school.id === preferredSchoolId)
+    ) {
+      return preferredSchoolId
+    }
+
+    if (
+      nextDefaultContext?.schoolId &&
+      nextMemberships.some((membership) => membership.school.id === nextDefaultContext.schoolId)
+    ) {
+      return nextDefaultContext.schoolId
+    }
+
+    return (
+      nextMemberships.find((membership) => membership.isDefault)?.school.id ??
+      nextMemberships[0]?.school.id ??
+      null
+    )
+  }
 
   function applySession(response: LoginResponse) {
     token.value = response.token
@@ -36,8 +79,16 @@ export const useAuthStore = defineStore('auth', () => {
     memberships.value = response.memberships ?? []
     globalRoles.value = response.globalRoles ?? []
     defaultContext.value = response.defaultContext
-    activeSchoolId.value = response.defaultContext?.schoolId ?? null
-    activeRoles.value = response.defaultContext?.roles ?? response.memberships?.[0]?.roles ?? []
+    activeSchoolId.value = resolveActiveSchoolId(
+      response.defaultContext?.schoolId,
+      response.defaultContext,
+      memberships.value,
+    )
+    activeRoles.value =
+      memberships.value.find((membership) => membership.school.id === activeSchoolId.value)?.roles ??
+      response.defaultContext?.roles ??
+      response.memberships?.[0]?.roles ??
+      []
 
     persistSession({
       token: token.value,
@@ -77,8 +128,23 @@ export const useAuthStore = defineStore('auth', () => {
     memberships.value = stored.memberships
     globalRoles.value = stored.globalRoles
     defaultContext.value = stored.defaultContext
-    activeSchoolId.value = stored.activeSchoolId
-    activeRoles.value = stored.activeRoles
+    activeSchoolId.value = resolveActiveSchoolId(
+      stored.activeSchoolId,
+      stored.defaultContext,
+      stored.memberships,
+    )
+    activeRoles.value = activeMembership.value?.roles ?? stored.activeRoles
+    if (token.value && stored.activeSchoolId !== activeSchoolId.value) {
+      persistSession({
+        token: token.value ?? '',
+        user: user.value,
+        memberships: memberships.value,
+        globalRoles: globalRoles.value,
+        defaultContext: defaultContext.value,
+        activeSchoolId: activeSchoolId.value,
+        activeRoles: activeRoles.value,
+      })
+    }
     isRestored.value = true
   }
 
@@ -98,6 +164,8 @@ export const useAuthStore = defineStore('auth', () => {
     globalRoles,
     defaultContext,
     activeSchoolId,
+    activeMembership,
+    activeSchoolUserId,
     activeRoles,
     isAuthenticated,
     allRoles,
