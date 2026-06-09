@@ -21,6 +21,7 @@ import TeacherSubjects from "../pages/teacher/TeacherSubjects.vue";
 import AdminDashboard from "../pages/admin/AdminDashboard.vue";
 import AdminAcademicYears from "../pages/admin/AdminAcademicYears.vue";
 import AdminClasses from "../pages/admin/AdminClasses.vue";
+import AdminEnrollments from "../pages/admin/AdminEnrollments.vue";
 import AdminUsers from "../pages/admin/AdminUsers.vue";
 import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard.vue";
 import FeaturePlaceholder from "../components/common/FeaturePlaceholder.vue";
@@ -276,13 +277,7 @@ const router = createRouter({
         {
           path: "enrollments",
           name: "admin-enrollments",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Enrollments",
-            title: "Enrollment kelas",
-            description:
-              "Halaman ini nantinya mengatur siswa dan guru yang tergabung dalam kelas tertentu.",
-          },
+          component: AdminEnrollments,
         },
         {
           path: "academic-years",
