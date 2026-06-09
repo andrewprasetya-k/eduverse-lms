@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { useAuthStore } from "../../stores/auth";
+import { useToastStore } from "../../stores/toast";
 import {
   activateAcademicYear,
   activateTerm,
@@ -32,6 +33,7 @@ import {
 } from "@phosphor-icons/vue";
 
 const auth = useAuthStore();
+const toast = useToastStore();
 
 const currentSchool = computed(() => {
   const activeId = auth.activeSchoolId ?? auth.defaultContext?.schoolId ?? null;
@@ -63,8 +65,6 @@ const subjectsLoading = ref(false);
 const subjectsError = ref("");
 const categoriesLoading = ref(false);
 const categoriesError = ref("");
-const actionMessage = ref("");
-const actionError = ref("");
 const activeAction = ref("");
 
 const academicYearForm = ref({ academicYearName: "" });
@@ -169,17 +169,15 @@ async function refreshAll() {
 
 async function submitAcademicYear() {
   if (!currentSchool.value.schoolId) {
-    actionError.value = "Context sekolah aktif belum tersedia.";
+    toast.error("Context sekolah aktif belum tersedia.");
     return;
   }
   if (!academicYearForm.value.academicYearName.trim()) {
-    actionError.value = "Nama tahun ajaran wajib diisi.";
+    toast.error("Nama tahun ajaran wajib diisi.");
     return;
   }
 
   activeAction.value = "academic-year-create";
-  actionError.value = "";
-  actionMessage.value = "";
 
   try {
     await createAcademicYear({
@@ -187,11 +185,11 @@ async function submitAcademicYear() {
       academicYearName: academicYearForm.value.academicYearName.trim(),
     });
     academicYearForm.value.academicYearName = "";
-    actionMessage.value = "Tahun ajaran berhasil dibuat.";
+    toast.success("Tahun ajaran berhasil dibuat.");
     await loadAcademicYears();
     await loadTerms();
   } catch {
-    actionError.value = "Tahun ajaran belum bisa dibuat.";
+    toast.error("Tahun ajaran belum bisa dibuat.");
   } finally {
     activeAction.value = "";
   }
@@ -199,21 +197,19 @@ async function submitAcademicYear() {
 
 async function toggleAcademicYear(year: AcademicYearItem) {
   activeAction.value = `academic-year-toggle-${year.academicYearId}`;
-  actionError.value = "";
-  actionMessage.value = "";
 
   try {
     if (year.isActive) {
       await deactivateAcademicYear(year.academicYearId);
-      actionMessage.value = "Tahun ajaran dinonaktifkan.";
+      toast.success("Tahun ajaran dinonaktifkan.");
     } else {
       await activateAcademicYear(year.academicYearId);
-      actionMessage.value = "Tahun ajaran diaktifkan.";
+      toast.success("Tahun ajaran diaktifkan.");
     }
     await loadAcademicYears();
     await loadTerms();
   } catch {
-    actionError.value = "Perubahan status tahun ajaran belum bisa disimpan.";
+    toast.error("Perubahan status tahun ajaran belum bisa disimpan.");
   } finally {
     activeAction.value = "";
   }
@@ -221,17 +217,15 @@ async function toggleAcademicYear(year: AcademicYearItem) {
 
 async function submitTerm() {
   if (!selectedAcademicYearId.value) {
-    actionError.value = "Pilih tahun ajaran terlebih dahulu.";
+    toast.error("Pilih tahun ajaran terlebih dahulu.");
     return;
   }
   if (!termForm.value.termName.trim()) {
-    actionError.value = "Nama semester wajib diisi.";
+    toast.error("Nama semester wajib diisi.");
     return;
   }
 
   activeAction.value = "term-create";
-  actionError.value = "";
-  actionMessage.value = "";
 
   try {
     await createTerm({
@@ -239,10 +233,10 @@ async function submitTerm() {
       termName: termForm.value.termName.trim(),
     });
     termForm.value.termName = "";
-    actionMessage.value = "Semester berhasil dibuat.";
+    toast.success("Semester berhasil dibuat.");
     await loadTerms();
   } catch {
-    actionError.value = "Semester belum bisa dibuat.";
+    toast.error("Semester belum bisa dibuat.");
   } finally {
     activeAction.value = "";
   }
@@ -250,20 +244,18 @@ async function submitTerm() {
 
 async function toggleTerm(term: TermItem) {
   activeAction.value = `term-toggle-${term.termId}`;
-  actionError.value = "";
-  actionMessage.value = "";
 
   try {
     if (term.isActive) {
       await deactivateTerm(term.termId);
-      actionMessage.value = "Semester dinonaktifkan.";
+      toast.success("Semester dinonaktifkan.");
     } else {
       await activateTerm(term.termId);
-      actionMessage.value = "Semester diaktifkan.";
+      toast.success("Semester diaktifkan.");
     }
     await loadTerms();
   } catch {
-    actionError.value = "Perubahan status semester belum bisa disimpan.";
+    toast.error("Perubahan status semester belum bisa disimpan.");
   } finally {
     activeAction.value = "";
   }
@@ -271,20 +263,18 @@ async function toggleTerm(term: TermItem) {
 
 async function submitSubject() {
   if (!currentSchool.value.schoolId) {
-    actionError.value = "Context sekolah aktif belum tersedia.";
+    toast.error("Context sekolah aktif belum tersedia.");
     return;
   }
   if (
     !subjectForm.value.subjectName.trim() ||
     !subjectForm.value.subjectCode.trim()
   ) {
-    actionError.value = "Nama dan kode mata pelajaran wajib diisi.";
+    toast.error("Nama dan kode mata pelajaran wajib diisi.");
     return;
   }
 
   activeAction.value = "subject-create";
-  actionError.value = "";
-  actionMessage.value = "";
 
   try {
     await createSubject({
@@ -294,10 +284,10 @@ async function submitSubject() {
     });
     subjectForm.value.subjectName = "";
     subjectForm.value.subjectCode = "";
-    actionMessage.value = "Mata pelajaran berhasil dibuat.";
+    toast.success("Mata pelajaran berhasil dibuat.");
     await loadSubjects();
   } catch {
-    actionError.value = "Mata pelajaran belum bisa dibuat.";
+    toast.error("Mata pelajaran belum bisa dibuat.");
   } finally {
     activeAction.value = "";
   }
@@ -305,17 +295,15 @@ async function submitSubject() {
 
 async function submitCategory() {
   if (!currentSchool.value.schoolId) {
-    actionError.value = "Context sekolah aktif belum tersedia.";
+    toast.error("Context sekolah aktif belum tersedia.");
     return;
   }
   if (!categoryForm.value.categoryName.trim()) {
-    actionError.value = "Nama kategori wajib diisi.";
+    toast.error("Nama kategori wajib diisi.");
     return;
   }
 
   activeAction.value = "category-create";
-  actionError.value = "";
-  actionMessage.value = "";
 
   try {
     await createAssignmentCategory({
@@ -323,10 +311,10 @@ async function submitCategory() {
       categoryName: categoryForm.value.categoryName.trim(),
     });
     categoryForm.value.categoryName = "";
-    actionMessage.value = "Kategori tugas berhasil dibuat.";
+    toast.success("Kategori tugas berhasil dibuat.");
     await loadCategories();
   } catch {
-    actionError.value = "Kategori tugas belum bisa dibuat.";
+    toast.error("Kategori tugas belum bisa dibuat.");
   } finally {
     activeAction.value = "";
   }
@@ -385,18 +373,6 @@ onMounted(async () => {
           membership yang valid.
         </div>
 
-        <div
-          v-if="actionMessage"
-          class="mt-5 rounded-2xl border border-[#d8ecdf] bg-[#f5fbf7] px-4 py-3 text-sm text-[#4e8a73]"
-        >
-          {{ actionMessage }}
-        </div>
-        <div
-          v-if="actionError"
-          class="mt-5 rounded-2xl border border-[#f0c5bf] bg-[#fff8f6] px-4 py-3 text-sm text-[#a8665d]"
-        >
-          {{ actionError }}
-        </div>
       </header>
 
       <section class="grid gap-6 lg:grid-cols-2">

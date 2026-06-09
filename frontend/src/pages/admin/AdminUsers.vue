@@ -7,6 +7,7 @@ import {
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import { useAuthStore } from "../../stores/auth";
+import { useToastStore } from "../../stores/toast";
 import {
   enrollUserToSchool,
   getAdminUsers,
@@ -23,6 +24,7 @@ import { formatDateTime } from "../../utils/date";
 
 const allowedRoleNames = ["student", "teacher", "admin"];
 const auth = useAuthStore();
+const toast = useToastStore();
 
 const currentSchool = computed(() => {
   const activeId = auth.activeSchoolId ?? auth.defaultContext?.schoolId ?? null;
@@ -54,8 +56,6 @@ const savingRolesSchoolUserId = ref("");
 const membersError = ref("");
 const rolesError = ref("");
 const userSearchError = ref("");
-const actionError = ref("");
-const actionMessage = ref("");
 
 const memberSearch = ref("");
 const userSearch = ref("");
@@ -203,38 +203,33 @@ async function reloadMembersAndFind(userId: string) {
 
 async function syncRoleForMember(schoolUserId: string, roleId: string) {
   if (!roleId) {
-    actionError.value = "Pilih satu role.";
+    toast.error("Pilih satu role.");
     return;
   }
 
   savingRolesSchoolUserId.value = schoolUserId;
-  actionError.value = "";
-  actionMessage.value = "";
   try {
     await syncUserRoles(schoolUserId, { roleIds: [roleId] });
-    actionMessage.value = "Role member berhasil diperbarui.";
+    toast.success("Role member berhasil diperbarui.");
     await loadMembers();
   } catch {
-    actionError.value = "Role member belum bisa diperbarui.";
+    toast.error("Role member belum bisa diperbarui.");
   } finally {
     savingRolesSchoolUserId.value = "";
   }
 }
 
 async function addExistingUser(user: AdminUserItem) {
-  actionError.value = "";
-  actionMessage.value = "";
-
   if (!currentSchool.value.schoolId || !currentSchool.value.schoolCode) {
-    actionError.value = "Context sekolah aktif belum tersedia.";
+    toast.error("Context sekolah aktif belum tersedia.");
     return;
   }
   if (!existingRoleId.value) {
-    actionError.value = "Pilih role untuk user yang akan ditambahkan.";
+    toast.error("Pilih role untuk user yang akan ditambahkan.");
     return;
   }
   if (isMember(user.userId)) {
-    actionError.value = "User ini sudah menjadi member sekolah aktif.";
+    toast.info("User ini sudah menjadi member sekolah aktif.");
     return;
   }
 
@@ -247,18 +242,17 @@ async function addExistingUser(user: AdminUserItem) {
 
     const member = await reloadMembersAndFind(user.userId);
     if (!member) {
-      actionError.value =
-        "Membership belum ditemukan setelah user ditambahkan.";
+      toast.error("Membership belum ditemukan setelah user ditambahkan.");
       return;
     }
 
     await syncUserRoles(member.schoolUserId, {
       roleIds: [existingRoleId.value],
     });
-    actionMessage.value = "User berhasil ditambahkan sebagai member sekolah.";
+    toast.success("User berhasil ditambahkan sebagai member sekolah.");
     await loadMembers();
   } catch {
-    actionError.value = "User belum bisa ditambahkan ke sekolah.";
+    toast.error("User belum bisa ditambahkan ke sekolah.");
   } finally {
     addExistingLoadingUserId.value = "";
   }
@@ -318,19 +312,6 @@ onMounted(async () => {
           Context sekolah aktif belum tersedia. Pastikan akun admin memiliki
           membership sekolah.
         </div>
-
-        <div
-          v-if="actionMessage"
-          class="mt-4 rounded-[10px] border border-[#BBF7D0] bg-[#ECFDF5] px-4 py-3 text-sm text-[#059669]"
-        >
-          {{ actionMessage }}
-        </div>
-        <div
-          v-if="actionError"
-          class="mt-4 rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#DC2626]"
-        >
-          {{ actionError }}
-        </div>
       </header>
 
       <section class="grid gap-5">
@@ -344,9 +325,9 @@ onMounted(async () => {
                 Tambah user yang sudah ada
               </h2>
               <p class="mt-1 max-w-2xl text-sm leading-6 text-[#6B7280]">
-                Akun user bersifat global. Admin sekolah hanya menghubungkan akun
-                yang sudah ada sebagai membership sekolah aktif, lalu memberi
-                satu role sekolah.
+                Akun user bersifat global. Admin sekolah hanya menghubungkan
+                akun yang sudah ada sebagai membership sekolah aktif, lalu
+                memberi satu role sekolah.
               </p>
             </div>
             <PhMagnifyingGlass
@@ -576,11 +557,11 @@ onMounted(async () => {
                     >
                       <option value="" disabled>Pilih role</option>
                       <option
-                      v-for="role in allowedRoles"
-                      :key="role.roleId"
+                        v-for="role in allowedRoles"
+                        :key="role.roleId"
                         :value="role.roleId"
-                    >
-                      {{ roleLabel(role.roleName) }}
+                      >
+                        {{ roleLabel(role.roleName) }}
                       </option>
                     </select>
                   </label>

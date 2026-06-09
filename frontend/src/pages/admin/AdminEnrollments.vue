@@ -27,8 +27,10 @@ import type {
   EnrollmentMemberItem,
 } from "../../types/adminEnrollment";
 import { formatDateTime } from "../../utils/date";
+import { useToastStore } from "../../stores/toast";
 
 const auth = useAuthStore();
+const toast = useToastStore();
 
 const currentSchool = computed(() => {
   const activeId = auth.activeSchoolId ?? auth.defaultContext?.schoolId ?? null;
@@ -71,8 +73,6 @@ const termsError = ref("");
 const classesError = ref("");
 const membersError = ref("");
 const enrollmentsError = ref("");
-const actionMessage = ref("");
-const actionError = ref("");
 
 const selectedAcademicYear = computed(
   () =>
@@ -290,23 +290,20 @@ async function handleClassChange() {
 }
 
 async function submitEnrollment() {
-  actionError.value = "";
-  actionMessage.value = "";
-
   if (!currentSchool.value.schoolId || !currentSchool.value.schoolCode) {
-    actionError.value = "Context sekolah aktif belum tersedia.";
+    toast.error("Context sekolah aktif belum tersedia.");
     return;
   }
   if (!selectedClassId.value) {
-    actionError.value = "Pilih kelas terlebih dahulu.";
+    toast.error("Pilih kelas terlebih dahulu.");
     return;
   }
   if (selectedSchoolUserIds.value.length === 0) {
-    actionError.value = "Pilih minimal satu member sekolah.";
+    toast.error("Pilih minimal satu member sekolah.");
     return;
   }
   if (!classRole.value) {
-    actionError.value = "Pilih peran kelas.";
+    toast.error("Pilih peran kelas.");
     return;
   }
 
@@ -318,12 +315,13 @@ async function submitEnrollment() {
       classId: selectedClassId.value,
       role: classRole.value,
     });
-    actionMessage.value =
-      "Enrollment berhasil diproses. Member yang sudah terdaftar akan dilewati.";
+    toast.success(
+      "Enrollment berhasil diproses. Member yang sudah terdaftar akan dilewati.",
+    );
     selectedSchoolUserIds.value = [];
     await loadEnrollments();
   } catch {
-    actionError.value = "Member belum bisa ditambahkan ke kelas.";
+    toast.error("Member belum bisa ditambahkan ke kelas.");
   } finally {
     submitting.value = false;
   }
@@ -379,18 +377,6 @@ onMounted(async () => {
           membership sekolah.
         </div>
 
-        <div
-          v-if="actionMessage"
-          class="mt-4 rounded-[10px] border border-[#BBF7D0] bg-[#ECFDF5] px-4 py-3 text-sm text-[#059669]"
-        >
-          {{ actionMessage }}
-        </div>
-        <div
-          v-if="actionError"
-          class="mt-4 rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#DC2626]"
-        >
-          {{ actionError }}
-        </div>
       </header>
 
       <section

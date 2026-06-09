@@ -21,9 +21,11 @@ import type {
   TeacherSubmission,
 } from "../../types/teacherAssignment";
 import { formatDateTime } from "../../utils/date";
+import { useToastStore } from "../../stores/toast";
 
 const route = useRoute();
 const router = useRouter();
+const toast = useToastStore();
 
 const assignmentId = computed(() => String(route.params.assignmentId ?? ""));
 const assignment = ref<AssignmentWithSubmissionsResponse["assignment"] | null>(null);
@@ -92,7 +94,7 @@ function formatFileSize(size?: number) {
 async function handleGrade() {
   if (!currentSubmission.value) return;
   if (score.value === "") {
-    alert("Nilai wajib diisi");
+    toast.error("Nilai wajib diisi.");
     return;
   }
 
@@ -104,9 +106,9 @@ async function handleGrade() {
     });
 
     await loadData();
-    alert("Nilai berhasil disimpan");
+    toast.success("Nilai berhasil disimpan.");
   } catch (err) {
-    alert("Gagal menyimpan nilai");
+    toast.error("Gagal menyimpan nilai.");
   } finally {
     submitting.value = false;
   }

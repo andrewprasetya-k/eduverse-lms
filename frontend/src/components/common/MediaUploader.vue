@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { PhFile, PhTrash, PhUploadSimple } from '@phosphor-icons/vue'
 import { deleteMedia, uploadMediaFile } from '../../services/media'
+import { useToastStore } from '../../stores/toast'
 
 interface Props {
   schoolId: string
@@ -17,6 +18,8 @@ const props = withDefaults(defineProps<Props>(), {
   limit: 5,
   cleanupOnRemove: false,
 })
+
+const toast = useToastStore()
 
 const emit = defineEmits<{
   (e: 'update:mediaIds', ids: string[]): void
@@ -48,13 +51,13 @@ async function handleFileChange(event: Event) {
   const newFiles = Array.from(target.files)
   
   if (files.value.length + newFiles.length > props.limit) {
-    alert(`Maksimal ${props.limit} file yang dapat diunggah.`)
+    toast.error(`Maksimal ${props.limit} file yang dapat diunggah.`)
     return
   }
 
   for (const file of newFiles) {
     if (file.size > props.maxSizeMb * 1024 * 1024) {
-      alert(`File ${file.name} melebihi batas ${props.maxSizeMb}MB.`)
+      toast.error(`File ${file.name} melebihi batas ${props.maxSizeMb}MB.`)
       continue
     }
 

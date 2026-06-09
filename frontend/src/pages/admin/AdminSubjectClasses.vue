@@ -26,8 +26,10 @@ import type { AdminClassItem } from "../../types/adminClass";
 import type { EnrollmentMemberItem } from "../../types/adminEnrollment";
 import type { SchoolMemberItem } from "../../types/adminUser";
 import type { SubjectClassItem } from "../../types/adminSubjectClass";
+import { useToastStore } from "../../stores/toast";
 
 const auth = useAuthStore();
+const toast = useToastStore();
 
 const currentSchool = computed(() => {
   const activeId = auth.activeSchoolId ?? auth.defaultContext?.schoolId ?? null;
@@ -75,8 +77,6 @@ const subjectsError = ref("");
 const membersError = ref("");
 const enrollmentsError = ref("");
 const subjectClassesError = ref("");
-const actionMessage = ref("");
-const actionError = ref("");
 
 const selectedAcademicYear = computed(
   () =>
@@ -305,28 +305,26 @@ async function handleClassChange() {
 }
 
 async function submitSubjectClass() {
-  actionError.value = "";
-  actionMessage.value = "";
-
   if (!selectedClassId.value) {
-    actionError.value = "Pilih kelas terlebih dahulu.";
+    toast.error("Pilih kelas terlebih dahulu.");
     return;
   }
   if (!selectedSubjectId.value) {
-    actionError.value = "Pilih subject yang belum ditugaskan.";
+    toast.error("Pilih subject yang belum ditugaskan.");
     return;
   }
   if (teacherCandidates.value.length === 0) {
-    actionError.value =
-      "Belum ada guru yang eligible. Atur role teacher di Warga Sekolah dan penempatan teacher di Penempatan Kelas.";
+    toast.error(
+      "Belum ada guru yang eligible. Atur role teacher di Warga Sekolah dan penempatan teacher di Penempatan Kelas.",
+    );
     return;
   }
   if (!selectedTeacherSchoolUserId.value) {
-    actionError.value = "Pilih teacher yang akan mengampu subject.";
+    toast.error("Pilih teacher yang akan mengampu subject.");
     return;
   }
   if (assignedSubjectIds.value.has(selectedSubjectId.value)) {
-    actionError.value = "Subject ini sudah punya assignment di kelas terpilih.";
+    toast.info("Subject ini sudah punya assignment di kelas terpilih.");
     return;
   }
 
@@ -337,10 +335,12 @@ async function submitSubjectClass() {
       subjectId: selectedSubjectId.value,
       teacherId: selectedTeacherSchoolUserId.value,
     });
-    actionMessage.value = "Subject class berhasil dibuat untuk teacher workspace.";
+    toast.success("Subject class berhasil dibuat untuk teacher workspace.");
     await loadClassContext();
   } catch {
-    actionError.value = "Subject class belum bisa dibuat. Periksa eligibility teacher dan duplikasi subject.";
+    toast.error(
+      "Subject class belum bisa dibuat. Periksa eligibility teacher dan duplikasi subject.",
+    );
   } finally {
     submitting.value = false;
   }
@@ -384,18 +384,6 @@ onMounted(async () => {
           Context sekolah aktif belum tersedia. Pastikan akun admin memiliki membership sekolah.
         </div>
 
-        <div
-          v-if="actionMessage"
-          class="mt-4 rounded-[10px] border border-[#BBF7D0] bg-[#ECFDF5] px-4 py-3 text-sm text-[#059669]"
-        >
-          {{ actionMessage }}
-        </div>
-        <div
-          v-if="actionError"
-          class="mt-4 rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#DC2626]"
-        >
-          {{ actionError }}
-        </div>
       </header>
 
       <section class="grid gap-5 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">

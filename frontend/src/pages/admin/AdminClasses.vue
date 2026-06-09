@@ -8,6 +8,7 @@ import {
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import { useAuthStore } from "../../stores/auth";
+import { useToastStore } from "../../stores/toast";
 import { getAcademicYearsBySchool, getTermsByAcademicYear } from "../../services/adminAcademic";
 import { createAdminClass, getAdminClasses } from "../../services/adminClass";
 import type { AcademicYearItem, TermItem } from "../../types/adminAcademic";
@@ -15,6 +16,7 @@ import type { AdminClassItem } from "../../types/adminClass";
 import { formatDateTime } from "../../utils/date";
 
 const auth = useAuthStore();
+const toast = useToastStore();
 
 const currentSchool = computed(() => {
   const activeId = auth.activeSchoolId ?? auth.defaultContext?.schoolId ?? null;
@@ -44,8 +46,6 @@ const classesLoading = ref(false);
 const yearsError = ref("");
 const termsError = ref("");
 const classesError = ref("");
-const actionMessage = ref("");
-const actionError = ref("");
 const isCreating = ref(false);
 
 const classForm = ref({
@@ -138,19 +138,16 @@ async function handleTermChange() {
 }
 
 async function submitClass() {
-  actionError.value = "";
-  actionMessage.value = "";
-
   if (!currentSchool.value.schoolId || !currentSchool.value.schoolCode) {
-    actionError.value = "Context sekolah aktif belum tersedia.";
+    toast.error("Context sekolah aktif belum tersedia.");
     return;
   }
   if (!selectedTermId.value) {
-    actionError.value = "Pilih semester terlebih dahulu.";
+    toast.error("Pilih semester terlebih dahulu.");
     return;
   }
   if (!classForm.value.classCode.trim() || !classForm.value.classTitle.trim()) {
-    actionError.value = "Kode dan nama kelas wajib diisi.";
+    toast.error("Kode dan nama kelas wajib diisi.");
     return;
   }
 
@@ -164,10 +161,10 @@ async function submitClass() {
       classDesc: classForm.value.classDesc.trim(),
     });
     classForm.value = { classCode: "", classTitle: "", classDesc: "" };
-    actionMessage.value = "Kelas berhasil dibuat.";
+    toast.success("Kelas berhasil dibuat.");
     await loadClasses();
   } catch {
-    actionError.value = "Kelas belum bisa dibuat.";
+    toast.error("Kelas belum bisa dibuat.");
   } finally {
     isCreating.value = false;
   }
@@ -210,18 +207,6 @@ onMounted(async () => {
           Context sekolah aktif belum tersedia. Pastikan akun admin memiliki membership sekolah.
         </div>
 
-        <div
-          v-if="actionMessage"
-          class="mt-4 rounded-[10px] border border-[#BBF7D0] bg-[#ECFDF5] px-4 py-3 text-sm text-[#059669]"
-        >
-          {{ actionMessage }}
-        </div>
-        <div
-          v-if="actionError"
-          class="mt-4 rounded-[10px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#DC2626]"
-        >
-          {{ actionError }}
-        </div>
       </header>
 
       <section class="grid gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
