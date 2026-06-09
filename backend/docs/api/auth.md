@@ -3,7 +3,7 @@
 Base URL: `/api`
 
 ## 1. Register
-Create a new user account and receive JWT token.
+Create a new plain global user account and receive JWT token.
 
 - **URL:** `/register`
 - **Method:** `POST`
@@ -21,6 +21,9 @@ Create a new user account and receive JWT token.
 - `fullName`: Required
 - `email`: Required, valid email format
 - `password`: Required, minimum 6 characters
+- Registration does not accept `schoolId`, `schoolCode`, role, enrollment, or class fields.
+- Registration does not create `school_users`, assign roles, or grant school access.
+  School access is granted later by a school admin through membership and role assignment.
 
 **Response (201 Created):**
 ```json

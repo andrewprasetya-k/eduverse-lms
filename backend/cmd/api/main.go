@@ -188,10 +188,10 @@ func main() {
 		{
 			userAPI.POST("", middleware.RequireSystemSuperAdmin(schoolService), userHandler.Create)
 			userAPI.GET("", middleware.RequireRole(schoolService, "admin", "super_admin"), userHandler.FindAll)
-			userAPI.GET("/:id", userHandler.GetByID)
-			userAPI.PATCH("/:id", userHandler.Update)
-			userAPI.PATCH("/change-password/:id", userHandler.ChangePassword)
-			userAPI.DELETE("/:id", middleware.RequireRole(schoolService, "admin", "super_admin"), userHandler.Delete)
+			userAPI.GET("/:id", middleware.RequireSystemSuperAdmin(schoolService), userHandler.GetByID)
+			userAPI.PATCH("/:id", middleware.RequireSystemSuperAdmin(schoolService), userHandler.Update)
+			userAPI.PATCH("/change-password/:id", middleware.RequireSystemSuperAdmin(schoolService), userHandler.ChangePassword)
+			userAPI.DELETE("/:id", middleware.RequireSystemSuperAdmin(schoolService), userHandler.Delete)
 		}
 
 		schoolUserAPI := api.Group("/school-users")

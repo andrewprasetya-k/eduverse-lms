@@ -6,7 +6,7 @@ Base URL: `http://localhost:8080/api`
 
 **Public Endpoints (No Auth Required):**
 - `POST /login` - User login
-- `POST /register` - User registration
+- `POST /register` - Public user self-registration (plain global account only)
 
 **All other endpoints require JWT authentication.**
 
@@ -50,11 +50,11 @@ Authorization: Bearer <your-jwt-token>
 
 ## 👤 Users
 - `POST /users` - Create global user (system super_admin only)
-- `GET /users` - List all users (with pagination & search)
-- `GET /users/:id` - Get user by ID
-- `PATCH /users/:id` - Update user
-- `PATCH /users/change-password/:id` - Change password
-- `DELETE /users/:id` - Delete user
+- `GET /users` - List/search global users (admin/super_admin)
+- `GET /users/:id` - Get user by ID (system super_admin only)
+- `PATCH /users/:id` - Update user (system super_admin only)
+- `PATCH /users/change-password/:id` - Change password by ID (system super_admin only; future `/me/change-password` recommended)
+- `DELETE /users/:id` - Delete user (system super_admin only)
 
 ## 🏢 School Users (User-School Relationship)
 - `POST /school-users/enroll` - Enroll user to school

@@ -263,12 +263,17 @@ Content-Type: application/json
 |----------|--------|-------------|-------|---------|---------|
 | `/users` | POST | ✅ | ❌ | ❌ | ❌ |
 | `/users` | GET | 📖 | ✅ | ❌ | ❌ |
-| `/users/:id` | DELETE | 📖 | ✅ | ❌ | ❌ |
+| `/users/:id` | GET | 📖 | ❌ | ❌ | ❌ |
+| `/users/:id` | PATCH | ✅ | ❌ | ❌ | ❌ |
+| `/users/change-password/:id` | PATCH | ✅ | ❌ | ❌ | ❌ |
+| `/users/:id` | DELETE | ✅ | ❌ | ❌ | ❌ |
 
 Global user creation is platform scope and only allowed for a `super_admin` membership
 on the system school where `schools.sch_code = "0000"`.
 School admins manage existing global users as school memberships and assign roles in
 their active school context.
+Public `/register` remains available for users creating their own plain global
+account, but it does not grant school membership, roles, or enrollment.
 
 ### Enrollment
 | Endpoint | Method | super_admin | admin | teacher | student |
