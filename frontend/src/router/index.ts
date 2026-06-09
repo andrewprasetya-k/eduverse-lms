@@ -21,6 +21,7 @@ import TeacherSubjects from "../pages/teacher/TeacherSubjects.vue";
 import AdminDashboard from "../pages/admin/AdminDashboard.vue";
 import AdminAcademicYears from "../pages/admin/AdminAcademicYears.vue";
 import AdminClasses from "../pages/admin/AdminClasses.vue";
+import AdminUsers from "../pages/admin/AdminUsers.vue";
 import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard.vue";
 import FeaturePlaceholder from "../components/common/FeaturePlaceholder.vue";
 import TeacherContentCreate from "../pages/teacher/TeacherContentCreate.vue";
@@ -270,13 +271,7 @@ const router = createRouter({
         {
           path: "users",
           name: "admin-users",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "School users",
-            title: "Manajemen user sekolah",
-            description:
-              "Halaman ini nantinya dipakai admin untuk mengelola user, membership sekolah, dan role.",
-          },
+          component: AdminUsers,
         },
         {
           path: "enrollments",
