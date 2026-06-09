@@ -428,7 +428,7 @@ onMounted(async () => {
                 </p>
                 <p>
                   Oleh:
-                  <span class="font-medium text-[#374151]">{{ classItem.creatorName || "Admin" }}</span>
+                  <span class="font-medium text-[#374151]">{{ classItem.creatorName || "Pembuat tidak tersedia" }}</span>
                 </p>
               </div>
             </article>
