@@ -335,9 +335,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-8 md:px-8 lg:px-10">
-    <section class="mx-auto flex max-w-6xl flex-col gap-6">
-      <header class="soft-card rounded-4xl p-6 md:p-8">
+  <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
+    <section class="flex w-full max-w-none flex-col gap-5">
+      <header class="soft-card rounded-[22px] p-5 md:p-6">
         <p class="text-sm font-medium text-[#4f46e5]">Admin sekolah</p>
         <h1 class="mt-3 text-3xl font-medium text-[#171322]">
           Struktur Akademik
@@ -375,8 +375,8 @@ onMounted(async () => {
 
       </header>
 
-      <section class="grid gap-6 lg:grid-cols-2">
-        <article class="soft-card rounded-[28px] p-6">
+      <section class="grid gap-5 lg:grid-cols-2">
+        <article class="soft-card rounded-[18px] p-5">
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="text-sm font-medium text-[#4f46e5]">Struktur akademik</p>
@@ -473,7 +473,7 @@ onMounted(async () => {
           </div>
         </article>
 
-        <article class="soft-card rounded-[28px] p-6">
+        <article class="soft-card rounded-[18px] p-5">
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="text-sm font-medium text-[#4f46e5]">Terms</p>
@@ -594,8 +594,8 @@ onMounted(async () => {
         </article>
       </section>
 
-      <section class="grid gap-6 lg:grid-cols-2">
-        <article class="soft-card rounded-[28px] p-6">
+      <section class="grid gap-5 lg:grid-cols-2">
+        <article class="soft-card rounded-[18px] p-5">
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="text-sm font-medium text-[#4f46e5]">Subjects</p>
@@ -662,7 +662,7 @@ onMounted(async () => {
           </div>
         </article>
 
-        <article class="soft-card rounded-[28px] p-6">
+        <article class="soft-card rounded-[18px] p-5">
           <div class="flex items-start justify-between gap-4">
             <div>
               <p class="text-sm font-medium text-[#4f46e5]">

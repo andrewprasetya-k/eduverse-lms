@@ -273,8 +273,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-6 sm:px-8 lg:px-10">
-    <section class="mx-auto flex max-w-6xl flex-col gap-6">
+  <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
+    <section class="flex w-full max-w-none flex-col gap-5">
       <header class="soft-card rounded-[22px] p-5">
         <div
           class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
