@@ -113,7 +113,7 @@ onMounted(loadGrades);
 <template>
   <main class="min-h-screen flex-1 bg-[#f8f7f4]">
     <section
-      class="border-b border-[#ebe7df] bg-white px-5 py-3 sm:px-8 lg:px-10"
+      class="border-b border-[#ebe7df] bg-white px-5 py-3 sm:px-6 lg:px-8"
     >
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
@@ -158,8 +158,8 @@ onMounted(loadGrades);
       </div>
     </section>
 
-    <section class="px-5 py-6 sm:px-8 lg:px-10">
-      <header class="mb-6 flex flex-col gap-2">
+    <section class="px-5 py-5 sm:px-6 lg:px-8">
+      <header class="mb-5 flex flex-col gap-2">
         <p class="text-sm text-[#7a7385]">Gradebook siswa</p>
         <h1 class="text-2xl font-medium tracking-normal text-[#171322]">
           Nilai dan feedback
@@ -184,7 +184,7 @@ onMounted(loadGrades);
 
       <section
         v-else-if="errorMessage"
-        class="soft-card max-w-2xl rounded-3xl p-6"
+        class="soft-card max-w-2xl rounded-[22px] p-5"
       >
         <div
           class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]"
@@ -206,7 +206,7 @@ onMounted(loadGrades);
 
       <section
         v-else-if="!activeClassStore.activeClassId"
-        class="soft-card max-w-2xl rounded-3xl p-6"
+        class="soft-card max-w-2xl rounded-[22px] p-5"
       >
         <div
           class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
@@ -222,7 +222,7 @@ onMounted(loadGrades);
 
       <section
         v-else-if="subjects.length === 0"
-        class="soft-card max-w-2xl rounded-3xl p-6"
+        class="soft-card max-w-2xl rounded-[22px] p-5"
       >
         <div
           class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
@@ -265,7 +265,7 @@ onMounted(loadGrades);
           </div>
         </div>
 
-        <div v-if="!hasAssignments" class="soft-card rounded-3xl p-6">
+        <div v-if="!hasAssignments" class="soft-card rounded-[22px] p-5">
           <div
             class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
           >
@@ -283,7 +283,7 @@ onMounted(loadGrades);
         <article
           v-for="subject in subjects"
           :key="subject.subjectClassId"
-          class="overflow-hidden rounded-3xl border border-[#ebe7df] bg-white"
+          class="overflow-hidden rounded-[22px] border border-[#ebe7df] bg-white"
         >
           <div
             class="flex flex-col gap-4 px-5 py-5 text-white md:flex-row md:items-center md:justify-between"

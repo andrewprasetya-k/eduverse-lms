@@ -165,21 +165,21 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-6 sm:px-8 lg:px-10">
+  <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
     <RouterLink
-      class="mb-6 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
+      class="mb-5 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
       :to="`/student/subjects/${subjectClassId}`"
     >
       <PhArrowLeft :size="18" />
       Kembali ke subject
     </RouterLink>
 
-    <section v-if="isLoading" class="max-w-3xl space-y-3">
+    <section v-if="isLoading" class="max-w-4xl space-y-3">
       <div class="h-40 animate-pulse rounded-3xl border border-[#ebe7df] bg-white" />
       <div class="h-28 animate-pulse rounded-3xl border border-[#ebe7df] bg-white" />
     </section>
 
-    <section v-else-if="errorMessage" class="soft-card max-w-3xl rounded-3xl p-6">
+    <section v-else-if="errorMessage" class="soft-card max-w-4xl rounded-[22px] p-5">
       <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]">
         <PhWarningCircle :size="24" weight="duotone" />
       </div>
@@ -194,7 +194,7 @@ async function handleSubmit() {
       </button>
     </section>
 
-    <section v-else-if="didLoad && !assignment" class="soft-card max-w-3xl rounded-3xl p-6">
+    <section v-else-if="didLoad && !assignment" class="soft-card max-w-4xl rounded-[22px] p-5">
       <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]">
         <PhClipboardText :size="24" weight="duotone" />
       </div>
@@ -204,9 +204,9 @@ async function handleSubmit() {
       </p>
     </section>
 
-    <section v-else-if="assignment" class="max-w-3xl space-y-4">
-      <article class="soft-card rounded-3xl p-6">
-        <div class="mb-6 flex items-start gap-4">
+    <section v-else-if="assignment" class="max-w-4xl space-y-4">
+      <article class="soft-card rounded-[22px] p-5">
+        <div class="mb-5 flex items-start gap-4">
           <div
             class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
           >
@@ -249,7 +249,7 @@ async function handleSubmit() {
           </div>
         </div>
 
-        <div class="mt-6 rounded-2xl bg-white p-4">
+        <div class="mt-5 rounded-2xl bg-white p-4">
           <p class="text-sm font-medium text-[#171322]">Deskripsi</p>
           <p
             v-if="assignment.assignmentDescription"
@@ -263,7 +263,7 @@ async function handleSubmit() {
         </div>
       </article>
 
-      <article v-if="assignment.attachments?.length" class="rounded-3xl border border-[#ebe7df] bg-white p-5">
+      <article v-if="assignment.attachments?.length" class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
         <p class="text-sm font-medium text-[#171322]">Lampiran</p>
         <div class="mt-3 space-y-2">
           <a
@@ -280,7 +280,7 @@ async function handleSubmit() {
         </div>
       </article>
 
-      <article class="rounded-3xl border border-[#ebe7df] bg-white p-5">
+      <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
         <p class="text-sm font-medium text-[#171322]">Pengumpulan tugas</p>
         <p class="mt-2 text-sm leading-6 text-[#7a7385]">
           Status pengumpulan diambil dari submission milik akun login saat ini.

@@ -45,22 +45,22 @@ onMounted(loadMaterial)
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-6 sm:px-8 lg:px-10">
+  <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
     <RouterLink
-      class="mb-6 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
+      class="mb-5 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
       :to="`/student/subjects/${subjectClassId}`"
     >
       <PhArrowLeft :size="18" />
       Kembali ke subject
     </RouterLink>
 
-    <section v-if="isLoading" class="max-w-3xl space-y-3">
+    <section v-if="isLoading" class="max-w-4xl space-y-3">
       <div class="h-40 animate-pulse rounded-3xl border border-[#ebe7df] bg-white" />
       <div class="h-28 animate-pulse rounded-3xl border border-[#ebe7df] bg-white" />
       <div class="h-24 animate-pulse rounded-3xl border border-[#ebe7df] bg-white" />
     </section>
 
-    <section v-else-if="errorMessage" class="soft-card max-w-3xl rounded-3xl p-6">
+    <section v-else-if="errorMessage" class="soft-card max-w-4xl rounded-[22px] p-5">
       <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]">
         <PhWarningCircle :size="24" weight="duotone" />
       </div>
@@ -75,7 +75,7 @@ onMounted(loadMaterial)
       </button>
     </section>
 
-    <section v-else-if="didLoad && !material" class="soft-card max-w-3xl rounded-3xl p-6">
+    <section v-else-if="didLoad && !material" class="soft-card max-w-4xl rounded-[22px] p-5">
       <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]">
         <PhBookOpen :size="24" weight="duotone" />
       </div>
@@ -85,9 +85,9 @@ onMounted(loadMaterial)
       </p>
     </section>
 
-    <section v-else-if="material" class="max-w-3xl space-y-4">
-      <article class="soft-card rounded-3xl p-6">
-        <div class="mb-6 flex items-start gap-4">
+    <section v-else-if="material" class="max-w-4xl space-y-4">
+      <article class="soft-card rounded-[22px] p-5">
+        <div class="mb-5 flex items-start gap-4">
           <div
             class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
           >
@@ -121,7 +121,7 @@ onMounted(loadMaterial)
           </div>
         </div>
 
-        <div class="mt-6 rounded-2xl bg-white p-4">
+        <div class="mt-5 rounded-2xl bg-white p-4">
           <p class="text-sm font-medium text-[#171322]">Deskripsi</p>
           <p
             v-if="material.materialDesc"
@@ -135,7 +135,7 @@ onMounted(loadMaterial)
         </div>
       </article>
 
-      <article v-if="material.attachments?.length" class="rounded-3xl border border-[#ebe7df] bg-white p-5">
+      <article v-if="material.attachments?.length" class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
         <p class="text-sm font-medium text-[#171322]">Lampiran</p>
         <div class="mt-3 space-y-2">
           <a
@@ -152,7 +152,7 @@ onMounted(loadMaterial)
         </div>
       </article>
 
-      <article class="rounded-3xl border border-[#ebe7df] bg-white p-5">
+      <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
         <div class="flex items-start gap-3">
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#f3ecff] text-[#7c3aed]">
             <PhNotebook :size="20" weight="duotone" />
@@ -166,7 +166,7 @@ onMounted(loadMaterial)
         </div>
       </article>
 
-      <article class="rounded-3xl border border-[#ebe7df] bg-white p-5">
+      <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
         <p class="text-sm font-medium text-[#171322]">Progress materi</p>
         <p class="mt-2 text-sm leading-6 text-[#7a7385]">
           Progress materi akan tersedia nanti. Membuka materi tidak otomatis menandai selesai.

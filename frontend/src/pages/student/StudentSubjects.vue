@@ -85,7 +85,7 @@ onMounted(loadSubjects);
 <template>
   <main class="min-h-screen flex-1 bg-[#f8f7f4]">
     <section
-      class="border-b border-[#ebe7df] bg-white px-5 py-3 sm:px-8 lg:px-10"
+      class="border-b border-[#ebe7df] bg-white px-5 py-3 sm:px-6 lg:px-8"
     >
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
@@ -134,8 +134,8 @@ onMounted(loadSubjects);
       </div>
     </section>
 
-    <section class="px-5 py-6 sm:px-8 lg:px-10">
-      <header class="mb-6 flex items-center justify-between gap-4">
+    <section class="px-5 py-5 sm:px-6 lg:px-8">
+      <header class="mb-5 flex items-center justify-between gap-4">
         <div>
           <h1 class="text-2xl font-medium tracking-normal text-[#171322]">
             Mata pelajaran
@@ -162,7 +162,7 @@ onMounted(loadSubjects);
 
       <section
         v-else-if="errorMessage"
-        class="soft-card max-w-2xl rounded-3xl p-6"
+        class="soft-card max-w-2xl rounded-[22px] p-5"
       >
         <div
           class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]"
@@ -184,7 +184,7 @@ onMounted(loadSubjects);
 
       <section
         v-else-if="!activeClass"
-        class="soft-card max-w-2xl rounded-3xl p-6"
+        class="soft-card max-w-2xl rounded-[22px] p-5"
       >
         <div
           class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
@@ -200,7 +200,7 @@ onMounted(loadSubjects);
 
       <section
         v-else-if="subjects.length === 0"
-        class="soft-card max-w-2xl rounded-3xl p-6"
+        class="soft-card max-w-2xl rounded-[22px] p-5"
       >
         <div
           class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"

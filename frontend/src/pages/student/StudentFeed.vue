@@ -55,8 +55,8 @@ onMounted(loadContext)
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-6 sm:px-8 lg:px-10">
-    <header class="mb-6">
+  <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
+    <header class="mb-5">
       <p class="text-sm text-[#7a7385]">Class feed</p>
       <h1 class="mt-2 text-3xl font-medium tracking-normal text-[#171322]">Feed kelas</h1>
       <p class="mt-3 max-w-2xl text-sm leading-6 text-[#7a7385]">
@@ -65,11 +65,11 @@ onMounted(loadContext)
       </p>
     </header>
 
-    <section v-if="isLoading || activeClassStore.isLoading" class="soft-card max-w-3xl rounded-3xl p-6">
+    <section v-if="isLoading || activeClassStore.isLoading" class="soft-card max-w-4xl rounded-[22px] p-5">
       <div class="h-24 animate-pulse rounded-2xl bg-white" />
     </section>
 
-    <section v-else-if="errorMessage" class="soft-card max-w-3xl rounded-3xl p-6">
+    <section v-else-if="errorMessage" class="soft-card max-w-4xl rounded-[22px] p-5">
       <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]">
         <PhWarningCircle :size="24" weight="duotone" />
       </div>
@@ -84,8 +84,8 @@ onMounted(loadContext)
       </button>
     </section>
 
-    <section v-else-if="activeClass" class="max-w-3xl space-y-3">
-      <div class="soft-card rounded-3xl p-6">
+    <section v-else-if="activeClass" class="max-w-4xl space-y-3">
+      <div class="soft-card rounded-[22px] p-5">
         <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]">
           <PhMegaphone :size="26" weight="duotone" />
         </div>
@@ -98,7 +98,7 @@ onMounted(loadContext)
         </p>
       </div>
 
-      <div v-if="posts.length === 0" class="soft-card rounded-3xl p-6">
+      <div v-if="posts.length === 0" class="soft-card rounded-[22px] p-5">
         <p class="text-sm font-medium text-[#171322]">Belum ada feed</p>
         <p class="mt-2 text-sm leading-6 text-[#7a7385]">
           Post akan tampil setelah guru atau admin membuat pengumuman untuk kelas ini.
@@ -109,7 +109,7 @@ onMounted(loadContext)
         v-for="post in posts"
         v-else
         :key="post.feedId"
-        class="rounded-3xl border border-[#ebe7df] bg-white p-5"
+        class="rounded-[22px] border border-[#ebe7df] bg-white p-5"
       >
         <div class="flex items-start gap-3">
           <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]">
@@ -146,7 +146,7 @@ onMounted(loadContext)
       </article>
     </section>
 
-    <section v-else class="soft-card max-w-3xl rounded-3xl p-6">
+    <section v-else class="soft-card max-w-4xl rounded-[22px] p-5">
       <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]">
         <PhMegaphone :size="26" weight="duotone" />
       </div>

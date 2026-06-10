@@ -91,9 +91,9 @@ onMounted(loadSubject);
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-6 sm:px-8 lg:px-10">
+  <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
     <header
-      class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+      class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
     >
       <div>
         <p class="text-sm text-[#7a7385]">Subject workspace</p>
@@ -128,8 +128,8 @@ onMounted(loadSubject);
         </div>
       </div>
 
-      <div class="grid gap-6 p-6 lg:grid-cols-[1fr_260px]">
-        <article class="rounded-md bg-[#fbfaf8] p-6">
+      <div class="grid gap-5 p-5 lg:grid-cols-[1fr_260px]">
+        <article class="rounded-md bg-[#fbfaf8] p-5">
           <div
             class="mb-5 flex h-12 w-12 items-center justify-center rounded-md bg-[#eef2ff] text-[#4f46e5]"
           >
@@ -142,7 +142,7 @@ onMounted(loadSubject);
               Materi subject
             </h2>
 
-            <div v-if="isLoading" class="mt-6 space-y-3">
+            <div v-if="isLoading" class="mt-5 space-y-3">
               <div
                 v-for="item in 3"
                 :key="item"
@@ -150,7 +150,7 @@ onMounted(loadSubject);
               />
             </div>
 
-            <div v-else-if="errorMessage" class="mt-6 rounded-md bg-white p-4">
+            <div v-else-if="errorMessage" class="mt-5 rounded-md bg-white p-4">
               <div class="flex items-start gap-3">
                 <PhWarningCircle
                   :size="22"
@@ -177,7 +177,7 @@ onMounted(loadSubject);
 
             <div
               v-else-if="materials.length === 0"
-              class="mt-6 rounded-md bg-white p-4"
+              class="mt-5 rounded-md bg-white p-4"
             >
               <p class="text-sm font-medium text-[#171322]">Belum ada materi</p>
               <p class="mt-2 text-sm leading-6 text-[#7a7385]">
@@ -186,7 +186,7 @@ onMounted(loadSubject);
               </p>
             </div>
 
-            <div v-else class="mt-6 space-y-3">
+            <div v-else class="mt-5 space-y-3">
               <article
                 v-for="material in materials"
                 :key="material.materialId"
@@ -236,7 +236,7 @@ onMounted(loadSubject);
               Tugas subject
             </h2>
 
-            <div v-if="isLoading" class="mt-6 space-y-3">
+            <div v-if="isLoading" class="mt-5 space-y-3">
               <div
                 v-for="item in 3"
                 :key="item"
@@ -244,7 +244,7 @@ onMounted(loadSubject);
               />
             </div>
 
-            <div v-else-if="errorMessage" class="mt-6 rounded-md bg-white p-4">
+            <div v-else-if="errorMessage" class="mt-5 rounded-md bg-white p-4">
               <div class="flex items-start gap-3">
                 <PhWarningCircle
                   :size="22"
@@ -271,7 +271,7 @@ onMounted(loadSubject);
 
             <div
               v-else-if="assignments.length === 0"
-              class="mt-6 rounded-md bg-white p-4"
+              class="mt-5 rounded-md bg-white p-4"
             >
               <p class="text-sm font-medium text-[#171322]">Belum ada tugas</p>
               <p class="mt-2 text-sm leading-6 text-[#7a7385]">
@@ -280,7 +280,7 @@ onMounted(loadSubject);
               </p>
             </div>
 
-            <div v-else class="mt-6 space-y-3">
+            <div v-else class="mt-5 space-y-3">
               <article
                 v-for="assignment in assignments"
                 :key="assignment.assignmentId"
