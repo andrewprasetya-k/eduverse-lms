@@ -229,8 +229,8 @@ onMounted(loadInitialData);
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-4 py-5 sm:px-6 lg:px-8">
-    <div class="mx-auto max-w-6xl">
+  <main class="max-h-screen flex-1 px-4 py-5 sm:px-6 lg:px-8">
+    <div class="flex w-full max-w-none flex-col gap-5">
       <!-- Topbar / Breadcrumb -->
       <div class="mb-5 flex items-center justify-between">
         <div class="flex items-center gap-4">
