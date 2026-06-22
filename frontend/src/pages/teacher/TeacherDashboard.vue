@@ -4,6 +4,7 @@ import { RouterLink } from "vue-router";
 import {
   PhArrowRight,
   PhBookOpen,
+  PhCalendarBlank,
   PhChalkboardTeacher,
   PhClipboardText,
   PhMegaphone,
@@ -283,15 +284,15 @@ onMounted(loadDashboard);
               </h3>
               <p class="mt-2 text-sm leading-6 text-[#6b6475]">
                 Ringkasan dashboard belum memiliki data untuk school aktif. Buka
-                teaching workspace untuk melihat daftar subject class yang
-                diajar dari endpoint current teacher.
+                teaching workspace untuk melihat subject yang Anda ajar.
               </p>
             </div>
           </section>
 
           <aside class="flex flex-col gap-4">
-            <article
-              class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5"
+            <RouterLink
+              to="/teacher/submissions"
+              class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
             >
               <div class="flex items-center gap-3">
                 <div
@@ -301,17 +302,49 @@ onMounted(loadDashboard);
                 </div>
                 <div>
                   <p class="text-sm font-medium text-[#171322]">
-                    Pending submissions
+                    Pengumpulan siswa
                   </p>
                   <p class="text-sm text-[#7b7486]">
-                    Review detail akan tersedia di halaman submissions.
+                    Pantau pengumpulan siswa dan lanjutkan review dari halaman
+                    Pengumpulan.
                   </p>
                 </div>
               </div>
-            </article>
+              <span
+                class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#4f46e5]"
+              >
+                Buka pengumpulan
+                <PhArrowRight :size="16" />
+              </span>
+            </RouterLink>
+
+            <RouterLink
+              to="/teacher/assignments"
+              class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef7f2] text-[#2f7d5c]"
+                >
+                  <PhCalendarBlank :size="22" weight="duotone" />
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-[#171322]">Tugas Saya</p>
+                  <p class="text-sm text-[#7b7486]">
+                    Kelola semua tugas dari subject yang Anda ajar.
+                  </p>
+                </div>
+              </div>
+              <span
+                class="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#4f46e5]"
+              >
+                Buka tugas
+                <PhArrowRight :size="16" />
+              </span>
+            </RouterLink>
 
             <article
-              class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5"
+              class="rounded-[22px] bg-white/70 p-5 shadow-sm ring-1 ring-black/5"
             >
               <div class="flex items-center gap-3">
                 <div
@@ -322,8 +355,8 @@ onMounted(loadDashboard);
                 <div>
                   <p class="text-sm font-medium text-[#171322]">Feed kelas</p>
                   <p class="text-sm text-[#7b7486]">
-                    Pengumuman class-level akan dibuat dari konteks class yang
-                    valid.
+                    Feed dan pengumuman kelas masih ditunda untuk tahap
+                    berikutnya.
                   </p>
                 </div>
               </div>
