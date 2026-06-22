@@ -26,6 +26,7 @@ import AdminSubjectClasses from "../pages/admin/AdminSubjectClasses.vue";
 import AdminUsers from "../pages/admin/AdminUsers.vue";
 import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard.vue";
 import FeaturePlaceholder from "../components/common/FeaturePlaceholder.vue";
+import TeacherCreate from "../pages/teacher/TeacherCreate.vue";
 import TeacherContentCreate from "../pages/teacher/TeacherContentCreate.vue";
 import TeacherAssignmentReview from "../pages/teacher/TeacherAssignmentReview.vue";
 
@@ -212,13 +213,7 @@ const router = createRouter({
         {
           path: "create",
           name: "teacher-create",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Create content",
-            title: "Pilih subject terlebih dahulu",
-            description:
-              "Material dan tugas harus dibuat dari subject workspace agar selalu terhubung ke subject class yang benar.",
-          },
+          component: TeacherCreate,
         },
         {
           path: "feed",
