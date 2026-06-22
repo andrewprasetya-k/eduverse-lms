@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { PhArrowRight, PhGraduationCap } from "@phosphor-icons/vue";
+import { PhArrowRight } from "@phosphor-icons/vue";
 import { dashboardByRole } from "../../router";
 import { useAuthStore } from "../../stores/auth";
 
@@ -44,9 +44,13 @@ async function submit() {
     >
       <div class="flex items-center gap-3">
         <div
-          class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#4f46e5] text-white"
+          class="flex h-14 w-14 items-center justify-center rounded-2xl"
         >
-          <PhGraduationCap :size="24" weight="duotone" />
+          <img
+            src="/logo_fix.svg"
+            alt="EduVerse"
+            class="h-14 w-14 rounded-2xl object-contain"
+          />
         </div>
         <div>
           <p class="text-sm font-medium text-[#4f46e5]">Eduverse</p>
@@ -82,9 +86,13 @@ async function submit() {
         <div class="mb-8">
           <div class="mb-8 flex items-center gap-3 md:hidden">
             <div
-              class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#4f46e5] text-white"
+              class="flex h-12 w-12 items-center justify-center rounded-2xl"
             >
-              <PhGraduationCap :size="24" weight="duotone" />
+              <img
+                src="/logo_fix.svg"
+                alt="EduVerse"
+                class="h-12 w-12 rounded-2xl object-contain"
+              />
             </div>
             <div>
               <p class="text-sm font-medium text-[#4f46e5]">Eduverse</p>

@@ -27,10 +27,12 @@ function isActive(to: string) {
   <aside
     class="flex h-full w-16 flex-col items-center border-r border-[#ebe7df] bg-white/95 px-0 py-4"
   >
-    <div
-      class="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#4f46e5] text-[13px] font-medium text-white"
-    >
-      Ev
+    <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-xl">
+      <img
+        src="/logo_fix.svg"
+        alt="EduVerse"
+        class="h-9 w-9 rounded-xl object-contain"
+      />
     </div>
 
     <nav class="flex flex-1 flex-col items-center gap-1" :aria-label="label">
