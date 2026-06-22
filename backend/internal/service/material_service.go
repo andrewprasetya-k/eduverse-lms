@@ -122,15 +122,8 @@ func (s *materialService) Create(ctx context.Context, mat *domain.Material, medi
 		}
 	}
 
-	// Link attachments
-	for _, mID := range mediaIDs {
-		att := &domain.Attachment{
-			SchoolID:   mat.SchoolID,
-			SourceID:   mat.ID,
-			SourceType: domain.SourceMaterial,
-			MediaID:    mID,
-		}
-		s.attService.Link(att)
+	if err := replaceSourceAttachments(s.attService, mat.SchoolID, domain.SourceMaterial, mat.ID, mediaIDs); err != nil {
+		return err
 	}
 
 	// Best-effort: notify students in the class
@@ -173,8 +166,11 @@ func (s *materialService) GetByID(id string) (*domain.Material, error) {
 
 func (s *materialService) Update(mat *domain.Material, mediaIDs []string, actorUserID string, isAdmin bool) error {
 	mat.Title = strings.TrimSpace(mat.Title)
+	var attachmentMediaIDs []string
 	if mediaIDs != nil {
-		if err := validateAttachableMedia(s.mediaRepo, mediaIDs, mat.SchoolID, actorUserID, isAdmin); err != nil {
+		var err error
+		attachmentMediaIDs, err = prepareAttachableMediaIDs(s.mediaRepo, mediaIDs, mat.SchoolID, actorUserID, isAdmin)
+		if err != nil {
 			return err
 		}
 	}
@@ -185,18 +181,8 @@ func (s *materialService) Update(mat *domain.Material, mediaIDs []string, actorU
 	}
 
 	if mediaIDs != nil {
-		// 1. Unlink existing attachments for this material
-		s.attService.UnlinkBySource(string(domain.SourceMaterial), mat.ID)
-
-		// 2. Link new attachments
-		for _, mID := range mediaIDs {
-			att := &domain.Attachment{
-				SchoolID:   mat.SchoolID,
-				SourceID:   mat.ID,
-				SourceType: domain.SourceMaterial,
-				MediaID:    mID,
-			}
-			s.attService.Link(att)
+		if err := replaceSourceAttachments(s.attService, mat.SchoolID, domain.SourceMaterial, mat.ID, attachmentMediaIDs); err != nil {
+			return err
 		}
 	}
 

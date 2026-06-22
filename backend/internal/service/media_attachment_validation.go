@@ -7,40 +7,45 @@ import (
 )
 
 func validateAttachableMedia(mediaRepo repository.MediaRepository, mediaIDs []string, schoolID string, userID string, isAdmin bool) error {
+	_, err := prepareAttachableMediaIDs(mediaRepo, mediaIDs, schoolID, userID, isAdmin)
+	return err
+}
+
+func prepareAttachableMediaIDs(mediaRepo repository.MediaRepository, mediaIDs []string, schoolID string, userID string, isAdmin bool) ([]string, error) {
 	uniqueIDs, err := uniqueNonEmptyIDs(mediaIDs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(uniqueIDs) == 0 {
-		return nil
+		return uniqueIDs, nil
 	}
 
 	medias, err := mediaRepo.GetByIDs(uniqueIDs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if len(medias) != len(uniqueIDs) {
-		return fmt.Errorf("invalid media attachment")
+		return nil, fmt.Errorf("invalid media attachment")
 	}
 
 	seen := make(map[string]bool, len(medias))
 	for _, media := range medias {
 		seen[media.ID] = true
 		if media.SchoolID != schoolID {
-			return fmt.Errorf("forbidden: media does not belong to current school")
+			return nil, fmt.Errorf("forbidden: media does not belong to current school")
 		}
 		if !isAdmin && media.OwnerID != userID {
-			return fmt.Errorf("forbidden: media cannot be attached by current user")
+			return nil, fmt.Errorf("forbidden: media cannot be attached by current user")
 		}
 	}
 
 	for _, id := range uniqueIDs {
 		if !seen[id] {
-			return fmt.Errorf("invalid media attachment")
+			return nil, fmt.Errorf("invalid media attachment")
 		}
 	}
 
-	return nil
+	return uniqueIDs, nil
 }
 
 func uniqueNonEmptyIDs(ids []string) ([]string, error) {

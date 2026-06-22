@@ -59,6 +59,11 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
+	if strings.Contains(errStr, "failed to link media attachments") {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to link media attachments"})
+		return
+	}
+
 	// Cannot delete due to dependencies
 	if strings.Contains(errStr, "teacher subject class assignment exists") {
 		c.JSON(http.StatusConflict, gin.H{"error": "Teacher masih ditugaskan mengajar di kelas ini. Lepaskan penugasan mengajar terlebih dahulu."})

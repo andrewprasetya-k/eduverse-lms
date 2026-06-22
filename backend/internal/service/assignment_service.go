@@ -72,23 +72,17 @@ func (s *assignmentService) CreateAssignment(asg *domain.Assignment, mediaIDs []
 	if err := s.validateAssignmentCategory(asg.CategoryID, asg.SchoolID); err != nil {
 		return err
 	}
-	if err := validateAttachableMedia(s.mediaRepo, mediaIDs, asg.SchoolID, actorUserID, isAdmin); err != nil {
-		return err
-	}
-
-	err := s.repo.CreateAssignment(asg)
+	attachmentMediaIDs, err := prepareAttachableMediaIDs(s.mediaRepo, mediaIDs, asg.SchoolID, actorUserID, isAdmin)
 	if err != nil {
 		return err
 	}
 
-	for _, mID := range mediaIDs {
-		att := &domain.Attachment{
-			SchoolID:   asg.SchoolID,
-			SourceID:   asg.ID,
-			SourceType: domain.SourceAssignment,
-			MediaID:    mID,
-		}
-		s.attService.Link(att)
+	if err := s.repo.CreateAssignment(asg); err != nil {
+		return err
+	}
+
+	if err := replaceSourceAttachments(s.attService, asg.SchoolID, domain.SourceAssignment, asg.ID, attachmentMediaIDs); err != nil {
+		return err
 	}
 
 	// Best-effort: notify students in the class
@@ -276,8 +270,11 @@ func (s *assignmentService) UpdateAssignment(id string, asg *domain.Assignment, 
 			return err
 		}
 	}
+	var attachmentMediaIDs []string
 	if mediaIDs != nil {
-		if err := validateAttachableMedia(s.mediaRepo, mediaIDs, asg.SchoolID, actorUserID, isAdmin); err != nil {
+		var err error
+		attachmentMediaIDs, err = prepareAttachableMediaIDs(s.mediaRepo, mediaIDs, asg.SchoolID, actorUserID, isAdmin)
+		if err != nil {
 			return err
 		}
 	}
@@ -288,16 +285,8 @@ func (s *assignmentService) UpdateAssignment(id string, asg *domain.Assignment, 
 	}
 
 	if mediaIDs != nil {
-		// Update attachments
-		s.attService.UnlinkBySource(string(domain.SourceAssignment), id)
-		for _, mID := range mediaIDs {
-			att := &domain.Attachment{
-				SchoolID:   asg.SchoolID,
-				SourceID:   id,
-				SourceType: domain.SourceAssignment,
-				MediaID:    mID,
-			}
-			s.attService.Link(att)
+		if err := replaceSourceAttachments(s.attService, asg.SchoolID, domain.SourceAssignment, id, attachmentMediaIDs); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -321,26 +310,17 @@ func (s *assignmentService) Submit(sbm *domain.Submission, mediaIDs []string, ac
 		return fmt.Errorf("submission past due")
 	}
 
-	if err := validateAttachableMedia(s.mediaRepo, mediaIDs, sbm.SchoolID, actorUserID, isAdmin); err != nil {
-		return err
-	}
-
-	err = s.repo.UpsertSubmission(sbm)
+	attachmentMediaIDs, err := prepareAttachableMediaIDs(s.mediaRepo, mediaIDs, sbm.SchoolID, actorUserID, isAdmin)
 	if err != nil {
 		return err
 	}
 
-	// Unlink existing attachments for this submission if updating
-	s.attService.UnlinkBySource(string(domain.SourceSubmission), sbm.ID)
+	if err = s.repo.UpsertSubmission(sbm); err != nil {
+		return err
+	}
 
-	for _, mID := range mediaIDs {
-		att := &domain.Attachment{
-			SchoolID:   sbm.SchoolID,
-			SourceID:   sbm.ID,
-			SourceType: domain.SourceSubmission,
-			MediaID:    mID,
-		}
-		s.attService.Link(att)
+	if err := replaceSourceAttachments(s.attService, sbm.SchoolID, domain.SourceSubmission, sbm.ID, attachmentMediaIDs); err != nil {
+		return err
 	}
 	return nil
 }
@@ -413,8 +393,13 @@ func (s *assignmentService) UpdateSubmission(id string, mediaIDs []string, actor
 	if err != nil {
 		return err
 	}
-	if err := validateAttachableMedia(s.mediaRepo, mediaIDs, sbm.SchoolID, actorUserID, isAdmin); err != nil {
-		return err
+	var attachmentMediaIDs []string
+	if mediaIDs != nil {
+		var err error
+		attachmentMediaIDs, err = prepareAttachableMediaIDs(s.mediaRepo, mediaIDs, sbm.SchoolID, actorUserID, isAdmin)
+		if err != nil {
+			return err
+		}
 	}
 
 	sbm.SubmittedAt = time.Now()
@@ -424,15 +409,8 @@ func (s *assignmentService) UpdateSubmission(id string, mediaIDs []string, actor
 	}
 
 	if mediaIDs != nil {
-		s.attService.UnlinkBySource(string(domain.SourceSubmission), id)
-		for _, mID := range mediaIDs {
-			att := &domain.Attachment{
-				SchoolID:   sbm.SchoolID,
-				SourceID:   id,
-				SourceType: domain.SourceSubmission,
-				MediaID:    mID,
-			}
-			s.attService.Link(att)
+		if err := replaceSourceAttachments(s.attService, sbm.SchoolID, domain.SourceSubmission, id, attachmentMediaIDs); err != nil {
+			return err
 		}
 	}
 	return nil

@@ -10,6 +10,7 @@ type AttachmentRepository interface {
 	GetBySource(sourceType domain.SourceType, sourceID string) ([]*domain.Attachment, error)
 	Delete(id string) error
 	DeleteBySource(sourceType domain.SourceType, sourceID string) error
+	ReplaceBySource(schoolID string, sourceType domain.SourceType, sourceID string, mediaIDs []string) error
 }
 
 type attachmentRepository struct {
@@ -46,4 +47,27 @@ func (r *attachmentRepository) Delete(id string) error {
 func (r *attachmentRepository) DeleteBySource(sourceType domain.SourceType, sourceID string) error {
 	return r.db.Where("att_source_type = ? AND att_source_id = ?", sourceType, sourceID).
 		Delete(&domain.Attachment{}).Error
+}
+
+func (r *attachmentRepository) ReplaceBySource(schoolID string, sourceType domain.SourceType, sourceID string, mediaIDs []string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("att_source_type = ? AND att_source_id = ?", sourceType, sourceID).
+			Delete(&domain.Attachment{}).Error; err != nil {
+			return err
+		}
+
+		for _, mediaID := range mediaIDs {
+			att := &domain.Attachment{
+				SchoolID:   schoolID,
+				SourceID:   sourceID,
+				SourceType: sourceType,
+				MediaID:    mediaID,
+			}
+			if err := tx.Create(att).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
