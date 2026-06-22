@@ -30,6 +30,7 @@ import ReadProfile from "../pages/profile/ReadProfile.vue";
 import TeacherCreate from "../pages/teacher/TeacherCreate.vue";
 import TeacherContentCreate from "../pages/teacher/TeacherContentCreate.vue";
 import TeacherAssignmentReview from "../pages/teacher/TeacherAssignmentReview.vue";
+import TeacherSubmissions from "../pages/teacher/TeacherSubmissions.vue";
 
 export const dashboardByRole: Record<RoleName, string> = {
   super_admin: "/superadmin/dashboard",
@@ -203,13 +204,7 @@ const router = createRouter({
         {
           path: "submissions",
           name: "teacher-submissions",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Submission review",
-            title: "Review submission",
-            description:
-              "Halaman ini nantinya menampilkan submission siswa yang perlu dinilai dan feedback yang sudah diberikan.",
-          },
+          component: TeacherSubmissions,
         },
         {
           path: "create",
