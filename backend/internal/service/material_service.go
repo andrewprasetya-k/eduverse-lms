@@ -145,7 +145,24 @@ func (s *materialService) Create(ctx context.Context, mat *domain.Material, medi
 }
 
 func (s *materialService) FindAll(search string, subjectClassID string, page int, limit int) ([]*domain.Material, int64, error) {
-	return s.repo.FindAll(search, subjectClassID, page, limit)
+	materials, total, err := s.repo.FindAll(search, subjectClassID, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for _, mat := range materials {
+		atts, err := s.attService.GetBySource(string(domain.SourceMaterial), mat.ID)
+		if err != nil {
+			return nil, 0, err
+		}
+		
+		mat.Attachments = nil
+		for _, a := range atts {
+			mat.Attachments = append(mat.Attachments, *a)
+		}
+	}
+
+	return materials, total, nil
 }
 
 func (s *materialService) GetByID(id string) (*domain.Material, error) {
@@ -155,7 +172,11 @@ func (s *materialService) GetByID(id string) (*domain.Material, error) {
 	}
 
 	// Load attachments metadata
-	atts, _ := s.attService.GetBySource(string(domain.SourceMaterial), id)
+	atts, err := s.attService.GetBySource(string(domain.SourceMaterial), id)
+	if err != nil {
+		return nil, err
+	}
+
 	mat.Attachments = nil
 	for _, a := range atts {
 		mat.Attachments = append(mat.Attachments, *a)

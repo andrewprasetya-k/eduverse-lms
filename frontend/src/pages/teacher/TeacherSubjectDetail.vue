@@ -252,11 +252,15 @@ onMounted(loadWorkspace)
                 </p>
               </div>
 
-              <article
+              <RouterLink
                 v-for="material in materials"
                 v-else
                 :key="material.materialId"
-                class="rounded-[18px] bg-[#faf8f4] p-5 ring-1 ring-black/5"
+                :to="{
+                  name: 'teacher-material-detail',
+                  params: { subjectClassId: subjectClassId, matId: material.materialId },
+                }"
+                class="block rounded-[18px] bg-[#faf8f4] p-5 ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(66,55,40,0.08)]"
               >
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
@@ -286,7 +290,7 @@ onMounted(loadWorkspace)
                     Oleh {{ material.creatorName }}
                   </span>
                 </div>
-              </article>
+              </RouterLink>
             </div>
 
             <div v-else-if="activeTab === 'assignments'" class="space-y-3">
@@ -346,6 +350,15 @@ onMounted(loadWorkspace)
                     <PhPaperclip :size="16" weight="duotone" />
                     {{ assignment.attachments?.length ?? 0 }} attachment
                   </span>
+                  <RouterLink
+                    :to="{
+                      name: 'teacher-assignment-review',
+                      params: { assignmentId: assignment.assignmentId },
+                    }"
+                    class="ml-auto inline-flex items-center gap-1.5 rounded-2xl bg-[#171322] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#2f2b3a]"
+                  >
+                    Review pengumpulan
+                  </RouterLink>
                 </div>
               </article>
             </div>

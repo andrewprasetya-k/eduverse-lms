@@ -31,6 +31,7 @@ import ReadProfile from "../pages/profile/ReadProfile.vue";
 import TeacherCreate from "../pages/teacher/TeacherCreate.vue";
 import TeacherContentCreate from "../pages/teacher/TeacherContentCreate.vue";
 import TeacherAssignmentReview from "../pages/teacher/TeacherAssignmentReview.vue";
+import TeacherMaterialDetail from "../pages/teacher/TeacherMaterialDetail.vue";
 import TeacherSubmissions from "../pages/teacher/TeacherSubmissions.vue";
 
 export const dashboardByRole: Record<RoleName, string> = {
@@ -174,6 +175,11 @@ const router = createRouter({
           path: "subjects/:subjectClassId",
           name: "teacher-subject-detail",
           component: TeacherSubjectDetail,
+        },
+        {
+          path: "subjects/:subjectClassId/materials/:matId",
+          name: "teacher-material-detail",
+          component: TeacherMaterialDetail,
         },
         {
           path: "subjects/:subjectClassId/create",
