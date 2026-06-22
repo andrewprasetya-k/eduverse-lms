@@ -195,11 +195,11 @@ func RequireSystemSuperAdmin(schoolService interface {
 		}
 
 		if slices.Contains(roles, "super_admin") {
-				c.Set("school_id", systemSchoolID)
-				c.Set("user_roles", roles)
-				c.Next()
-				return
-			}
+			c.Set("school_id", systemSchoolID)
+			c.Set("user_roles", roles)
+			c.Next()
+			return
+		}
 
 		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: insufficient permissions"})
 		c.Abort()
