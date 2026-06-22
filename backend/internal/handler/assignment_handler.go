@@ -377,6 +377,28 @@ func (h *AssignmentHandler) GetTeacherSubmissionInbox(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+func (h *AssignmentHandler) GetStudentAssignmentInbox(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	schoolID := h.getSchoolContext(c)
+	if schoolID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required (SchoolId header)"})
+		return
+	}
+
+	response, err := h.service.GetStudentAssignmentInbox(userID, schoolID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func (h *AssignmentHandler) GetSubmissionsByAssignment(c *gin.Context) {
 	assignmentID := c.Param("assignmentId")
 	asg, err := h.service.GetAssignmentWithSubmissions(assignmentID)

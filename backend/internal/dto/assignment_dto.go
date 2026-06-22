@@ -121,6 +121,38 @@ type TeacherSubmissionInboxResponseDTO struct {
 	Items   []TeacherSubmissionInboxItemDTO  `json:"items"`
 }
 
+type StudentAssignmentInboxSummaryDTO struct {
+	TotalAssignments  int `json:"totalAssignments"`
+	NotSubmittedCount int `json:"notSubmittedCount"`
+	SubmittedCount    int `json:"submittedCount"`
+	GradedCount       int `json:"gradedCount"`
+	OverdueCount      int `json:"overdueCount"`
+}
+
+type StudentAssignmentInboxItemDTO struct {
+	AssignmentID    string     `json:"assignmentId" gorm:"column:assignment_id"`
+	SubjectClassID  string     `json:"subjectClassId" gorm:"column:subject_class_id"`
+	AssignmentTitle string     `json:"assignmentTitle" gorm:"column:assignment_title"`
+	SubjectName     string     `json:"subjectName" gorm:"column:subject_name"`
+	SubjectCode     string     `json:"subjectCode" gorm:"column:subject_code"`
+	ClassName       string     `json:"className" gorm:"column:class_name"`
+	ClassCode       string     `json:"classCode" gorm:"column:class_code"`
+	CategoryName    string     `json:"categoryName" gorm:"column:category_name"`
+	Deadline        *time.Time `json:"deadline" gorm:"column:deadline"`
+	SubmissionID    *string    `json:"submissionId" gorm:"column:submission_id"`
+	SubmittedAt     *time.Time `json:"submittedAt" gorm:"column:submitted_at"`
+	Score           *float64   `json:"score" gorm:"column:score"`
+	IsSubmitted     bool       `json:"isSubmitted" gorm:"column:is_submitted"`
+	IsGraded        bool       `json:"isGraded" gorm:"column:is_graded"`
+	IsOverdue       bool       `json:"isOverdue" gorm:"column:is_overdue"`
+	IsSubmittedLate bool       `json:"isSubmittedLate" gorm:"column:is_submitted_late"`
+}
+
+type StudentAssignmentInboxResponseDTO struct {
+	Summary StudentAssignmentInboxSummaryDTO `json:"summary"`
+	Items   []StudentAssignmentInboxItemDTO  `json:"items"`
+}
+
 // Submission
 type CreateSubmissionDTO struct {
 	SchoolID string   `json:"schoolId" binding:"required,uuid"`

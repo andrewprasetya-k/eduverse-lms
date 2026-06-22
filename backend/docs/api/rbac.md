@@ -246,6 +246,7 @@ Content-Type: application/json
 | `/assignments/:id` | GET | ❌ | ❌ | 📖* | ❌ |
 | `/assignments/subject-class/:subjectClassId` | GET | ❌ | 📖** | 📖* | 📖*** |
 | `/assignments/teacher-submissions` | GET | ❌ | ❌ | 📖* | ❌ |
+| `/assignments/student-assignments` | GET | ❌ | ❌ | ❌ | 📖*** |
 | `/assignments/:id` | PATCH/DELETE | ❌ | ✅** | ✅* | ❌ |
 | `/assignments/submit/:id` | POST | ❌ | ❌ | ❌ | ✅ |
 | `/assignments/submit/:id` | GET | ❌ | ❌ | 📖* | ❌ |

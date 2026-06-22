@@ -12,6 +12,7 @@ import StudentDashboard from "../pages/student/StudentDashboard.vue";
 import StudentFeed from "../pages/student/StudentFeed.vue";
 import StudentSubjectDetail from "../pages/student/StudentSubjectDetail.vue";
 import StudentAssignmentDetail from "../pages/student/StudentAssignmentDetail.vue";
+import StudentAssignments from "../pages/student/StudentAssignments.vue";
 import StudentMaterialDetail from "../pages/student/StudentMaterialDetail.vue";
 import StudentSubjects from "../pages/student/StudentSubjects.vue";
 import StudentGrades from "../pages/student/StudentGrades.vue";
@@ -108,13 +109,7 @@ const router = createRouter({
         {
           path: "assignments",
           name: "student-assignments",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Student assignments",
-            title: "Daftar tugas siswa",
-            description:
-              "Halaman ini nantinya membantu siswa melihat tugas aktif, deadline, status submit, dan hasil penilaian.",
-          },
+          component: StudentAssignments,
         },
         {
           path: "grades",

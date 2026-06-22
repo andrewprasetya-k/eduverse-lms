@@ -63,3 +63,35 @@ export interface MySubmissionResponse {
   status: MySubmissionStatus
   submission: MySubmission | null
 }
+
+export interface StudentAssignmentInboxSummary {
+  totalAssignments: number
+  notSubmittedCount: number
+  submittedCount: number
+  gradedCount: number
+  overdueCount: number
+}
+
+export interface StudentAssignmentInboxItem {
+  assignmentId: string
+  subjectClassId: string
+  assignmentTitle: string
+  subjectName: string
+  subjectCode?: string
+  className: string
+  classCode?: string
+  categoryName?: string
+  deadline?: string | null
+  submissionId?: string | null
+  submittedAt?: string | null
+  score?: number | null
+  isSubmitted: boolean
+  isGraded: boolean
+  isOverdue: boolean
+  isSubmittedLate: boolean
+}
+
+export interface StudentAssignmentInboxResponse {
+  summary: StudentAssignmentInboxSummary
+  items: StudentAssignmentInboxItem[]
+}

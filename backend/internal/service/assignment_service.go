@@ -23,6 +23,7 @@ type AssignmentService interface {
 	GetAssignmentWithSubmissions(id string) (*domain.Assignment, error)
 	GetSubjectClassSubmissions(subjectClassID string, schoolID string) ([]*domain.Assignment, error)
 	GetTeacherSubmissionInbox(userID string, schoolID string) (*dto.TeacherSubmissionInboxResponseDTO, error)
+	GetStudentAssignmentInbox(userID string, schoolID string) (*dto.StudentAssignmentInboxResponseDTO, error)
 	GetAssignmentStatus(assignmentID string) (map[string]interface{}, error)
 	UpdateAssignment(id string, asg *domain.Assignment, mediaIDs []string, actorUserID string, isAdmin bool, validateCategory bool) error
 	DeleteAssignment(id string) error
@@ -188,6 +189,36 @@ func (s *assignmentService) GetTeacherSubmissionInbox(userID string, schoolID st
 		response.Summary.PendingCount += item.PendingCount
 		response.Summary.GradedCount += item.GradedCount
 		response.Summary.LateCount += item.LateCount
+	}
+
+	return response, nil
+}
+
+func (s *assignmentService) GetStudentAssignmentInbox(userID string, schoolID string) (*dto.StudentAssignmentInboxResponseDTO, error) {
+	items, err := s.repo.GetStudentAssignmentInbox(userID, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	if items == nil {
+		items = []dto.StudentAssignmentInboxItemDTO{}
+	}
+
+	response := &dto.StudentAssignmentInboxResponseDTO{
+		Items: items,
+	}
+	response.Summary.TotalAssignments = len(items)
+	for _, item := range items {
+		if item.IsSubmitted {
+			response.Summary.SubmittedCount++
+		} else {
+			response.Summary.NotSubmittedCount++
+		}
+		if item.IsGraded {
+			response.Summary.GradedCount++
+		}
+		if item.IsOverdue {
+			response.Summary.OverdueCount++
+		}
 	}
 
 	return response, nil

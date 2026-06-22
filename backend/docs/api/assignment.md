@@ -212,12 +212,66 @@ Base URL: `/api/assignments`
 - Summary totals are sums across all returned items.
 - Items are assignment-level rows with at least one submission.
 
-### 8. Get Assignment Status
+### 8. Get Student Assignments Inbox
+- **URL:** `/student-assignments`
+- **Method:** `GET`
+- **Auth:** Required
+- **Role:** `student`
+- **School Context:** Requires `SchoolId` header
+- **Auth Note:** Student identity is taken from the JWT token. Do not send `userId`, `schoolUserId`, or enrollment fields in body/query.
+- **Purpose:** Student-safe aggregate endpoint for the global assignments list across all active classes and subject classes where the current student is enrolled.
+- **Authorization:** Returns only assignments from active-school classes where the current student has active enrollment (`left_at IS NULL`).
+
+**Response:**
+```json
+{
+  "summary": {
+    "totalAssignments": 3,
+    "notSubmittedCount": 1,
+    "submittedCount": 2,
+    "gradedCount": 1,
+    "overdueCount": 1
+  },
+  "items": [
+    {
+      "assignmentId": "uuid",
+      "subjectClassId": "uuid",
+      "assignmentTitle": "Quiz Chapter 1",
+      "subjectName": "Matematika",
+      "subjectCode": "MTK",
+      "className": "Kelas 10 A",
+      "classCode": "10A",
+      "categoryName": "Kuis",
+      "deadline": "2026-03-01T23:59:59Z",
+      "submissionId": "uuid",
+      "submittedAt": "2026-03-01T10:30:00Z",
+      "score": 90,
+      "isSubmitted": true,
+      "isGraded": true,
+      "isOverdue": false,
+      "isSubmittedLate": false
+    }
+  ]
+}
+```
+
+**Status Rules:**
+- `totalAssignments`: all returned active assignments.
+- `isSubmitted`: current student has an active submission for the assignment.
+- `isGraded`: current student submission has an assessment.
+- `notSubmittedCount`: assignments where `isSubmitted = false`.
+- `submittedCount`: assignments where `isSubmitted = true`.
+- `gradedCount`: assignments where `isGraded = true`.
+- `isOverdue`: deadline has passed and the current student has not submitted.
+- `overdueCount`: count of `isOverdue = true`.
+- `isSubmittedLate`: `submittedAt > deadline`, only when both values exist.
+
+### 9. Get Assignment Status
 - **URL:** `/status/:id`
 - **Method:** `GET`
 - **Response:** Assignment with submission statistics (total, submitted, graded, pending)
 
-### 9. Get My Submission Status
+### 10. Get My Submission Status
 - **URL:** `/my-submission/:assignmentId`
 - **Method:** `GET`
 - **Auth:** Required

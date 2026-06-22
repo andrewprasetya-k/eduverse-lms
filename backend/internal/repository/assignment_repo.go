@@ -22,6 +22,7 @@ type AssignmentRepository interface {
 	GetAssignmentWithSubmissions(id string) (*domain.Assignment, error)
 	GetAssignmentsWithSubmissionsBySubjectClass(subjectClassID string, schoolID string) ([]*domain.Assignment, error)
 	GetTeacherSubmissionInbox(userID string, schoolID string) ([]dto.TeacherSubmissionInboxItemDTO, error)
+	GetStudentAssignmentInbox(userID string, schoolID string) ([]dto.StudentAssignmentInboxItemDTO, error)
 	CountStudentsInClass(classID string) (int, error)
 	GetClassIDBySubjectClass(subjectClassID string) (string, error)
 	UpdateAssignment(asg *domain.Assignment) error
@@ -167,6 +168,61 @@ func (r *assignmentRepository) GetTeacherSubmissionInbox(userID string, schoolID
 		Group("a.asg_id, sc.scl_id, a.asg_title, sub.sub_name, sub.sub_code, c.cls_title, c.cls_code, a.asg_deadline").
 		Having("COUNT(s.sbm_id) > 0").
 		Order("pending_count DESC, a.asg_deadline ASC NULLS LAST, a.asg_title ASC").
+		Scan(&rows).Error
+	return rows, err
+}
+
+func (r *assignmentRepository) GetStudentAssignmentInbox(userID string, schoolID string) ([]dto.StudentAssignmentInboxItemDTO, error) {
+	var rows []dto.StudentAssignmentInboxItemDTO
+	now := time.Now()
+	err := r.db.Table("edv.assignments a").
+		Select(`
+			a.asg_id AS assignment_id,
+			sc.scl_id AS subject_class_id,
+			a.asg_title AS assignment_title,
+			sub.sub_name AS subject_name,
+			sub.sub_code AS subject_code,
+			c.cls_title AS class_name,
+			c.cls_code AS class_code,
+			COALESCE(ac.asc_name, '') AS category_name,
+			a.asg_deadline AS deadline,
+			s.sbm_id AS submission_id,
+			s.submitted_at AS submitted_at,
+			asm.asm_score AS score,
+			(s.sbm_id IS NOT NULL) AS is_submitted,
+			(asm.asm_sbm_id IS NOT NULL) AS is_graded,
+			(a.asg_deadline IS NOT NULL AND a.asg_deadline < ? AND s.sbm_id IS NULL) AS is_overdue,
+			(a.asg_deadline IS NOT NULL AND s.submitted_at IS NOT NULL AND s.submitted_at > a.asg_deadline) AS is_submitted_late
+		`, now).
+		Joins("JOIN edv.subject_classes sc ON sc.scl_id = a.asg_scl_id").
+		Joins("JOIN edv.classes c ON c.cls_id = sc.scl_cls_id").
+		Joins("JOIN edv.subjects sub ON sub.sub_id = sc.scl_sub_id").
+		Joins("JOIN edv.enrollments e ON e.enr_cls_id = c.cls_id").
+		Joins("JOIN edv.school_users scu ON scu.scu_id = e.enr_scu_id").
+		Joins("LEFT JOIN edv.assignment_categories ac ON ac.asc_id = a.asg_asc_id").
+		Joins(`LEFT JOIN LATERAL (
+			SELECT *
+			FROM edv.submissions latest_s
+			WHERE latest_s.sbm_asg_id = a.asg_id
+				AND latest_s.sbm_usr_id = ?
+				AND latest_s.sbm_sch_id = ?
+				AND latest_s.deleted_at IS NULL
+			ORDER BY latest_s.submitted_at DESC, latest_s.sbm_id DESC
+			LIMIT 1
+		) s ON true`, userID, schoolID).
+		Joins(`LEFT JOIN LATERAL (
+			SELECT *
+			FROM edv.assessments latest_asm
+			WHERE latest_asm.asm_sbm_id = s.sbm_id
+			ORDER BY latest_asm.assessed_at DESC, latest_asm.asm_id DESC
+			LIMIT 1
+		) asm ON true`).
+		Where("a.asg_sch_id = ? AND a.deleted_at IS NULL", schoolID).
+		Where("c.cls_sch_id = ? AND c.deleted_at IS NULL", schoolID).
+		Where("sub.sub_sch_id = ?", schoolID).
+		Where("e.enr_sch_id = ? AND e.enr_role = ? AND e.left_at IS NULL", schoolID, "student").
+		Where("scu.scu_usr_id = ? AND scu.scu_sch_id = ?", userID, schoolID).
+		Order("is_overdue DESC, is_submitted ASC, a.asg_deadline ASC NULLS LAST, a.asg_title ASC").
 		Scan(&rows).Error
 	return rows, err
 }
