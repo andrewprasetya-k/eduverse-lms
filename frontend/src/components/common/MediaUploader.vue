@@ -4,12 +4,20 @@ import { PhFile, PhTrash, PhUploadSimple } from '@phosphor-icons/vue'
 import { deleteMedia, uploadMediaFile } from '../../services/media'
 import { useToastStore } from '../../stores/toast'
 
+interface InitialMedia {
+  mediaId: string
+  mediaName: string
+  fileSize?: number
+  fileUrl?: string
+}
+
 interface Props {
   schoolId: string
   ownerType?: string
   maxSizeMb?: number
   limit?: number
   cleanupOnRemove?: boolean
+  initialMedia?: InitialMedia[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -17,6 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
   maxSizeMb: 10,
   limit: 5,
   cleanupOnRemove: false,
+  initialMedia: () => [],
 })
 
 const toast = useToastStore()
@@ -35,9 +44,30 @@ const files = ref<{
   status: 'pending' | 'uploading' | 'success' | 'error'
   errorMessage?: string
   mediaId?: string
+  fileUrl?: string
+  isInitial?: boolean
 }[]>([])
 
 const mediaIds = ref<string[]>([])
+
+import { watch } from 'vue'
+
+watch(() => props.initialMedia, (newVal) => {
+  if (newVal && newVal.length > 0 && files.value.length === 0) {
+    files.value = newVal.map(m => ({
+      name: m.mediaName || 'Lampiran',
+      size: m.fileSize || 0,
+      progress: 100,
+      status: 'success' as const,
+      mediaId: m.mediaId,
+      fileUrl: m.fileUrl,
+      isInitial: true
+    }))
+    mediaIds.value = newVal.map(m => m.mediaId)
+    // Emit initial mediaIds so parent state is synced
+    emit('update:mediaIds', [...mediaIds.value])
+  }
+}, { immediate: true })
 
 function emitUploadState() {
   emit('update:isUploading', files.value.some((file) => file.status === 'uploading'))
@@ -93,7 +123,7 @@ async function removeFile(index: number) {
   const file = files.value[index]
   if (file.mediaId) {
     try {
-      if (props.cleanupOnRemove) {
+      if (props.cleanupOnRemove && !file.isInitial) {
         await deleteMedia(file.mediaId)
       }
       mediaIds.value = mediaIds.value.filter(id => id !== file.mediaId)

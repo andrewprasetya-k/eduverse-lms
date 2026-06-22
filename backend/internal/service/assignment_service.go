@@ -293,6 +293,14 @@ func (s *assignmentService) UpdateAssignment(id string, asg *domain.Assignment, 
 }
 
 func (s *assignmentService) DeleteAssignment(id string) error {
+	submissions, err := s.repo.GetSubmissionsByAssignment(id)
+	if err != nil {
+		return err
+	}
+	if len(submissions) > 0 {
+		return fmt.Errorf("assignment cannot be deleted because it already has student submissions")
+	}
+
 	s.attService.UnlinkBySource(string(domain.SourceAssignment), id)
 	return s.repo.DeleteAssignment(id)
 }

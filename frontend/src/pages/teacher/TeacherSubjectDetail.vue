@@ -8,13 +8,14 @@ import {
   PhCheckCircle,
   PhClipboardText,
   PhFileText,
-  PhPaperclip,
   PhPlusCircle,
   PhUsersThree,
   PhWarningCircle,
+  PhPencilSimple,
+  PhTrash,
 } from '@phosphor-icons/vue'
 import { getSubjectAssignments } from '../../services/assignment'
-import { getSubjectClassSubmissions } from '../../services/teacherAssignment'
+import { getSubjectClassSubmissions, deleteAssignment } from '../../services/teacherAssignment'
 import { getSubjectMaterials } from '../../services/teacherMaterial'
 import { getMyTeachingSubjectClassById } from '../../services/teacherSubjects'
 import type { AssignmentItem } from '../../types/assignment'
@@ -23,10 +24,12 @@ import type { MaterialItem } from '../../types/teacherMaterial'
 import type { TeacherSubjectClass } from '../../types/teacherSubjects'
 import { getSubjectColor } from '../../utils/color'
 import { formatDate, formatDateTime } from '../../utils/date'
+import { useToastStore } from '../../stores/toast'
 
 type WorkspaceTab = 'materials' | 'assignments' | 'submissions'
 
 const route = useRoute()
+const toast = useToastStore()
 const subjectClassId = computed(() => String(route.params.subjectClassId ?? ''))
 
 const activeTab = ref<WorkspaceTab>('materials')
@@ -39,6 +42,7 @@ const loading = ref(false)
 const submissionsLoading = ref(false)
 const errorMessage = ref('')
 const submissionsError = ref('')
+const deletingAssignmentId = ref<string | null>(null)
 
 const submissionCount = computed(
   () =>
@@ -112,6 +116,22 @@ function materialAttachmentLabel(material: MaterialItem) {
 function materialTypeLabel(type?: string) {
   if (!type) return 'Materi'
   return type.toUpperCase()
+}
+
+async function handleDeleteAssignment(id: string) {
+  if (!window.confirm('Apakah anda yakin ingin menghapus tugas ini? Tugas dengan pengumpulan siswa tidak bisa dihapus.')) return
+  deletingAssignmentId.value = id
+  try {
+    await deleteAssignment(id)
+    toast.success('Tugas berhasil dihapus.')
+    const assignmentData = await getSubjectAssignments(subjectClassId.value, 1, 50)
+    assignments.value = assignmentData.data?.data ?? []
+  } catch (err: any) {
+    const msg = err.response?.data?.error || err.response?.data?.message || 'Gagal menghapus tugas.'
+    toast.error(msg)
+  } finally {
+    deletingAssignmentId.value = null
+  }
 }
 
 onMounted(loadWorkspace)
@@ -352,10 +372,28 @@ onMounted(loadWorkspace)
                   </span>
                   <RouterLink
                     :to="{
+                      name: 'teacher-assignment-edit',
+                      params: { subjectClassId: subjectClassId, asgId: assignment.assignmentId },
+                    }"
+                    class="ml-auto inline-flex items-center gap-1.5 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-[#4f46e5] transition border border-[#eef2ff] hover:bg-[#eef2ff]"
+                  >
+                    <PhPencilSimple :size="16" />
+                    Edit
+                  </RouterLink>
+                  <button
+                    @click="handleDeleteAssignment(assignment.assignmentId)"
+                    :disabled="deletingAssignmentId === assignment.assignmentId"
+                    class="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-[#dc2626] transition border border-[#fef2f2] hover:bg-[#fef2f2] disabled:opacity-50"
+                  >
+                    <PhTrash :size="16" />
+                    {{ deletingAssignmentId === assignment.assignmentId ? 'Menghapus...' : 'Hapus' }}
+                  </button>
+                  <RouterLink
+                    :to="{
                       name: 'teacher-assignment-review',
                       params: { assignmentId: assignment.assignmentId },
                     }"
-                    class="ml-auto inline-flex items-center gap-1.5 rounded-2xl bg-[#171322] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#2f2b3a]"
+                    class="inline-flex items-center gap-1.5 rounded-2xl bg-[#171322] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#2f2b3a]"
                   >
                     Review pengumpulan
                   </RouterLink>

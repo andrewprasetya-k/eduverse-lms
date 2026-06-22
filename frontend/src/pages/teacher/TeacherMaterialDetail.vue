@@ -1,23 +1,30 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   PhArrowLeft,
   PhBookOpen,
   PhFileText,
   PhWarningCircle,
+  PhPencilSimple,
+  PhTrash,
 } from '@phosphor-icons/vue'
 import { getMaterialById } from '../../services/classWorkspace'
+import { deleteMaterial } from '../../services/teacherMaterial'
 import type { MaterialItem } from '../../types/classWorkspace'
 import { formatDateTime } from '../../utils/date'
+import { useToastStore } from '../../stores/toast'
 
 const route = useRoute()
+const router = useRouter()
+const toast = useToastStore()
 const subjectClassId = computed(() => String(route.params.subjectClassId ?? ''))
 const materialId = computed(() => String(route.params.matId ?? ''))
 const material = ref<MaterialItem | null>(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
 const didLoad = ref(false)
+const isDeleting = ref(false)
 
 async function loadMaterial() {
   if (!subjectClassId.value || !materialId.value) {
@@ -40,18 +47,53 @@ async function loadMaterial() {
   }
 }
 
+async function handleDelete() {
+  if (!window.confirm('Apakah anda yakin ingin menghapus materi ini? Tindakan ini tidak dapat dibatalkan.')) return
+  isDeleting.value = true
+  try {
+    await deleteMaterial(materialId.value)
+    toast.success('Materi berhasil dihapus.')
+    router.push(`/teacher/subjects/${subjectClassId.value}`)
+  } catch (err: any) {
+    const msg = err.response?.data?.error || err.response?.data?.message || 'Gagal menghapus materi.'
+    toast.error(msg)
+  } finally {
+    isDeleting.value = false
+  }
+}
+
 onMounted(loadMaterial)
 </script>
 
 <template>
   <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
-    <RouterLink
-      class="mb-5 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-[#6b6475] transition hover:text-[#171322]"
-      :to="`/teacher/subjects/${subjectClassId}`"
-    >
-      <PhArrowLeft :size="18" />
-      Kembali ke workspace
-    </RouterLink>
+    <div class="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-4xl">
+      <RouterLink
+        class="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-[#6b6475] transition hover:text-[#171322]"
+        :to="`/teacher/subjects/${subjectClassId}`"
+      >
+        <PhArrowLeft :size="18" />
+        Kembali ke workspace
+      </RouterLink>
+
+      <div v-if="material" class="flex items-center gap-3">
+        <RouterLink
+          :to="`/teacher/subjects/${subjectClassId}/materials/${materialId}/edit`"
+          class="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#4f46e5] border border-[#eef2ff] hover:bg-[#eef2ff] transition"
+        >
+          <PhPencilSimple :size="16" />
+          Edit Materi
+        </RouterLink>
+        <button
+          @click="handleDelete"
+          :disabled="isDeleting"
+          class="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-[#dc2626] border border-[#fef2f2] hover:bg-[#fef2f2] transition disabled:opacity-50"
+        >
+          <PhTrash :size="16" />
+          {{ isDeleting ? 'Menghapus...' : 'Hapus' }}
+        </button>
+      </div>
+    </div>
 
     <section v-if="isLoading" class="max-w-4xl space-y-3">
       <div class="h-40 animate-pulse rounded-3xl border border-[#ebe7df] bg-white" />

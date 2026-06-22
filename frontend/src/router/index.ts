@@ -182,6 +182,16 @@ const router = createRouter({
           component: TeacherMaterialDetail,
         },
         {
+          path: "subjects/:subjectClassId/materials/:matId/edit",
+          name: "teacher-material-edit",
+          component: TeacherContentCreate,
+        },
+        {
+          path: "subjects/:subjectClassId/assignments/:asgId/edit",
+          name: "teacher-assignment-edit",
+          component: TeacherContentCreate,
+        },
+        {
           path: "subjects/:subjectClassId/create",
           name: "teacher-content-create",
           component: TeacherContentCreate,

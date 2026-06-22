@@ -12,6 +12,16 @@ export async function createAssignment(payload: CreateAssignmentPayload) {
   return data
 }
 
+export async function updateAssignment(id: string, payload: Partial<CreateAssignmentPayload>) {
+  const { data } = await api.patch(`/assignments/${id}`, payload)
+  return data
+}
+
+export async function deleteAssignment(id: string) {
+  const { data } = await api.delete(`/assignments/${id}`)
+  return data
+}
+
 export async function getAssignmentCategories(schoolCode: string) {
   const { data } = await api.get<SchoolCategoriesResponse>(`/assignments/categories/school/${schoolCode}`)
   return data

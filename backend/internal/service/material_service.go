@@ -155,7 +155,7 @@ func (s *materialService) FindAll(search string, subjectClassID string, page int
 		if err != nil {
 			return nil, 0, err
 		}
-		
+
 		mat.Attachments = nil
 		for _, a := range atts {
 			mat.Attachments = append(mat.Attachments, *a)

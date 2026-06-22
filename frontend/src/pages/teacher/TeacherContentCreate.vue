@@ -15,8 +15,11 @@ import { getMyTeachingSubjectClassById } from "../../services/teacherSubjects";
 import {
   getAssignmentCategories,
   createAssignment,
+  updateAssignment,
 } from "../../services/teacherAssignment";
-import { createMaterial } from "../../services/teacherMaterial";
+import { createMaterial, updateMaterial } from "../../services/teacherMaterial";
+import { getSubjectAssignmentDetail } from "../../services/assignment";
+import { getMaterialById } from "../../services/classWorkspace";
 import { deleteMedia } from "../../services/media";
 import MediaUploader from "../../components/common/MediaUploader.vue";
 import type { TeacherSubjectClass } from "../../types/teacherSubjects";
@@ -31,7 +34,11 @@ const subjectClassId = computed(() =>
 );
 const subject = ref<TeacherSubjectClass | null>(null);
 const categories = ref<AssignmentCategory[]>([]);
+const materialId = computed(() => String(route.params.matId ?? ""));
+const assignmentId = computed(() => String(route.params.asgId ?? ""));
+const isEditMode = computed(() => !!materialId.value || !!assignmentId.value);
 const activeTab = ref<"material" | "assignment">("material");
+const existingAttachments = ref<any[]>([]);
 const loading = ref(false);
 const submitting = ref(false);
 const errorMessage = ref("");
@@ -110,12 +117,61 @@ async function loadInitialData() {
         activeSchoolCode.value,
       );
       categories.value = categoriesData.categories;
-      if (categories.value.length > 0) {
+      if (categories.value.length > 0 && !isEditMode.value) {
         form.value.categoryId = categories.value[0].categoryId;
       }
     } catch {
       categories.value = [];
       categoryErrorMessage.value = "Kategori tugas belum bisa dimuat.";
+    }
+
+    if (isEditMode.value) {
+      if (materialId.value) {
+        activeTab.value = "material";
+        const mat = await getMaterialById(materialId.value);
+        if (mat) {
+          form.value.title = mat.materialTitle;
+          form.value.description = mat.materialDesc || "";
+          form.value.materialType = (mat.materialType as any) || "pdf";
+          if (mat.attachments) {
+            existingAttachments.value = mat.attachments.map((a: any) => ({
+              mediaId: a.mediaId,
+              mediaName: a.mediaName,
+              fileSize: a.fileSize,
+              fileUrl: a.fileUrl
+            }));
+            form.value.mediaIds = mat.attachments.map((a: any) => a.mediaId);
+          }
+        }
+      } else if (assignmentId.value) {
+        activeTab.value = "assignment";
+        const asgData = await getSubjectAssignmentDetail(subjectClassId.value, assignmentId.value);
+        if (asgData && asgData.assignment) {
+          const asg = asgData.assignment;
+          form.value.title = asg.assignmentTitle;
+          form.value.description = asg.assignmentDescription || "";
+          form.value.allowLate = asg.allowLateSubmission ?? false;
+          if (asg.deadline) {
+            const dateObj = new Date(asg.deadline);
+            form.value.deadlineDate = dateObj.toISOString().split("T")[0];
+            form.value.deadlineTime = dateObj.toISOString().split("T")[1].substring(0, 5);
+          }
+          if (asg.attachments) {
+            existingAttachments.value = asg.attachments.map((a: any) => ({
+              mediaId: a.mediaId,
+              mediaName: a.mediaName,
+              fileSize: a.fileSize,
+              fileUrl: a.fileUrl
+            }));
+            form.value.mediaIds = asg.attachments.map((a: any) => a.mediaId);
+          }
+          // find category ID by name
+          const cat = categories.value.find(c => c.categoryName === asg.categoryName);
+          if (cat) {
+            form.value.categoryId = cat.categoryId;
+          }
+        }
+      }
     }
   } catch (err) {
     errorMessage.value = "Gagal memuat data pendukung. Coba refresh halaman.";
@@ -158,30 +214,50 @@ async function handleSubmit() {
   submitting.value = true;
   try {
     if (activeTab.value === "material") {
-      await createMaterial({
-        schoolId: activeSchoolId.value,
-        subjectClassId: subjectClassId.value,
-        materialTitle: form.value.title,
-        materialDesc: form.value.description,
-        materialType: form.value.materialType,
-        mediaIds: form.value.mediaIds,
-      });
+      if (isEditMode.value && materialId.value) {
+        await updateMaterial(materialId.value, {
+          materialTitle: form.value.title,
+          materialDesc: form.value.description,
+          materialType: form.value.materialType,
+          mediaIds: form.value.mediaIds,
+        });
+      } else {
+        await createMaterial({
+          schoolId: activeSchoolId.value,
+          subjectClassId: subjectClassId.value,
+          materialTitle: form.value.title,
+          materialDesc: form.value.description,
+          materialType: form.value.materialType,
+          mediaIds: form.value.mediaIds,
+        });
+      }
     } else {
       let deadline = undefined;
       if (form.value.deadlineDate) {
         deadline = `${form.value.deadlineDate}T${form.value.deadlineTime}:00Z`;
       }
 
-      await createAssignment({
-        schoolId: activeSchoolId.value,
-        subjectClassId: subjectClassId.value,
-        categoryId: form.value.categoryId,
-        assignmentTitle: form.value.title,
-        assignmentDescription: form.value.description,
-        deadline,
-        allowLateSubmission: form.value.allowLate,
-        mediaIds: form.value.mediaIds,
-      });
+      if (isEditMode.value && assignmentId.value) {
+        await updateAssignment(assignmentId.value, {
+          categoryId: form.value.categoryId,
+          assignmentTitle: form.value.title,
+          assignmentDescription: form.value.description,
+          deadline,
+          allowLateSubmission: form.value.allowLate,
+          mediaIds: form.value.mediaIds,
+        });
+      } else {
+        await createAssignment({
+          schoolId: activeSchoolId.value,
+          subjectClassId: subjectClassId.value,
+          categoryId: form.value.categoryId,
+          assignmentTitle: form.value.title,
+          assignmentDescription: form.value.description,
+          deadline,
+          allowLateSubmission: form.value.allowLate,
+          mediaIds: form.value.mediaIds,
+        });
+      }
     }
 
     router.push(`/teacher/subjects/${subjectClassId.value}`);
@@ -244,7 +320,7 @@ onMounted(loadInitialData);
             }}</span>
           </button>
           <span class="text-[#D1D5DB]">/</span>
-          <h1 class="text-sm font-semibold text-[#111827]">Buat Konten Baru</h1>
+          <h1 class="text-sm font-semibold text-[#111827]">{{ isEditMode ? 'Edit Konten' : 'Buat Konten Baru' }}</h1>
         </div>
 
         <div class="flex items-center gap-3">
@@ -260,7 +336,7 @@ onMounted(loadInitialData);
             class="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-[#4F46E5] rounded-xl hover:bg-[#4338CA] transition disabled:opacity-50"
           >
             <PhPaperPlaneTilt v-if="!submitting" :size="18" weight="bold" />
-            {{ submitting ? "Menyimpan..." : "Terbitkan" }}
+            {{ submitting ? "Menyimpan..." : (isEditMode ? "Simpan Perubahan" : "Terbitkan") }}
           </button>
         </div>
       </div>
@@ -285,25 +361,29 @@ onMounted(loadInitialData);
         class="mb-5 flex w-fit gap-2 rounded-2xl bg-[#F3F4F6] p-1.5"
       >
         <button
-          @click="activeTab = 'material'"
+          @click="!isEditMode && (activeTab = 'material')"
           :class="[
             'flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-xl transition',
             activeTab === 'material'
               ? 'bg-white text-[#4F46E5] shadow-sm'
-              : 'text-[#6B7280] hover:text-[#111827]',
+              : 'text-[#6B7280]',
+            !isEditMode && activeTab !== 'material' ? 'hover:text-[#111827] cursor-pointer' : (isEditMode && activeTab !== 'material' ? 'opacity-50 cursor-not-allowed' : '')
           ]"
+          :disabled="isEditMode"
         >
           <PhFileText :size="18" weight="duotone" />
           Materi
         </button>
         <button
-          @click="activeTab = 'assignment'"
+          @click="!isEditMode && (activeTab = 'assignment')"
           :class="[
             'flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-xl transition',
             activeTab === 'assignment'
               ? 'bg-white text-[#4F46E5] shadow-sm'
-              : 'text-[#6B7280] hover:text-[#111827]',
+              : 'text-[#6B7280]',
+            !isEditMode && activeTab !== 'assignment' ? 'hover:text-[#111827] cursor-pointer' : (isEditMode && activeTab !== 'assignment' ? 'opacity-50 cursor-not-allowed' : '')
           ]"
+          :disabled="isEditMode"
         >
           <PhClipboardText :size="18" weight="duotone" />
           Tugas
@@ -366,6 +446,7 @@ onMounted(loadInitialData);
               :key="uploaderKey"
               :school-id="activeSchoolId"
               :owner-type="activeTab"
+              :initial-media="existingAttachments"
               v-model:is-uploading="isUploadingMedia"
               v-model:has-upload-error="hasMediaUploadError"
               cleanup-on-remove
