@@ -169,7 +169,7 @@ Authorization: Bearer <your-jwt-token>
 - `GET /logs/school/:schoolId` - Get logs by school
 
 ## 📊 Grade Book
-- `GET /grades/my-grades/:classId` - Get current student's gradebook by active class
+- `GET /grades/my-grades/:classId` - Get current student's gradebook by active class, including provisional weighted grade when weights and graded assignments exist
 - `POST /grades/weights` - Configure assessment weights
 - `GET /grades/weights/subject/:subjectId` - Get weights by subject
 - `GET /grades/class/:classId/subject/:subjectId` - Get class grade report
