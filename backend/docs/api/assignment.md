@@ -166,7 +166,58 @@ Base URL: `/api/assignments`
 - Returns `assignments: []` if the teacher owns the subject class but there are no assignments.
 - Route must be registered before `/subject-class/:subjectClassId`.
 
-### 7. Get Teacher Submissions Inbox
+### 7. Get Teacher Assignments Inbox
+- **URL:** `/teacher-assignments`
+- **Method:** `GET`
+- **Auth:** Required
+- **Role:** `teacher`
+- **School Context:** Requires `SchoolId` header
+- **Auth Note:** Teacher identity is taken from the JWT token. Do not send `teacherId`, `schoolUserId`, or `userId` in body/query.
+- **Purpose:** Teacher-safe aggregate endpoint for the global assignments overview across all subject classes taught by the current teacher in the active school.
+- **Authorization:** Returns only assignments from active-school subject classes owned by the current teacher where teacher class enrollment is still active (`left_at IS NULL`).
+
+**Response:**
+```json
+{
+  "summary": {
+    "totalAssignments": 2,
+    "activeAssignments": 1,
+    "overdueAssignments": 1,
+    "pendingReviewCount": 2,
+    "totalSubmissions": 4
+  },
+  "items": [
+    {
+      "assignmentId": "uuid",
+      "subjectClassId": "uuid",
+      "assignmentTitle": "Quiz Chapter 1",
+      "subjectName": "Matematika",
+      "subjectCode": "MTK",
+      "className": "Kelas 10 A",
+      "classCode": "10A",
+      "categoryName": "Kuis",
+      "deadline": "2026-03-01T23:59:59Z",
+      "submissionCount": 2,
+      "pendingCount": 1,
+      "gradedCount": 1,
+      "lateCount": 0
+    }
+  ]
+}
+```
+
+**Counting Rules:**
+- `submissionCount`: all active submissions for the assignment.
+- `gradedCount`: submissions that already have an assessment.
+- `pendingCount`: submissions that exist but do not have an assessment yet.
+- `lateCount`: submissions where `submittedAt > deadline`, only when deadline exists.
+- `activeAssignments`: assignments where deadline is not past or deadline is empty.
+- `overdueAssignments`: assignments where deadline is past.
+- `pendingReviewCount`: sum of `pendingCount` across all returned items.
+- `totalSubmissions`: sum of `submissionCount` across all returned items.
+- Items are assignment-level rows and may include assignments with zero submissions.
+
+### 8. Get Teacher Submissions Inbox
 - **URL:** `/teacher-submissions`
 - **Method:** `GET`
 - **Auth:** Required
@@ -212,7 +263,7 @@ Base URL: `/api/assignments`
 - Summary totals are sums across all returned items.
 - Items are assignment-level rows with at least one submission.
 
-### 8. Get Student Assignments Inbox
+### 9. Get Student Assignments Inbox
 - **URL:** `/student-assignments`
 - **Method:** `GET`
 - **Auth:** Required

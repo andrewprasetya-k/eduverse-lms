@@ -121,6 +121,35 @@ type TeacherSubmissionInboxResponseDTO struct {
 	Items   []TeacherSubmissionInboxItemDTO  `json:"items"`
 }
 
+type TeacherAssignmentInboxSummaryDTO struct {
+	TotalAssignments   int `json:"totalAssignments"`
+	ActiveAssignments  int `json:"activeAssignments"`
+	OverdueAssignments int `json:"overdueAssignments"`
+	PendingReviewCount int `json:"pendingReviewCount"`
+	TotalSubmissions   int `json:"totalSubmissions"`
+}
+
+type TeacherAssignmentInboxItemDTO struct {
+	AssignmentID    string     `json:"assignmentId" gorm:"column:assignment_id"`
+	SubjectClassID  string     `json:"subjectClassId" gorm:"column:subject_class_id"`
+	AssignmentTitle string     `json:"assignmentTitle" gorm:"column:assignment_title"`
+	SubjectName     string     `json:"subjectName" gorm:"column:subject_name"`
+	SubjectCode     string     `json:"subjectCode" gorm:"column:subject_code"`
+	ClassName       string     `json:"className" gorm:"column:class_name"`
+	ClassCode       string     `json:"classCode" gorm:"column:class_code"`
+	CategoryName    string     `json:"categoryName" gorm:"column:category_name"`
+	Deadline        *time.Time `json:"deadline" gorm:"column:deadline"`
+	SubmissionCount int        `json:"submissionCount" gorm:"column:submission_count"`
+	PendingCount    int        `json:"pendingCount" gorm:"column:pending_count"`
+	GradedCount     int        `json:"gradedCount" gorm:"column:graded_count"`
+	LateCount       int        `json:"lateCount" gorm:"column:late_count"`
+}
+
+type TeacherAssignmentInboxResponseDTO struct {
+	Summary TeacherAssignmentInboxSummaryDTO `json:"summary"`
+	Items   []TeacherAssignmentInboxItemDTO  `json:"items"`
+}
+
 type StudentAssignmentInboxSummaryDTO struct {
 	TotalAssignments  int `json:"totalAssignments"`
 	NotSubmittedCount int `json:"notSubmittedCount"`
