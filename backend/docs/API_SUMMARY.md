@@ -174,11 +174,11 @@ Authorization: Bearer <your-jwt-token>
 - `GET /grades/class/:classId/subject/:subjectId` - Get class grade report
 
 ## 🔔 Notifications
-- `GET /notifications` - Get user notifications (with pagination)
-- `GET /notifications/unread-count` - Get unread count
-- `PATCH /notifications/read/:id` - Mark notification as read
-- `PATCH /notifications/read-all` - Mark all notifications as read
-- `DELETE /notifications/:id` - Delete notification
+- `GET /notifications` - Get current user's notifications (with pagination)
+- `GET /notifications/unread-count` - Get current user's unread count
+- `PATCH /notifications/read/:id` - Mark current user's notification as read
+- `PATCH /notifications/read-all` - Mark all current user's notifications as read
+- `DELETE /notifications/:id` - Delete current user's notification
 
 ## 📈 Dashboard
 - `GET /dashboard/student/:userId` - Get student dashboard (userId = usr_id)

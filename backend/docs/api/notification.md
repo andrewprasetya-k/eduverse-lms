@@ -6,6 +6,8 @@ Base URL: `/api/notifications`
 
 Real-time notification system untuk inform users tentang activities seperti new assignments, grades, comments, dll.
 
+Notifications are currently scoped to the authenticated global user (`ntf_usr_id`), not to `school_user` or a specific school. Read/delete operations must use the JWT user context and cannot target another user's notification.
+
 ---
 
 ## 1. Get User Notifications
@@ -74,6 +76,7 @@ Mark specific notification sebagai sudah dibaca.
 - **URL:** `/read/:id`
 - **Method:** `PATCH`
 - **Auth:** Required
+- **Ownership:** Only the authenticated user's own notification can be marked as read.
 
 **Response (200 OK):**
 ```json
@@ -106,6 +109,7 @@ Delete specific notification.
 - **URL:** `/:id`
 - **Method:** `DELETE`
 - **Auth:** Required
+- **Ownership:** Only the authenticated user's own notification can be deleted.
 
 **Response (200 OK):**
 ```json

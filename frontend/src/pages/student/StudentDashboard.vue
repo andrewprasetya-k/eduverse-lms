@@ -20,6 +20,8 @@ import { getStudentAssignmentInbox } from "../../services/assignment";
 import {
   getRecentNotifications,
   getUnreadNotificationCount,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
 } from "../../services/studentDashboard";
 import type { SubjectClassItem } from "../../types/classWorkspace";
 import type { FeedPost } from "../../types/feed";
@@ -27,9 +29,11 @@ import type { NotificationItem } from "../../types/dashboard";
 import type { StudentAssignmentInboxItem } from "../../types/assignment";
 import { formatDate, formatDateTime } from "../../utils/date";
 import { getSubjectColor } from "../../utils/color";
+import { useToastStore } from "../../stores/toast";
 
 const auth = useAuthStore();
 const activeClassStore = useActiveClassStore();
+const toast = useToastStore();
 
 const subjects = ref<SubjectClassItem[]>([]);
 const feedPosts = ref<FeedPost[]>([]);
@@ -39,6 +43,8 @@ const unreadCount = ref(0);
 const isLoading = ref(true);
 const assignmentsLoading = ref(false);
 const assignmentsError = ref("");
+const markingNotificationIds = ref<Set<string>>(new Set());
+const markingAllNotifications = ref(false);
 const errorMessage = ref("");
 const viewDate = ref(new Date());
 
@@ -213,6 +219,68 @@ function assignmentStatusClasses(item: StudentAssignmentInboxItem) {
   if (item.isSubmitted) return "bg-[#eef2ff] text-[#4f46e5]";
   if (item.isOverdue) return "bg-[#fef2f2] text-[#dc2626]";
   return "bg-[#fff7ed] text-[#b45309]";
+}
+
+function notificationErrorMessage(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof (error as { response?: { data?: { error?: unknown } } }).response
+      ?.data?.error === "string"
+  ) {
+    return (error as { response: { data: { error: string } } }).response.data
+      .error;
+  }
+
+  return "Status notifikasi belum bisa diperbarui.";
+}
+
+async function markNotificationRead(item: NotificationItem) {
+  if (item.isRead || markingNotificationIds.value.has(item.notificationId)) {
+    return;
+  }
+
+  markingNotificationIds.value = new Set([
+    ...markingNotificationIds.value,
+    item.notificationId,
+  ]);
+
+  try {
+    await markNotificationAsRead(item.notificationId);
+    notifications.value = notifications.value.map((notification) =>
+      notification.notificationId === item.notificationId
+        ? { ...notification, isRead: true }
+        : notification,
+    );
+    unreadCount.value = Math.max(0, unreadCount.value - 1);
+  } catch (error) {
+    toast.error(notificationErrorMessage(error));
+  } finally {
+    const next = new Set(markingNotificationIds.value);
+    next.delete(item.notificationId);
+    markingNotificationIds.value = next;
+  }
+}
+
+async function markAllNotificationsRead() {
+  if (unreadCount.value <= 0 || markingAllNotifications.value) return;
+
+  markingAllNotifications.value = true;
+
+  try {
+    await markAllNotificationsAsRead();
+    notifications.value = notifications.value.map((notification) => ({
+      ...notification,
+      isRead: true,
+    }));
+    unreadCount.value = 0;
+    toast.success("Semua notifikasi ditandai sudah dibaca.");
+  } catch (error) {
+    toast.error(notificationErrorMessage(error));
+  } finally {
+    markingAllNotifications.value = false;
+  }
 }
 
 onMounted(loadDashboard);
@@ -489,7 +557,7 @@ onMounted(loadDashboard);
     </section>
 
     <aside class="border-l border-[#ebe7df] bg-white/95">
-      <div class="flex border-b border-[#ebe7df] px-5">
+      <div class="flex items-center justify-between gap-3 border-b border-[#ebe7df] px-5">
         <button
           class="flex items-center gap-2 border-b-2 border-[#4f46e5] px-1 py-4 text-sm font-medium text-[#4f46e5]"
           type="button"
@@ -497,9 +565,24 @@ onMounted(loadDashboard);
           <PhBell :size="18" />
           Notifikasi
         </button>
-        <button class="px-5 py-4 text-sm text-[#a09aa8]" type="button">
-          {{ unreadCount }} belum dibaca
-        </button>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-[#a09aa8]">
+            {{ unreadCount }} belum dibaca
+          </span>
+          <button
+            v-if="unreadCount > 0"
+            class="rounded-full bg-[#eef2ff] px-3 py-1.5 text-xs font-medium text-[#4f46e5] transition hover:bg-[#e0e7ff] disabled:cursor-not-allowed disabled:opacity-60"
+            type="button"
+            :disabled="markingAllNotifications"
+            @click="markAllNotificationsRead"
+          >
+            {{
+              markingAllNotifications
+                ? "Menyimpan..."
+                : "Tandai semua dibaca"
+            }}
+          </button>
+        </div>
       </div>
 
       <div v-if="isLoading" class="space-y-2 p-4">
@@ -510,11 +593,15 @@ onMounted(loadDashboard);
         />
       </div>
       <div v-else-if="notifications.length > 0" class="space-y-1 p-4">
-        <article
+        <button
           v-for="item in notifications"
           :key="item.notificationId"
-          class="flex gap-3 rounded-2xl p-3 transition hover:bg-[#f8f7f4]"
+          class="flex w-full gap-3 rounded-2xl p-3 text-left transition hover:bg-[#f8f7f4] disabled:cursor-wait disabled:opacity-75"
           :class="!item.isRead ? 'bg-[#f5f7ff]' : ''"
+          type="button"
+          :disabled="markingNotificationIds.has(item.notificationId)"
+          :aria-label="`${item.isRead ? 'Notifikasi' : 'Tandai notifikasi dibaca'}: ${item.title}`"
+          @click="markNotificationRead(item)"
         >
           <div
             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-medium text-white"
@@ -539,7 +626,7 @@ onMounted(loadDashboard);
               baru
             </span>
           </div>
-        </article>
+        </button>
       </div>
       <div v-else class="p-4">
         <div class="rounded-2xl bg-[#fbfaf8] p-4 text-sm text-[#7a7385]">

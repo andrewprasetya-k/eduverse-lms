@@ -11,9 +11,9 @@ type NotificationService interface {
 	Create(req *dto.CreateNotificationDTO) error
 	GetByUserID(userID string, page, limit int, unreadOnly bool) (*dto.NotificationListDTO, error)
 	GetUnreadCount(userID string) (*dto.UnreadCountDTO, error)
-	MarkAsRead(notificationID string) error
+	MarkAsRead(notificationID string, userID string) error
 	MarkAllAsRead(userID string) error
-	Delete(notificationID string) error
+	Delete(notificationID string, userID string) error
 }
 
 type notificationService struct {
@@ -93,14 +93,14 @@ func (s *notificationService) GetUnreadCount(userID string) (*dto.UnreadCountDTO
 	}, nil
 }
 
-func (s *notificationService) MarkAsRead(notificationID string) error {
-	return s.repo.MarkAsRead(notificationID)
+func (s *notificationService) MarkAsRead(notificationID string, userID string) error {
+	return s.repo.MarkAsRead(notificationID, userID)
 }
 
 func (s *notificationService) MarkAllAsRead(userID string) error {
 	return s.repo.MarkAllAsRead(userID)
 }
 
-func (s *notificationService) Delete(notificationID string) error {
-	return s.repo.Delete(notificationID)
+func (s *notificationService) Delete(notificationID string, userID string) error {
+	return s.repo.Delete(notificationID, userID)
 }

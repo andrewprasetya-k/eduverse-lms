@@ -10,9 +10,9 @@ type NotificationRepository interface {
 	Create(notification *domain.Notification) error
 	GetByUserID(userID string, page, limit int, unreadOnly bool) ([]*domain.Notification, int, error)
 	GetUnreadCount(userID string) (int, error)
-	MarkAsRead(notificationID string) error
+	MarkAsRead(notificationID string, userID string) error
 	MarkAllAsRead(userID string) error
-	Delete(notificationID string) error
+	Delete(notificationID string, userID string) error
 }
 
 type notificationRepository struct {
@@ -54,8 +54,10 @@ func (r *notificationRepository) GetUnreadCount(userID string) (int, error) {
 	return int(count), err
 }
 
-func (r *notificationRepository) MarkAsRead(notificationID string) error {
-	result := r.db.Model(&domain.Notification{}).Where("ntf_id = ?", notificationID).Update("is_read", true)
+func (r *notificationRepository) MarkAsRead(notificationID string, userID string) error {
+	result := r.db.Model(&domain.Notification{}).
+		Where("ntf_id = ? AND ntf_usr_id = ?", notificationID, userID).
+		Update("is_read", true)
 
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
@@ -67,8 +69,9 @@ func (r *notificationRepository) MarkAllAsRead(userID string) error {
 	return r.db.Model(&domain.Notification{}).Where("ntf_usr_id = ? AND is_read = ?", userID, false).Update("is_read", true).Error
 }
 
-func (r *notificationRepository) Delete(notificationID string) error {
-	result := r.db.Delete(&domain.Notification{}, "ntf_id = ?", notificationID)
+func (r *notificationRepository) Delete(notificationID string, userID string) error {
+	result := r.db.Where("ntf_id = ? AND ntf_usr_id = ?", notificationID, userID).
+		Delete(&domain.Notification{})
 	if result.RowsAffected == 0 {
 		return gorm.ErrRecordNotFound
 	}

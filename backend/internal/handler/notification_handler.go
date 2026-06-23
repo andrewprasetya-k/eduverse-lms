@@ -47,9 +47,10 @@ func (h *NotificationHandler) GetUnreadCount(c *gin.Context) {
 }
 
 func (h *NotificationHandler) MarkAsRead(c *gin.Context) {
+	userID := middleware.GetUserID(c)
 	notificationID := c.Param("id")
 
-	if err := h.service.MarkAsRead(notificationID); err != nil {
+	if err := h.service.MarkAsRead(notificationID, userID); err != nil {
 		HandleError(c, err)
 		return
 	}
@@ -69,9 +70,10 @@ func (h *NotificationHandler) MarkAllAsRead(c *gin.Context) {
 }
 
 func (h *NotificationHandler) Delete(c *gin.Context) {
+	userID := middleware.GetUserID(c)
 	notificationID := c.Param("id")
 
-	if err := h.service.Delete(notificationID); err != nil {
+	if err := h.service.Delete(notificationID, userID); err != nil {
 		HandleError(c, err)
 		return
 	}
