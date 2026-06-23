@@ -7,6 +7,7 @@ import {
   PhPaperPlaneTilt,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
+import FeedComments from "../../components/feed/FeedComments.vue";
 import { getMyTeachingSubjectClasses } from "../../services/teacherSubjects";
 import { createClassFeed, getClassFeed } from "../../services/feed";
 import type { TeacherSubjectClass } from "../../types/teacherSubjects";
@@ -201,6 +202,12 @@ onMounted(async () => {
   await loadClasses();
   await loadFeed();
 });
+
+function updatePostCommentCount(feedId: string, count: number) {
+  posts.value = posts.value.map((post) =>
+    post.feedId === feedId ? { ...post, commentCount: count } : post,
+  );
+}
 </script>
 
 <template>
@@ -214,8 +221,8 @@ onMounted(async () => {
           Pengumuman kelas
         </h1>
         <p class="mt-3 max-w-2xl text-sm leading-6 text-[#6b6475]">
-          Buat pengumuman untuk kelas yang Anda ajar. Komentar, attachment, dan
-          realtime feed belum termasuk dalam MVP ini.
+          Buat pengumuman untuk kelas yang Anda ajar. Komentar ringan tersedia,
+          sedangkan attachment dan realtime feed tetap post-MVP.
         </p>
       </header>
 
@@ -332,7 +339,7 @@ onMounted(async () => {
                   Pengumuman belum bisa dikirim untuk kelas ini.
                 </span>
                 <span v-else>
-                  Attachment dan komentar belum diaktifkan untuk feed MVP.
+                  Attachment belum diaktifkan untuk feed MVP.
                 </span>
               </p>
               <button
@@ -426,6 +433,10 @@ onMounted(async () => {
                 <p class="mt-3 whitespace-pre-line text-sm leading-6 text-[#4a4356]">
                   {{ post.content }}
                 </p>
+                <FeedComments
+                  :post="post"
+                  @comment-count-change="updatePostCommentCount"
+                />
               </article>
             </div>
           </article>

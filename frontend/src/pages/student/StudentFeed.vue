@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { PhMegaphone, PhWarningCircle } from '@phosphor-icons/vue'
+import FeedComments from '../../components/feed/FeedComments.vue'
 import { getClassFeed } from '../../services/feed'
 import { useActiveClassStore } from '../../stores/activeClass'
 import { useAuthStore } from '../../stores/auth'
@@ -52,6 +53,12 @@ async function loadContext() {
 }
 
 onMounted(loadContext)
+
+function updatePostCommentCount(feedId: string, count: number) {
+  posts.value = posts.value.map((post) =>
+    post.feedId === feedId ? { ...post, commentCount: count } : post,
+  )
+}
 </script>
 
 <template>
@@ -61,7 +68,7 @@ onMounted(loadContext)
       <h1 class="mt-2 text-3xl font-medium tracking-normal text-[#171322]">Feed kelas</h1>
       <p class="mt-3 max-w-2xl text-sm leading-6 text-[#7a7385]">
         Feed kelas menampilkan pengumuman dari teacher atau admin untuk kelas aktifmu.
-        Diskusi realtime dan komentar direncanakan setelah MVP sekolah.
+        Kamu bisa membaca pengumuman dan menambahkan komentar ringan pada setiap post.
       </p>
     </header>
 
@@ -124,6 +131,10 @@ onMounted(loadContext)
             <p class="mt-3 whitespace-pre-line text-sm leading-6 text-[#4a4356]">
               {{ post.content }}
             </p>
+            <FeedComments
+              :post="post"
+              @comment-count-change="updatePostCommentCount"
+            />
           </div>
         </div>
       </article>
