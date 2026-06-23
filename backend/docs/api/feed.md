@@ -70,4 +70,5 @@ Base URL: `/api/feeds`
 - **Comment Count:** Automatically included in response
 - **Class Context:** Feed list includes class header
 - **Notifications:** `feed_posted` notification remains best-effort and does not block feed creation.
-- **Deferred:** Comments UI, reactions, realtime/WebSocket, and feed attachments are outside the current MVP.
+- **Feed comments:** Backend comment endpoints are feed-only and active-school scoped for MVP. UI exposure is deferred.
+- **Deferred:** Reactions, realtime/WebSocket, nested replies, non-feed comments, and feed attachments are outside the current MVP.

@@ -4,32 +4,51 @@ import (
 	"backend/internal/domain"
 	"backend/internal/dto"
 	"backend/internal/repository"
+	"fmt"
+	"slices"
+	"strings"
 )
 
 type CommentService interface {
-	Create(comment *domain.Comment) error
-	GetBySource(sourceType string, sourceID string) ([]*domain.Comment, error)
-	GetByID(id string) (*domain.Comment, error)
-	Update(id string, comment *domain.Comment) error
-	Delete(id string) error
-	CountBySource(sourceType string, sourceID string) (int, error)
+	Create(comment *domain.Comment, schoolID string, userID string, roles []string) error
+	GetBySource(sourceType string, sourceID string, schoolID string, userID string, roles []string) ([]*domain.Comment, error)
+	GetByID(id string, schoolID string, userID string, roles []string) (*domain.Comment, error)
+	Update(id string, schoolID string, userID string, roles []string, content *string) error
+	Delete(id string, schoolID string, userID string, roles []string) error
+	CountBySource(sourceType string, sourceID string, schoolID string) (int, error)
 }
 
 type commentService struct {
 	repo             repository.CommentRepository
 	contentOwnerRepo repository.ContentOwnerRepository
 	notifService     NotificationService
+	feedRepo         repository.FeedRepository
+	enrRepo          repository.EnrollmentRepository
+	subjectClassRepo repository.SubjectClassRepository
 }
 
-func NewCommentService(repo repository.CommentRepository, contentOwnerRepo repository.ContentOwnerRepository, notifService NotificationService) CommentService {
+func NewCommentService(repo repository.CommentRepository, contentOwnerRepo repository.ContentOwnerRepository, notifService NotificationService, feedRepo repository.FeedRepository, enrRepo repository.EnrollmentRepository, subjectClassRepo repository.SubjectClassRepository) CommentService {
 	return &commentService{
 		repo:             repo,
 		contentOwnerRepo: contentOwnerRepo,
 		notifService:     notifService,
+		feedRepo:         feedRepo,
+		enrRepo:          enrRepo,
+		subjectClassRepo: subjectClassRepo,
 	}
 }
 
-func (s *commentService) Create(comment *domain.Comment) error {
+func (s *commentService) Create(comment *domain.Comment, schoolID string, userID string, roles []string) error {
+	comment.SchoolID = schoolID
+	comment.UserID = userID
+	comment.Content = strings.TrimSpace(comment.Content)
+	if comment.Content == "" {
+		return fmt.Errorf("comment content is required")
+	}
+	if err := s.ensureCanAccessSource(comment.SourceType, comment.SourceID, schoolID, userID, roles); err != nil {
+		return err
+	}
+
 	if err := s.repo.Create(comment); err != nil {
 		return err
 	}
@@ -48,23 +67,107 @@ func (s *commentService) Create(comment *domain.Comment) error {
 	return nil
 }
 
-func (s *commentService) GetBySource(sourceType string, sourceID string) ([]*domain.Comment, error) {
-	return s.repo.GetBySource(domain.SourceType(sourceType), sourceID)
+func (s *commentService) GetBySource(sourceType string, sourceID string, schoolID string, userID string, roles []string) ([]*domain.Comment, error) {
+	source := domain.SourceType(sourceType)
+	if err := s.ensureCanAccessSource(source, sourceID, schoolID, userID, roles); err != nil {
+		return nil, err
+	}
+	return s.repo.GetBySourceInSchool(source, sourceID, schoolID)
 }
 
-func (s *commentService) GetByID(id string) (*domain.Comment, error) {
-	return s.repo.GetByID(id)
+func (s *commentService) GetByID(id string, schoolID string, userID string, roles []string) (*domain.Comment, error) {
+	comment, err := s.repo.GetByIDInSchool(id, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.ensureCanAccessSource(comment.SourceType, comment.SourceID, schoolID, userID, roles); err != nil {
+		return nil, err
+	}
+	return comment, nil
 }
 
-func (s *commentService) Update(id string, comment *domain.Comment) error {
-	comment.ID = id
-	return s.repo.Update(comment)
+func (s *commentService) Update(id string, schoolID string, userID string, roles []string, content *string) error {
+	comment, err := s.repo.GetByIDInSchool(id, schoolID)
+	if err != nil {
+		return err
+	}
+	if comment.UserID != userID {
+		return fmt.Errorf("forbidden: comment update is not allowed")
+	}
+	if err := s.ensureCanAccessSource(comment.SourceType, comment.SourceID, schoolID, userID, roles); err != nil {
+		return err
+	}
+	if content != nil {
+		comment.Content = strings.TrimSpace(*content)
+	}
+	if comment.Content == "" {
+		return fmt.Errorf("comment content is required")
+	}
+	return s.repo.UpdateInSchool(comment, schoolID)
 }
 
-func (s *commentService) Delete(id string) error {
-	return s.repo.Delete(id)
+func (s *commentService) Delete(id string, schoolID string, userID string, roles []string) error {
+	comment, err := s.repo.GetByIDInSchool(id, schoolID)
+	if err != nil {
+		return err
+	}
+	if comment.SourceType != domain.SourceFeed {
+		return fmt.Errorf("unsupported comment source")
+	}
+	if !hasCommentRole(roles, "admin") && comment.UserID != userID {
+		return fmt.Errorf("forbidden: comment delete is not allowed")
+	}
+	if !hasCommentRole(roles, "admin") {
+		if err := s.ensureCanAccessSource(comment.SourceType, comment.SourceID, schoolID, userID, roles); err != nil {
+			return err
+		}
+	}
+	return s.repo.DeleteInSchool(id, schoolID)
 }
 
-func (s *commentService) CountBySource(sourceType string, sourceID string) (int, error) {
-	return s.repo.CountBySource(domain.SourceType(sourceType), sourceID)
+func (s *commentService) CountBySource(sourceType string, sourceID string, schoolID string) (int, error) {
+	source := domain.SourceType(sourceType)
+	if source != domain.SourceFeed {
+		return 0, nil
+	}
+	return s.repo.CountBySourceInSchool(source, sourceID, schoolID)
+}
+
+func (s *commentService) ensureCanAccessSource(sourceType domain.SourceType, sourceID string, schoolID string, userID string, roles []string) error {
+	if sourceType != domain.SourceFeed {
+		return fmt.Errorf("unsupported comment source")
+	}
+
+	feed, err := s.feedRepo.GetByIDInSchool(sourceID, schoolID)
+	if err != nil {
+		return err
+	}
+
+	if hasCommentRole(roles, "admin") {
+		return nil
+	}
+	if hasCommentRole(roles, "teacher") {
+		ok, err := s.subjectClassRepo.UserTeachesClass(userID, schoolID, feed.ClassID)
+		if err != nil {
+			return err
+		}
+		if ok {
+			return nil
+		}
+	}
+	if hasCommentRole(roles, "student") {
+		ok, err := s.enrRepo.UserEnrolledInClassAsRole(userID, schoolID, feed.ClassID, "student")
+		if err != nil {
+			return err
+		}
+		if ok {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("forbidden: comment source access denied")
+}
+
+func hasCommentRole(roles []string, role string) bool {
+	return slices.Contains(roles, role)
 }

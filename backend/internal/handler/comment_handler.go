@@ -30,16 +30,25 @@ func (h *CommentHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+	schoolID, ok := getCommentActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+	if input.SchoolID != "" && input.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: schoolId does not match active school"})
+		return
+	}
 
 	comment := domain.Comment{
-		SchoolID:   input.SchoolID,
+		SchoolID:   schoolID,
 		SourceType: domain.SourceType(input.SourceType),
 		SourceID:   input.SourceID,
 		UserID:     userID,
 		Content:    input.Content,
 	}
 
-	if err := h.service.Create(&comment); err != nil {
+	if err := h.service.Create(&comment, schoolID, userID, getCommentActiveRoles(c)); err != nil {
 		HandleError(c, err)
 		return
 	}
@@ -50,8 +59,14 @@ func (h *CommentHandler) Create(c *gin.Context) {
 func (h *CommentHandler) GetBySource(c *gin.Context) {
 	sourceType := c.Query("type")
 	sourceID := c.Query("id")
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getCommentActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
 
-	comments, err := h.service.GetBySource(sourceType, sourceID)
+	comments, err := h.service.GetBySource(sourceType, sourceID, schoolID, userID, getCommentActiveRoles(c))
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -59,12 +74,7 @@ func (h *CommentHandler) GetBySource(c *gin.Context) {
 
 	var response []dto.CommentResponseDTO
 	for _, c := range comments {
-		response = append(response, dto.CommentResponseDTO{
-			ID:          c.ID,
-			Content:     c.Content,
-			CreatorName: c.User.FullName,
-			CreatedAt:   c.CreatedAt.Format("02-01-2006 15:04:05"),
-		})
+		response = append(response, h.mapCommentToResponse(c, userID))
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -72,20 +82,20 @@ func (h *CommentHandler) GetBySource(c *gin.Context) {
 
 func (h *CommentHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
-	comment, err := h.service.GetByID(id)
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getCommentActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+
+	comment, err := h.service.GetByID(id, schoolID, userID, getCommentActiveRoles(c))
 	if err != nil {
 		HandleError(c, err)
 		return
 	}
 
-	response := dto.CommentResponseDTO{
-		ID:          comment.ID,
-		Content:     comment.Content,
-		CreatorName: comment.User.FullName,
-		CreatedAt:   comment.CreatedAt.Format("02-01-2006 15:04:05"),
-	}
-
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, h.mapCommentToResponse(comment, userID))
 }
 
 func (h *CommentHandler) Update(c *gin.Context) {
@@ -95,18 +105,14 @@ func (h *CommentHandler) Update(c *gin.Context) {
 		HandleBindingError(c, err)
 		return
 	}
-
-	existing, err := h.service.GetByID(id)
-	if err != nil {
-		HandleError(c, err)
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getCommentActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
 		return
 	}
 
-	if input.Content != nil {
-		existing.Content = *input.Content
-	}
-
-	if err := h.service.Update(id, existing); err != nil {
+	if err := h.service.Update(id, schoolID, userID, getCommentActiveRoles(c), input.Content); err != nil {
 		HandleError(c, err)
 		return
 	}
@@ -116,9 +122,49 @@ func (h *CommentHandler) Update(c *gin.Context) {
 
 func (h *CommentHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.service.Delete(id); err != nil {
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getCommentActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+
+	if err := h.service.Delete(id, schoolID, userID, getCommentActiveRoles(c)); err != nil {
 		HandleError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Comment deleted"})
+}
+
+func (h *CommentHandler) mapCommentToResponse(comment *domain.Comment, userID string) dto.CommentResponseDTO {
+	return dto.CommentResponseDTO{
+		ID:          comment.ID,
+		SourceType:  string(comment.SourceType),
+		SourceID:    comment.SourceID,
+		Content:     comment.Content,
+		CreatorName: comment.User.FullName,
+		CreatedAt:   comment.CreatedAt.Format("02-01-2006 15:04:05"),
+		IsMine:      comment.UserID == userID,
+	}
+}
+
+func getCommentActiveSchoolID(c *gin.Context) (string, bool) {
+	if sid, exists := c.Get("school_id"); exists {
+		if value, ok := sid.(string); ok && value != "" {
+			return value, true
+		}
+	}
+	if value := c.GetHeader("SchoolId"); value != "" {
+		return value, true
+	}
+	return "", false
+}
+
+func getCommentActiveRoles(c *gin.Context) []string {
+	if raw, exists := c.Get("user_roles"); exists {
+		if roles, ok := raw.([]string); ok {
+			return roles
+		}
+	}
+	return nil
 }

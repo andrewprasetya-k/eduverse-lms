@@ -80,7 +80,7 @@ func (h *FeedHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	count, _ := h.commentService.CountBySource(string(domain.SourceFeed), feed.ID)
+	count, _ := h.commentService.CountBySource(string(domain.SourceFeed), feed.ID, schoolID)
 	c.JSON(http.StatusOK, h.mapToResponse(feed, count))
 }
 
@@ -149,7 +149,7 @@ func (h *FeedHandler) GetByClass(c *gin.Context) {
 
 	var feedsDTO []dto.FeedResponseDTO
 	for _, f := range feeds {
-		count, _ := h.commentService.CountBySource(string(domain.SourceFeed), f.ID)
+		count, _ := h.commentService.CountBySource(string(domain.SourceFeed), f.ID, schoolID)
 		feedsDTO = append(feedsDTO, h.mapToResponse(f, count))
 	}
 

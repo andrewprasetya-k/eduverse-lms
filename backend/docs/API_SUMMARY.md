@@ -131,11 +131,11 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /feeds/:id` - Soft-delete active-school feed (admin or owning teacher who teaches the class)
 
 ## 💬 Comments
-- `POST /comments` - Create comment
-- `GET /comments?type=&id=` - Get comments by source
-- `GET /comments/:id` - Get comment by ID
-- `PATCH /comments/:id` - Update comment
-- `DELETE /comments/:id` - Delete comment
+- `POST /comments` - Create feed-only comment in active school
+- `GET /comments?type=feed&id=` - Get accessible feed comments
+- `GET /comments/:id` - Get accessible active-school feed comment by ID
+- `PATCH /comments/:id` - Update own active-school feed comment
+- `DELETE /comments/:id` - Delete own feed comment, or admin-delete active-school comment
 
 ## 📝 Assignments & Grading
 ### Categories

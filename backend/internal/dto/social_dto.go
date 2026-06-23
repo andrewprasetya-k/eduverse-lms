@@ -29,7 +29,7 @@ type ClassWithFeedsDTO struct {
 
 // Comment DTOs
 type CreateCommentDTO struct {
-	SchoolID   string `json:"schoolId" binding:"required,uuid"`
+	SchoolID   string `json:"schoolId"`
 	SourceType string `json:"sourceType" binding:"required"`
 	SourceID   string `json:"sourceId" binding:"required,uuid"`
 	Content    string `json:"content" binding:"required"`
@@ -41,7 +41,10 @@ type UpdateCommentDTO struct {
 
 type CommentResponseDTO struct {
 	ID          string `json:"commentId"`
+	SourceType  string `json:"sourceType"`
+	SourceID    string `json:"sourceId"`
 	Content     string `json:"content"`
 	CreatorName string `json:"creatorName"`
 	CreatedAt   string `json:"createdAt"`
+	IsMine      bool   `json:"isMine"`
 }

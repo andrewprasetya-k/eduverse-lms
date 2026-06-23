@@ -53,6 +53,16 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
+	if strings.Contains(errStr, "comment content is required") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Comment content is required"})
+		return
+	}
+
+	if strings.Contains(errStr, "unsupported comment source") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Comments are only supported for feed posts in this MVP"})
+		return
+	}
+
 	if strings.Contains(errStr, "invalid media attachment") ||
 		strings.Contains(errStr, "invalid assignment category") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or non-existent data reference"})

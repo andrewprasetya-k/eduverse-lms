@@ -101,7 +101,7 @@ func main() {
 	feedService := service.NewFeedService(feedRepo, attachmentService, notificationService, enrollmentRepo, classRepo, subjectClassRepo)
 	commentRepo := repository.NewCommentRepository(db)
 	contentOwnerRepo := repository.NewContentOwnerRepository(db)
-	commentService := service.NewCommentService(commentRepo, contentOwnerRepo, notificationService)
+	commentService := service.NewCommentService(commentRepo, contentOwnerRepo, notificationService, feedRepo, enrollmentRepo, subjectClassRepo)
 	feedHandler := handler.NewFeedHandler(feedService, commentService, classService)
 	commentHandler := handler.NewCommentHandler(commentService)
 
@@ -290,11 +290,11 @@ func main() {
 
 		commentAPI := api.Group("/comments")
 		{
-			commentAPI.POST("", commentHandler.Create)
-			commentAPI.GET("", commentHandler.GetBySource)
-			commentAPI.GET("/:id", commentHandler.GetByID)
-			commentAPI.PATCH("/:id", commentHandler.Update)
-			commentAPI.DELETE("/:id", commentHandler.Delete)
+			commentAPI.POST("", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), commentHandler.Create)
+			commentAPI.GET("", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), commentHandler.GetBySource)
+			commentAPI.GET("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), commentHandler.GetByID)
+			commentAPI.PATCH("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), commentHandler.Update)
+			commentAPI.DELETE("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), commentHandler.Delete)
 		}
 
 		assignmentAPI := api.Group("/assignments")
