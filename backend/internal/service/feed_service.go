@@ -6,16 +6,18 @@ import (
 	"backend/internal/repository"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 
 	"gorm.io/gorm"
 )
 
 type FeedService interface {
-	Create(feed *domain.Feed, mediaIDs []string, userID string, userRole string) error
-	GetByClass(classID string, page int, limit int) ([]*domain.Feed, int64, error)
-	GetByID(id string) (*domain.Feed, error)
-	Update(id string, feed *domain.Feed, mediaIDs []string) error
-	Delete(id string) error
+	Create(feed *domain.Feed, userID string, roles []string) error
+	GetByClass(classID string, schoolID string, userID string, roles []string, page int, limit int) ([]*domain.Feed, int64, error)
+	GetByID(id string, schoolID string, userID string, roles []string) (*domain.Feed, error)
+	Update(id string, schoolID string, userID string, roles []string, content *string) error
+	Delete(id string, schoolID string, userID string, roles []string) error
 }
 
 type feedService struct {
@@ -38,7 +40,11 @@ func NewFeedService(repo repository.FeedRepository, attService AttachmentService
 	}
 }
 
-func (s *feedService) Create(feed *domain.Feed, mediaIDs []string, userID string, userRole string) error {
+func (s *feedService) Create(feed *domain.Feed, userID string, roles []string) error {
+	feed.Content = strings.TrimSpace(feed.Content)
+	if feed.Content == "" {
+		return fmt.Errorf("feed content is required")
+	}
 
 	classSchoolID, err := s.classRepo.GetSchoolIDByClass(feed.ClassID)
 	if err != nil {
@@ -48,31 +54,21 @@ func (s *feedService) Create(feed *domain.Feed, mediaIDs []string, userID string
 		return err
 	}
 	if classSchoolID != feed.SchoolID {
-		return fmt.Errorf("class does not belong to this school")
+		return fmt.Errorf("forbidden: class does not belong to active school")
 	}
 
-	if userRole == "teacher" {
-		canPost, err := s.subjectClassRepo.TeacherTeachesInClass(userID, feed.ClassID)
-		if err != nil {
-			return fmt.Errorf("failed to verify teacher authorization")
-		}
-		if !canPost {
-			return fmt.Errorf("teacher does not teach any subject in this class")
+	if !hasFeedRole(roles, "admin") && !hasFeedRole(roles, "teacher") {
+		return fmt.Errorf("forbidden: insufficient feed permission")
+	}
+
+	if hasFeedRole(roles, "teacher") && !hasFeedRole(roles, "admin") {
+		if err := s.ensureTeacherCanAccessClass(userID, feed.SchoolID, feed.ClassID); err != nil {
+			return err
 		}
 	}
 
 	if err := s.repo.Create(feed); err != nil {
 		return err
-	}
-
-	for _, mID := range mediaIDs {
-		att := &domain.Attachment{
-			SchoolID:   feed.SchoolID,
-			SourceID:   feed.ID,
-			SourceType: domain.SourceFeed,
-			MediaID:    mID,
-		}
-		s.attService.Link(att)
 	}
 
 	// Best-effort: notify all class members except the creator
@@ -94,8 +90,12 @@ func (s *feedService) Create(feed *domain.Feed, mediaIDs []string, userID string
 	return nil
 }
 
-func (s *feedService) GetByClass(classID string, page int, limit int) ([]*domain.Feed, int64, error) {
-	feeds, total, err := s.repo.GetByClass(classID, page, limit)
+func (s *feedService) GetByClass(classID string, schoolID string, userID string, roles []string, page int, limit int) ([]*domain.Feed, int64, error) {
+	if err := s.ensureCanReadClassFeed(userID, schoolID, classID, roles); err != nil {
+		return nil, 0, err
+	}
+
+	feeds, total, err := s.repo.GetByClassInSchool(classID, schoolID, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -110,9 +110,12 @@ func (s *feedService) GetByClass(classID string, page int, limit int) ([]*domain
 	return feeds, total, nil
 }
 
-func (s *feedService) GetByID(id string) (*domain.Feed, error) {
-	feed, err := s.repo.GetByID(id)
+func (s *feedService) GetByID(id string, schoolID string, userID string, roles []string) (*domain.Feed, error) {
+	feed, err := s.repo.GetByIDInSchool(id, schoolID)
 	if err != nil {
+		return nil, err
+	}
+	if err := s.ensureCanReadClassFeed(userID, schoolID, feed.ClassID, roles); err != nil {
 		return nil, err
 	}
 
@@ -124,26 +127,91 @@ func (s *feedService) GetByID(id string) (*domain.Feed, error) {
 	return feed, nil
 }
 
-func (s *feedService) Update(id string, feed *domain.Feed, mediaIDs []string) error {
-	feed.ID = id
-	err := s.repo.Update(feed)
+func (s *feedService) Update(id string, schoolID string, userID string, roles []string, content *string) error {
+	feed, err := s.repo.GetByIDInSchool(id, schoolID)
 	if err != nil {
 		return err
 	}
+	if err := s.ensureCanMutateFeed(feed, schoolID, userID, roles); err != nil {
+		return err
+	}
+	if content != nil {
+		feed.Content = strings.TrimSpace(*content)
+	}
+	if feed.Content == "" {
+		return fmt.Errorf("feed content is required")
+	}
 
-	s.attService.UnlinkBySource(string(domain.SourceFeed), id)
-	for _, mID := range mediaIDs {
-		att := &domain.Attachment{
-			SchoolID:   feed.SchoolID,
-			SourceID:   id,
-			SourceType: domain.SourceFeed,
-			MediaID:    mID,
+	return s.repo.UpdateInSchool(feed, schoolID)
+}
+
+func (s *feedService) Delete(id string, schoolID string, userID string, roles []string) error {
+	feed, err := s.repo.GetByIDInSchool(id, schoolID)
+	if err != nil {
+		return err
+	}
+	if err := s.ensureCanMutateFeed(feed, schoolID, userID, roles); err != nil {
+		return err
+	}
+	return s.repo.DeleteInSchool(id, schoolID)
+}
+
+func (s *feedService) ensureCanReadClassFeed(userID string, schoolID string, classID string, roles []string) error {
+	classSchoolID, err := s.classRepo.GetSchoolIDByClass(classID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return gorm.ErrRecordNotFound
 		}
-		s.attService.Link(att)
+		return err
+	}
+	if classSchoolID != schoolID {
+		return fmt.Errorf("forbidden: class does not belong to active school")
+	}
+
+	if hasFeedRole(roles, "admin") {
+		return nil
+	}
+	if hasFeedRole(roles, "teacher") {
+		if err := s.ensureTeacherCanAccessClass(userID, schoolID, classID); err == nil {
+			return nil
+		}
+	}
+	if hasFeedRole(roles, "student") {
+		ok, err := s.enrRepo.UserEnrolledInClassAsRole(userID, schoolID, classID, "student")
+		if err != nil {
+			return err
+		}
+		if ok {
+			return nil
+		}
+	}
+	return fmt.Errorf("forbidden: feed class access denied")
+}
+
+func (s *feedService) ensureCanMutateFeed(feed *domain.Feed, schoolID string, userID string, roles []string) error {
+	if feed.SchoolID != schoolID {
+		return fmt.Errorf("forbidden: feed does not belong to active school")
+	}
+	if hasFeedRole(roles, "admin") {
+		return nil
+	}
+	if hasFeedRole(roles, "teacher") && feed.CreatedBy == userID {
+		return s.ensureTeacherCanAccessClass(userID, schoolID, feed.ClassID)
+	}
+	return fmt.Errorf("forbidden: feed mutation is not allowed")
+}
+
+func (s *feedService) ensureTeacherCanAccessClass(userID string, schoolID string, classID string) error {
+	canPost, err := s.subjectClassRepo.UserTeachesClass(userID, schoolID, classID)
+	if err != nil {
+		return err
+	}
+	if !canPost {
+		return fmt.Errorf("forbidden: teacher does not teach this class")
 	}
 	return nil
 }
 
-func (s *feedService) Delete(id string) error {
-	return s.repo.Delete(id)
+func hasFeedRole(roles []string, role string) bool {
+	return slices.Contains(roles, role)
 }

@@ -22,6 +22,7 @@ type EnrollmentRepository interface {
 	HasTeacherSubjectClassAssignment(classID string, schoolUserID string, schoolID string) (bool, error)
 	GetStudentUserIDsByClass(classID string) ([]string, error)
 	GetMemberUserIDsByClass(classID string) ([]string, error)
+	UserEnrolledInClassAsRole(userID string, schoolID string, classID string, role string) (bool, error)
 }
 
 type enrollmentRepository struct {
@@ -166,4 +167,15 @@ func (r *enrollmentRepository) GetMemberUserIDsByClass(classID string) ([]string
 		Where("enrollments.enr_cls_id = ? AND enrollments.left_at IS NULL", classID).
 		Pluck("school_users.scu_usr_id", &userIDs).Error
 	return userIDs, err
+}
+
+func (r *enrollmentRepository) UserEnrolledInClassAsRole(userID string, schoolID string, classID string, role string) (bool, error) {
+	var count int64
+	err := r.db.Model(&domain.Enrollment{}).
+		Joins("JOIN edv.school_users ON school_users.scu_id = enrollments.enr_scu_id").
+		Where("school_users.scu_usr_id = ? AND school_users.scu_sch_id = ?", userID, schoolID).
+		Where("enrollments.enr_sch_id = ? AND enrollments.enr_cls_id = ?", schoolID, classID).
+		Where("enrollments.enr_role = ? AND enrollments.left_at IS NULL", role).
+		Count(&count).Error
+	return count > 0, err
 }

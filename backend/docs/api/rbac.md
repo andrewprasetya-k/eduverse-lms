@@ -287,6 +287,17 @@ Subject_class unassign is admin-only and active-school scoped. It is allowed onl
 
 *Student gradebook access is current-user only. The student identity comes from JWT, the school context comes from `SchoolId`, and the class must be a class where the current student is enrolled.
 
+### Feeds
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/feeds` | POST | ❌ | ✅* | ✅* | ❌ |
+| `/feeds/class/:classId` | GET | ❌ | 📖* | 📖* | 📖* |
+| `/feeds/:id` | GET | ❌ | 📖* | 📖* | 📖* |
+| `/feeds/:id` | PATCH | ❌ | ✅* | ✅* | ❌ |
+| `/feeds/:id` | DELETE | ❌ | ✅* | ✅* | ❌ |
+
+*Feed access is scoped to active `SchoolId`. Feed is class-level. Admin can manage feeds in active-school classes. Teacher can create/read/update/delete only in classes they actively teach, and teacher update/delete is limited to their own feed posts. Student can read only feeds from classes where the current student has active enrollment (`left_at IS NULL`). Feed attachments, comments UI, reactions, and realtime are deferred from the MVP.
+
 ### User Management
 | Endpoint | Method | super_admin | admin | teacher | student |
 |----------|--------|-------------|-------|---------|---------|

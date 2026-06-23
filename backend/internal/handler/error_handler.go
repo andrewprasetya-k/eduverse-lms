@@ -48,6 +48,11 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
+	if strings.Contains(errStr, "feed content is required") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Feed content is required"})
+		return
+	}
+
 	if strings.Contains(errStr, "invalid media attachment") ||
 		strings.Contains(errStr, "invalid assignment category") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or non-existent data reference"})

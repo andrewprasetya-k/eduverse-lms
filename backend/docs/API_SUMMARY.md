@@ -124,11 +124,11 @@ Authorization: Bearer <your-jwt-token>
 - `POST /materials/progress` - Update material progress
 
 ## 📰 Feeds (Announcements)
-- `POST /feeds` - Create feed
-- `GET /feeds/class/:classId` - Get feeds by class
-- `GET /feeds/:id` - Get feed by ID
-- `PATCH /feeds/:id` - Update feed
-- `DELETE /feeds/:id` - Delete feed
+- `POST /feeds` - Create active-school class feed (admin or teacher who teaches the class)
+- `GET /feeds/class/:classId` - Get active-school class feed (admin, teacher who teaches the class, or active enrolled student)
+- `GET /feeds/:id` - Get accessible active-school feed by ID
+- `PATCH /feeds/:id` - Update active-school feed (admin or owning teacher who teaches the class)
+- `DELETE /feeds/:id` - Soft-delete active-school feed (admin or owning teacher who teaches the class)
 
 ## 💬 Comments
 - `POST /comments` - Create comment

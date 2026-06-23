@@ -282,10 +282,10 @@ func main() {
 		feedAPI := api.Group("/feeds")
 		{
 			feedAPI.POST("", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "teacher", "admin"), feedHandler.Create)
-			feedAPI.GET("/class/:classId", feedHandler.GetByClass)
-			feedAPI.GET("/:id", feedHandler.GetByID)
-			feedAPI.PATCH("/:id", feedHandler.Update)
-			feedAPI.DELETE("/:id", feedHandler.Delete)
+			feedAPI.GET("/class/:classId", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), feedHandler.GetByClass)
+			feedAPI.GET("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), feedHandler.GetByID)
+			feedAPI.PATCH("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "teacher", "admin"), feedHandler.Update)
+			feedAPI.DELETE("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "teacher", "admin"), feedHandler.Delete)
 		}
 
 		commentAPI := api.Group("/comments")

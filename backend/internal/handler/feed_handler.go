@@ -37,29 +37,28 @@ func (h *FeedHandler) Create(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-
-	// Get user roles from middleware context (set by RequireRole middleware)
-	var userRole string
-	if roles, exists := c.Get("user_roles"); exists {
-		if roleList, ok := roles.([]string); ok && len(roleList) > 0 {
-			userRole = roleList[0]
-		}
+	schoolID, ok := getFeedActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+	if input.SchoolID != "" && input.SchoolID != schoolID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: schoolId does not match active school"})
+		return
+	}
+	if len(input.MediaIDs) > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Feed attachments are not supported in this MVP"})
+		return
 	}
 
 	feed := domain.Feed{
-		SchoolID:  input.SchoolID,
+		SchoolID:  schoolID,
 		ClassID:   input.ClassID,
 		Content:   input.Content,
 		CreatedBy: userID,
 	}
 
-	if err := h.service.Create(&feed, input.MediaIDs, userID, userRole); err != nil {
-		// Check if it's an authorization error
-		if err.Error() == "teacher does not teach any subject in this class" ||
-			err.Error() == "class does not belong to this school" {
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-			return
-		}
+	if err := h.service.Create(&feed, userID, getFeedActiveRoles(c)); err != nil {
 		HandleError(c, err)
 		return
 	}
@@ -69,7 +68,13 @@ func (h *FeedHandler) Create(c *gin.Context) {
 
 func (h *FeedHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
-	feed, err := h.service.GetByID(id)
+	schoolID, ok := getFeedActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+
+	feed, err := h.service.GetByID(id, schoolID, middleware.GetUserID(c), getFeedActiveRoles(c))
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -86,18 +91,17 @@ func (h *FeedHandler) Update(c *gin.Context) {
 		HandleBindingError(c, err)
 		return
 	}
-
-	existing, err := h.service.GetByID(id)
-	if err != nil {
-		HandleError(c, err)
+	schoolID, ok := getFeedActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+	if len(input.MediaIDs) > 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Feed attachments are not supported in this MVP"})
 		return
 	}
 
-	if input.Content != nil {
-		existing.Content = *input.Content
-	}
-
-	if err := h.service.Update(id, existing, input.MediaIDs); err != nil {
+	if err := h.service.Update(id, schoolID, middleware.GetUserID(c), getFeedActiveRoles(c), input.Content); err != nil {
 		HandleError(c, err)
 		return
 	}
@@ -107,7 +111,12 @@ func (h *FeedHandler) Update(c *gin.Context) {
 
 func (h *FeedHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
-	if err := h.service.Delete(id); err != nil {
+	schoolID, ok := getFeedActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+	if err := h.service.Delete(id, schoolID, middleware.GetUserID(c), getFeedActiveRoles(c)); err != nil {
 		HandleError(c, err)
 		return
 	}
@@ -118,6 +127,11 @@ func (h *FeedHandler) GetByClass(c *gin.Context) {
 	classID := c.Param("classId")
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	schoolID, ok := getFeedActiveSchoolID(c)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
 
 	// 1. Get Class Header
 	class, err := h.classService.GetByID(classID)
@@ -127,7 +141,7 @@ func (h *FeedHandler) GetByClass(c *gin.Context) {
 	}
 
 	// 2. Get Feeds
-	feeds, total, err := h.service.GetByClass(classID, page, limit)
+	feeds, total, err := h.service.GetByClass(classID, schoolID, middleware.GetUserID(c), getFeedActiveRoles(c), page, limit)
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -179,4 +193,25 @@ func (h *FeedHandler) mapToResponse(f *domain.Feed, commentCount int) dto.FeedRe
 		Attachments:  atts,
 		CommentCount: commentCount,
 	}
+}
+
+func getFeedActiveSchoolID(c *gin.Context) (string, bool) {
+	if sid, exists := c.Get("school_id"); exists {
+		if value, ok := sid.(string); ok && value != "" {
+			return value, true
+		}
+	}
+	if value := c.GetHeader("SchoolId"); value != "" {
+		return value, true
+	}
+	return "", false
+}
+
+func getFeedActiveRoles(c *gin.Context) []string {
+	if raw, exists := c.Get("user_roles"); exists {
+		if roles, ok := raw.([]string); ok {
+			return roles
+		}
+	}
+	return nil
 }

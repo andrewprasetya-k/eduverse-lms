@@ -17,6 +17,7 @@ type SubjectClassRepository interface {
 	HasSubjectClassContent(subjectClassID string, schoolID string) (bool, error)
 	GetClassIDBySubjectClass(subjectClassID string) (string, error)
 	TeacherTeachesInClass(schoolUserID string, classID string) (bool, error)
+	UserTeachesClass(userID string, schoolID string, classID string) (bool, error)
 	TeacherOwnsSubjectClass(userID string, schoolID string, subjectClassID string) (bool, error)
 	ClassBelongsToSchool(classID string, schoolID string) (bool, error)
 	SubjectBelongsToSchool(subjectID string, schoolID string) (bool, error)
@@ -191,6 +192,20 @@ func (r *subjectClassRepository) TeacherTeachesInClass(schoolUserID string, clas
 		Joins("JOIN edv.enrollments e ON e.enr_cls_id = sc.scl_cls_id AND e.enr_scu_id = sc.scl_scu_id").
 		Where("sc.scl_scu_id = ? AND sc.scl_cls_id = ?", schoolUserID, classID).
 		Where("e.enr_role = ? AND e.left_at IS NULL", "teacher").
+		Count(&count).Error
+	return count > 0, err
+}
+
+func (r *subjectClassRepository) UserTeachesClass(userID string, schoolID string, classID string) (bool, error) {
+	var count int64
+	err := r.db.Table("edv.subject_classes sc").
+		Joins("JOIN edv.school_users teacher_scu ON teacher_scu.scu_id = sc.scl_scu_id").
+		Joins("JOIN edv.enrollments e ON e.enr_cls_id = sc.scl_cls_id AND e.enr_scu_id = sc.scl_scu_id").
+		Joins("JOIN edv.classes c ON c.cls_id = sc.scl_cls_id").
+		Where("teacher_scu.scu_usr_id = ? AND teacher_scu.scu_sch_id = ?", userID, schoolID).
+		Where("sc.scl_cls_id = ?", classID).
+		Where("e.enr_sch_id = ? AND e.enr_role = ? AND e.left_at IS NULL", schoolID, "teacher").
+		Where("c.cls_sch_id = ? AND c.deleted_at IS NULL", schoolID).
 		Count(&count).Error
 	return count > 0, err
 }
