@@ -93,8 +93,9 @@ func (s *assignmentService) CreateAssignment(asg *domain.Assignment, mediaIDs []
 				_ = s.notifService.Create(&dto.CreateNotificationDTO{
 					UserID:    uid,
 					Type:      domain.NotifAssignmentCreated,
-					Title:     "New Assignment",
-					Message:   "A new assignment has been posted: " + asg.Title,
+					Title:     "Tugas baru",
+					Message:   asg.Title,
+					Link:      fmt.Sprintf("/student/subjects/%s/assignments/%s", asg.SubjectClassID, asg.ID),
 					RelatedID: asg.ID,
 				})
 			}
@@ -415,8 +416,9 @@ func (s *assignmentService) Assess(asm *domain.Assessment) error {
 		_ = s.notifService.Create(&dto.CreateNotificationDTO{
 			UserID:    sbm.UserID,
 			Type:      domain.NotifAssignmentGraded,
-			Title:     "Assignment Graded",
-			Message:   fmt.Sprintf("Your submission has been graded. Score: %.2f", asm.Score),
+			Title:     "Tugas sudah dinilai",
+			Message:   fmt.Sprintf("Nilai Anda sudah tersedia: %.2f", asm.Score),
+			Link:      "/student/grades",
 			RelatedID: asm.SubmissionID,
 		})
 	}

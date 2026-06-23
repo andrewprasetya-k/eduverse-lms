@@ -196,7 +196,8 @@ function compareAssignments(
   const notSubmittedDiff = Number(!b.isSubmitted) - Number(!a.isSubmitted);
   if (notSubmittedDiff !== 0) return notSubmittedDiff;
 
-  const deadlineDiff = getDeadlineTime(a.deadline) - getDeadlineTime(b.deadline);
+  const deadlineDiff =
+    getDeadlineTime(a.deadline) - getDeadlineTime(b.deadline);
   if (deadlineDiff !== 0) return deadlineDiff;
 
   return (a.assignmentTitle || "").localeCompare(b.assignmentTitle || "");
@@ -238,14 +239,18 @@ function notificationErrorMessage(error: unknown) {
 }
 
 function notificationTitle(item: NotificationItem) {
+  if (item.type === "assignment_created") return "Tugas baru";
   if (item.type === "feed_posted") return "Pengumuman kelas baru";
   if (item.type === "assignment_graded") return "Tugas sudah dinilai";
+  if (item.type === "material_added") return "Materi baru";
   return item.title || "Notifikasi";
 }
 
 function notificationBadge(item: NotificationItem) {
+  if (item.type === "assignment_created") return "TB";
   if (item.type === "feed_posted") return "PG";
   if (item.type === "assignment_graded") return "AG";
+  if (item.type === "material_added") return "MT";
   return initials(notificationTitle(item));
 }
 
@@ -584,13 +589,15 @@ onMounted(loadDashboard);
                 class="mt-0.5 shrink-0 text-[#4f46e5]"
               />
               <p class="text-sm leading-6 text-[#6b6475]">
-                Chat direncanakan untuk komunikasi kelas dan subject. Saat ini Feed kelas menjadi kanal pengumuman.
+                Chat direncanakan untuk komunikasi kelas dan subject. Saat ini
+                Feed kelas menjadi kanal pengumuman.
               </p>
             </div>
             <div class="flex gap-3 rounded-2xl bg-[#f3ecff] p-4">
               <PhNotebook :size="20" class="mt-0.5 shrink-0 text-[#7c3aed]" />
               <p class="text-sm leading-6 text-[#6b6475]">
-                Notes per materi direncanakan untuk catatan belajar setelah MVP sekolah.
+                Notes per materi direncanakan untuk catatan belajar setelah MVP
+                sekolah.
               </p>
             </div>
           </div>
@@ -599,7 +606,9 @@ onMounted(loadDashboard);
     </section>
 
     <aside class="border-l border-[#ebe7df] bg-white/95">
-      <div class="flex items-center justify-between gap-3 border-b border-[#ebe7df] px-5">
+      <div
+        class="flex items-center justify-between gap-3 border-b border-[#ebe7df] px-5"
+      >
         <button
           class="flex items-center gap-2 border-b-2 border-[#4f46e5] px-1 py-4 text-sm font-medium text-[#4f46e5]"
           type="button"
@@ -619,9 +628,7 @@ onMounted(loadDashboard);
             @click="markAllNotificationsRead"
           >
             {{
-              markingAllNotifications
-                ? "Menyimpan..."
-                : "Tandai semua dibaca"
+              markingAllNotifications ? "Menyimpan..." : "Tandai semua dibaca"
             }}
           </button>
         </div>
@@ -647,7 +654,11 @@ onMounted(loadDashboard);
         >
           <div
             class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-medium text-white"
-            :style="{ backgroundColor: getSubjectColor(item.type || item.notificationId) }"
+            :style="{
+              backgroundColor: getSubjectColor(
+                item.type || item.notificationId,
+              ),
+            }"
           >
             {{ notificationBadge(item) }}
           </div>

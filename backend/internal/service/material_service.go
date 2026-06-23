@@ -133,8 +133,9 @@ func (s *materialService) Create(ctx context.Context, mat *domain.Material, medi
 				_ = s.notifService.Create(&dto.CreateNotificationDTO{
 					UserID:    uid,
 					Type:      domain.NotifMaterialAdded,
-					Title:     "New Material",
-					Message:   "New learning material has been posted: " + mat.Title,
+					Title:     "Materi baru",
+					Message:   mat.Title,
+					Link:      fmt.Sprintf("/student/subjects/%s/materials/%s", mat.SubjectClassID, mat.ID),
 					RelatedID: mat.ID,
 				})
 			}
