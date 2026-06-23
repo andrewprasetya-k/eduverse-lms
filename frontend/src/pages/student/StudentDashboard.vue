@@ -532,7 +532,7 @@ onMounted(loadDashboard);
         <article class="soft-card rounded-[22px] p-5 pl-0 opacity-90">
           <p class="text-sm font-medium text-[#171322]">Fitur berikutnya</p>
           <p class="mt-1 text-xs text-[#8b8592]">
-            Chat dan notes belum menjadi bagian dari flow utama saat ini.
+            Chat dan notes tetap terlihat sebagai rencana setelah MVP sekolah.
           </p>
           <div class="mt-4 space-y-3">
             <div class="flex gap-3 rounded-2xl bg-[#eef2ff] p-4">
@@ -541,14 +541,13 @@ onMounted(loadDashboard);
                 class="mt-0.5 shrink-0 text-[#4f46e5]"
               />
               <p class="text-sm leading-6 text-[#6b6475]">
-                Chat realtime masih ditunda dan belum menampilkan data
-                percakapan.
+                Chat direncanakan untuk komunikasi kelas dan subject. Saat ini Feed kelas menjadi kanal pengumuman.
               </p>
             </div>
             <div class="flex gap-3 rounded-2xl bg-[#f3ecff] p-4">
               <PhNotebook :size="20" class="mt-0.5 shrink-0 text-[#7c3aed]" />
               <p class="text-sm leading-6 text-[#6b6475]">
-                Notes per materi dan autosave juga belum diimplementasikan.
+                Notes per materi direncanakan untuk catatan belajar setelah MVP sekolah.
               </p>
             </div>
           </div>

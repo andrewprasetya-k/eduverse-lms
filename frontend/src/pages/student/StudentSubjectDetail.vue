@@ -330,7 +330,7 @@ onMounted(loadSubject);
                       </span>
                     </div>
                     <p class="mt-2 text-xs text-[#c4b5fd]">
-                      Status pengumpulan akan tersedia di detail tugas
+                      Status dan pengumpulan tersedia dari detail tugas
                     </p>
                   </div>
                 </div>
@@ -341,11 +341,11 @@ onMounted(loadSubject);
           <template v-else>
             <p class="text-sm font-medium text-[#4f46e5]">Catatan</p>
             <h2 class="mt-3 text-2xl font-medium text-[#171322]">
-              Catatan pribadi akan tersedia di halaman materi
+              Catatan pribadi direncanakan setelah MVP sekolah
             </h2>
             <p class="mt-4 max-w-xl text-sm leading-6 text-[#6b6475]">
-              Notes adalah fitur future per-material. Belum ada autosave atau
-              data catatan yang difake di tahap ini.
+              Area ini disiapkan untuk catatan belajar per materi. Saat ini belum ada penyimpanan
+              catatan, jadi tidak ada data contoh yang ditampilkan.
             </p>
           </template>
         </article>

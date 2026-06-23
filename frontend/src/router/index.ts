@@ -125,9 +125,9 @@ const router = createRouter({
           component: FeaturePlaceholder,
           props: {
             eyebrow: "Realtime chat",
-            title: "Chat sedang dikembangkan",
+            title: "Chat student",
             description:
-              "Chat akan menjadi fitur DM, group, atau subject realtime. WebSocket belum diimplementasikan pada tahap ini.",
+              "Chat student direncanakan untuk komunikasi kelas dan subject setelah MVP sekolah. Untuk saat ini, komunikasi kelas berjalan melalui Feed kelas.",
           },
         },
         {
@@ -138,7 +138,7 @@ const router = createRouter({
             eyebrow: "Learning notes",
             title: "Catatan belajar",
             description:
-              "Notes akan tersedia dari halaman detail material, termasuk catatan per materi. Autosave belum diimplementasikan pada tahap ini.",
+              "Catatan belajar direncanakan untuk membantu siswa menyimpan ringkasan per materi setelah MVP sekolah.",
           },
         },
         {
@@ -231,7 +231,7 @@ const router = createRouter({
             eyebrow: "Realtime chat",
             title: "Chat kelas",
             description:
-              "Fitur chat guru akan memakai WebSocket untuk komunikasi realtime dengan kelas. WebSocket belum diimplementasikan pada tahap ini.",
+              "Chat kelas direncanakan untuk komunikasi cepat guru dan siswa setelah MVP sekolah. Untuk saat ini, pengumuman kelas berjalan melalui Feed.",
           },
         },
         {
@@ -313,7 +313,7 @@ const router = createRouter({
             eyebrow: "Platform schools",
             title: "Manajemen sekolah",
             description:
-              "Halaman ini nantinya mengelola tenant sekolah, status sekolah, dan konfigurasi dasar platform.",
+              "Manajemen sekolah level platform direncanakan setelah flow admin sekolah stabil. Halaman ini belum aktif sebagai fitur operasional MVP.",
           },
         },
         {
@@ -324,7 +324,7 @@ const router = createRouter({
             eyebrow: "Platform users",
             title: "User platform",
             description:
-              "Halaman ini nantinya membantu super admin melihat user lintas sekolah dan setup role platform.",
+              "Pengelolaan user lintas sekolah direncanakan setelah MVP sekolah. Identitas global tetap dikelola sesuai batas akses superadmin.",
           },
         },
         {

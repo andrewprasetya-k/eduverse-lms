@@ -160,7 +160,7 @@ onMounted(loadMaterial)
           <div>
             <p class="text-sm font-medium text-[#171322]">Catatan pribadi</p>
             <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-              Catatan pribadi akan tersedia pada tahap berikutnya.
+              Catatan pribadi direncanakan setelah MVP sekolah. Belum ada penyimpanan catatan pada tahap ini.
             </p>
           </div>
         </div>
@@ -169,7 +169,7 @@ onMounted(loadMaterial)
       <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
         <p class="text-sm font-medium text-[#171322]">Progress materi</p>
         <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-          Progress materi akan tersedia nanti. Membuka materi tidak otomatis menandai selesai.
+          Progress materi direncanakan setelah MVP sekolah. Membuka materi belum menandai progres selesai.
         </p>
       </article>
     </section>

@@ -60,8 +60,8 @@ onMounted(loadContext)
       <p class="text-sm text-[#7a7385]">Class feed</p>
       <h1 class="mt-2 text-3xl font-medium tracking-normal text-[#171322]">Feed kelas</h1>
       <p class="mt-3 max-w-2xl text-sm leading-6 text-[#7a7385]">
-        Feed adalah komunikasi level class untuk pengumuman dan aktivitas kelas. Chat tetap fitur
-        realtime terpisah yang sedang dikembangkan.
+        Feed kelas menampilkan pengumuman dari teacher atau admin untuk kelas aktifmu.
+        Diskusi realtime dan komentar direncanakan setelah MVP sekolah.
       </p>
     </header>
 
@@ -93,8 +93,7 @@ onMounted(loadContext)
           {{ classHeader?.classTitle || activeClass.classTitle || 'Kelas aktif' }}
         </p>
         <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-          Feed kelas menampilkan komunikasi dan pengumuman level class. Komentar dan pembuatan post
-          belum diimplementasikan di frontend tahap ini.
+          Siswa membaca pengumuman kelas dari halaman ini. Teacher dan admin membuat pengumuman dari area mereka.
         </p>
       </div>
 

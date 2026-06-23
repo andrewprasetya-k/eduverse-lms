@@ -272,7 +272,7 @@ onMounted(loadSubjects);
                 <span
                   class="rounded-full bg-[#eef2ff] px-2 py-1 text-[11px] text-[#4f46e5]"
                 >
-                  Catatan nanti
+                  Catatan Post-MVP
                 </span>
               </div>
             </div>

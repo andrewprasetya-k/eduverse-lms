@@ -17,7 +17,12 @@ defineProps<{
         <PhSparkle :size="24" weight="duotone" />
       </div>
       <p class="text-sm font-medium text-[#4f46e5]">{{ eyebrow }}</p>
-      <h1 class="mt-3 text-3xl font-medium text-[#171322]">Fitur sedang dikembangkan</h1>
+      <span
+        class="mt-3 inline-flex rounded-full bg-[#eef2ff] px-3 py-1 text-xs font-medium text-[#4f46e5]"
+      >
+        Post-MVP
+      </span>
+      <h1 class="mt-3 text-3xl font-medium text-[#171322]">Direncanakan setelah MVP sekolah</h1>
       <h2 class="mt-2 text-xl font-medium text-[#3f3a4a]">{{ title }}</h2>
       <p class="mt-4 max-w-xl text-sm leading-6 text-[#6b6475]">
         {{ description }}
