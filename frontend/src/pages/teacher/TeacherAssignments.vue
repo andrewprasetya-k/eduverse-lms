@@ -10,20 +10,18 @@ import {
   PhPencilSimple,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
-import { getSubjectAssignments } from "../../services/assignment";
-import { getSubjectClassSubmissions } from "../../services/teacherAssignment";
-import { getMyTeachingSubjectClasses } from "../../services/teacherSubjects";
-import type { AssignmentItem } from "../../types/assignment";
-import type { TeacherSubmissionGroup } from "../../types/teacherAssignment";
-import type { TeacherSubjectClass } from "../../types/teacherSubjects";
+import { getTeacherAssignmentInbox } from "../../services/teacherAssignment";
+import type {
+  TeacherAssignmentInboxItem,
+  TeacherAssignmentInboxSummary,
+} from "../../types/teacherAssignment";
 import { getSubjectColor } from "../../utils/color";
 import { formatDate } from "../../utils/date";
 
 type AssignmentFilter = "all" | "active" | "overdue" | "pending";
 
 interface TeacherAssignmentRow {
-  assignment: AssignmentItem;
-  subject: TeacherSubjectClass;
+  item: TeacherAssignmentInboxItem;
   submissionCount: number;
   pendingCount: number;
   gradedCount: number;
@@ -35,30 +33,30 @@ const loading = ref(false);
 const errorMessage = ref("");
 const assignments = ref<TeacherAssignmentRow[]>([]);
 const activeFilter = ref<AssignmentFilter>("all");
-
-const summary = computed(() => ({
-  total: assignments.value.length,
-  active: assignments.value.filter((item) => !item.isOverdue).length,
-  overdue: assignments.value.filter((item) => item.isOverdue).length,
-  pending: assignments.value.filter((item) => item.pendingCount > 0).length,
-  submissions: assignments.value.reduce(
-    (total, item) => total + item.submissionCount,
-    0,
-  ),
-}));
+const summary = ref<TeacherAssignmentInboxSummary>({
+  totalAssignments: 0,
+  activeAssignments: 0,
+  overdueAssignments: 0,
+  pendingReviewCount: 0,
+  totalSubmissions: 0,
+});
 
 const filterTabs = computed(() => [
   { id: "all" as const, label: "Semua", count: assignments.value.length },
-  { id: "active" as const, label: "Aktif", count: summary.value.active },
+  {
+    id: "active" as const,
+    label: "Aktif",
+    count: summary.value.activeAssignments,
+  },
   {
     id: "overdue" as const,
     label: "Lewat deadline",
-    count: summary.value.overdue,
+    count: summary.value.overdueAssignments,
   },
   {
     id: "pending" as const,
     label: "Perlu review",
-    count: summary.value.pending,
+    count: assignments.value.filter((item) => item.pendingCount > 0).length,
   },
 ]);
 
@@ -77,27 +75,18 @@ async function loadAssignments() {
   loading.value = true;
   errorMessage.value = "";
   assignments.value = [];
+  summary.value = {
+    totalAssignments: 0,
+    activeAssignments: 0,
+    overdueAssignments: 0,
+    pendingReviewCount: 0,
+    totalSubmissions: 0,
+  };
 
   try {
-    const subjects = await getMyTeachingSubjectClasses();
-    const rows = await Promise.all(
-      subjects.map(async (subject) => {
-        const [assignmentResponse, submissionResponse] = await Promise.all([
-          getSubjectAssignments(subject.subjectClassId, 1, 100),
-          getSubjectClassSubmissions(subject.subjectClassId),
-        ]);
-        const submissionMap = new Map<string, TeacherSubmissionGroup>();
-        for (const group of submissionResponse.assignments ?? []) {
-          submissionMap.set(group.assignment.assignmentId, group);
-        }
-
-        return (assignmentResponse.data?.data ?? []).map((assignment) =>
-          mapAssignmentRow(assignment, subject, submissionMap),
-        );
-      }),
-    );
-
-    assignments.value = rows.flat();
+    const response = await getTeacherAssignmentInbox();
+    summary.value = response.summary;
+    assignments.value = (response.items ?? []).map(mapAssignmentRow);
   } catch {
     errorMessage.value =
       "Daftar tugas belum bisa dimuat. Coba lagi beberapa saat.";
@@ -106,20 +95,14 @@ async function loadAssignments() {
   }
 }
 
-function mapAssignmentRow(
-  assignment: AssignmentItem,
-  subject: TeacherSubjectClass,
-  submissionMap: Map<string, TeacherSubmissionGroup>,
-): TeacherAssignmentRow {
-  const submission = submissionMap.get(assignment.assignmentId);
+function mapAssignmentRow(item: TeacherAssignmentInboxItem): TeacherAssignmentRow {
   return {
-    assignment,
-    subject,
-    submissionCount: submission?.submissionCount ?? 0,
-    pendingCount: submission?.pendingCount ?? 0,
-    gradedCount: submission?.gradedCount ?? 0,
-    lateCount: submission?.submissions.filter((item) => item.isLate).length ?? 0,
-    isOverdue: isPastDeadline(assignment.deadline),
+    item,
+    submissionCount: item.submissionCount,
+    pendingCount: item.pendingCount,
+    gradedCount: item.gradedCount,
+    lateCount: item.lateCount,
+    isOverdue: isPastDeadline(item.deadline),
   };
 }
 
@@ -128,12 +111,11 @@ function compareAssignments(a: TeacherAssignmentRow, b: TeacherAssignmentRow) {
   if (pendingDiff !== 0) return pendingDiff;
 
   const deadlineDiff =
-    getDeadlineTime(a.assignment.deadline) -
-    getDeadlineTime(b.assignment.deadline);
+    getDeadlineTime(a.item.deadline) - getDeadlineTime(b.item.deadline);
   if (deadlineDiff !== 0) return deadlineDiff;
 
-  return (a.assignment.assignmentTitle || "").localeCompare(
-    b.assignment.assignmentTitle || "",
+  return (a.item.assignmentTitle || "").localeCompare(
+    b.item.assignmentTitle || "",
   );
 }
 
@@ -233,7 +215,7 @@ onMounted(loadAssignments);
             />
             <p class="mt-4 text-sm text-[#8a8494]">Total tugas</p>
             <p class="mt-1 text-2xl font-medium text-[#171322]">
-              {{ summary.total }}
+              {{ summary.totalAssignments }}
             </p>
           </article>
           <article
@@ -246,7 +228,7 @@ onMounted(loadAssignments);
             />
             <p class="mt-4 text-sm text-[#8a8494]">Aktif</p>
             <p class="mt-1 text-2xl font-medium text-[#171322]">
-              {{ summary.active }}
+              {{ summary.activeAssignments }}
             </p>
           </article>
           <article
@@ -259,7 +241,7 @@ onMounted(loadAssignments);
             />
             <p class="mt-4 text-sm text-[#8a8494]">Perlu review</p>
             <p class="mt-1 text-2xl font-medium text-[#171322]">
-              {{ summary.pending }}
+              {{ summary.pendingReviewCount }}
             </p>
           </article>
           <article
@@ -272,7 +254,7 @@ onMounted(loadAssignments);
             />
             <p class="mt-4 text-sm text-[#8a8494]">Submission</p>
             <p class="mt-1 text-2xl font-medium text-[#171322]">
-              {{ summary.submissions }}
+              {{ summary.totalSubmissions }}
             </p>
           </article>
         </section>
@@ -318,8 +300,8 @@ onMounted(loadAssignments);
               Belum ada tugas
             </h2>
             <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#6b6475]">
-              Tugas akan tampil setelah Anda membuat tugas dari subject
-              workspace.
+              Belum ada tugas yang bisa ditampilkan. Pastikan Anda masih aktif
+              di Penempatan Kelas untuk kelas yang diajar.
             </p>
             <RouterLink
               to="/teacher/create"
@@ -351,7 +333,7 @@ onMounted(loadAssignments);
           <div v-else class="space-y-3 pt-5">
             <article
               v-for="item in filteredAssignments"
-              :key="`${item.subject.subjectClassId}-${item.assignment.assignmentId}`"
+              :key="`${item.item.subjectClassId}-${item.item.assignmentId}`"
               class="rounded-[18px] bg-[#faf8f4] p-5 ring-1 ring-black/5"
             >
               <div
@@ -362,20 +344,20 @@ onMounted(loadAssignments);
                     <span
                       class="rounded-2xl bg-white px-3 py-1.5 text-[#4f46e5]"
                     >
-                      {{ item.subject.subjectName }}
+                      {{ item.item.subjectName }}
                     </span>
                     <span
-                      v-if="item.subject.subjectCode"
+                      v-if="item.item.subjectCode"
                       class="rounded-2xl bg-white px-3 py-1.5 text-[#6b6475]"
                     >
-                      {{ item.subject.subjectCode }}
+                      {{ item.item.subjectCode }}
                     </span>
                     <span
                       class="rounded-2xl bg-white px-3 py-1.5 text-[#6b6475]"
                     >
                       {{
-                        item.subject.className ||
-                        item.subject.classCode ||
+                        item.item.className ||
+                        item.item.classCode ||
                         "Kelas"
                       }}
                     </span>
@@ -386,9 +368,9 @@ onMounted(loadAssignments);
                       class="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white"
                       :style="{
                         backgroundColor: getSubjectColor(
-                          item.subject.subjectClassId ||
-                            item.subject.subjectName ||
-                            item.subject.subjectCode,
+                          item.item.subjectClassId ||
+                            item.item.subjectName ||
+                            item.item.subjectCode,
                         ),
                       }"
                     >
@@ -398,17 +380,11 @@ onMounted(loadAssignments);
                       <p
                         class="text-xs font-medium uppercase tracking-wide text-[#e58f86]"
                       >
-                        {{ item.assignment.categoryName || "Tanpa kategori" }}
+                        {{ item.item.categoryName || "Tanpa kategori" }}
                       </p>
                       <h2 class="mt-1 text-lg font-medium text-[#171322]">
-                        {{ item.assignment.assignmentTitle }}
+                        {{ item.item.assignmentTitle }}
                       </h2>
-                      <p
-                        v-if="item.assignment.assignmentDescription"
-                        class="mt-2 line-clamp-2 text-sm leading-6 text-[#6b6475]"
-                      >
-                        {{ item.assignment.assignmentDescription }}
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -425,7 +401,7 @@ onMounted(loadAssignments);
                 <div class="rounded-2xl bg-white p-4">
                   <p class="text-xs text-[#8a8494]">Deadline</p>
                   <p class="mt-1 text-sm font-medium text-[#171322]">
-                    {{ formatDate(item.assignment.deadline) }}
+                    {{ formatDate(item.item.deadline) }}
                   </p>
                 </div>
                 <div class="rounded-2xl bg-white p-4">
@@ -453,8 +429,8 @@ onMounted(loadAssignments);
                   :to="{
                     name: 'teacher-assignment-edit',
                     params: {
-                      subjectClassId: item.subject.subjectClassId,
-                      asgId: item.assignment.assignmentId,
+                      subjectClassId: item.item.subjectClassId,
+                      asgId: item.item.assignmentId,
                     },
                   }"
                   class="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#ebe7df] bg-white px-4 py-3 text-sm font-medium text-[#171322] transition hover:border-[#4f46e5] hover:text-[#4f46e5]"
@@ -465,7 +441,7 @@ onMounted(loadAssignments);
                 <RouterLink
                   :to="{
                     name: 'teacher-assignment-review',
-                    params: { assignmentId: item.assignment.assignmentId },
+                    params: { assignmentId: item.item.assignmentId },
                   }"
                   class="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#171322] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#2f2b3a]"
                 >
@@ -475,7 +451,7 @@ onMounted(loadAssignments);
                 <RouterLink
                   :to="{
                     name: 'teacher-subject-detail',
-                    params: { subjectClassId: item.subject.subjectClassId },
+                    params: { subjectClassId: item.item.subjectClassId },
                   }"
                   class="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-medium text-[#6b6475] transition hover:text-[#171322]"
                 >

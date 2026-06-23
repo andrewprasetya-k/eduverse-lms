@@ -126,3 +126,32 @@ export interface TeacherSubmissionInboxResponse {
   summary: TeacherSubmissionInboxSummary
   items: TeacherSubmissionInboxItem[]
 }
+
+export interface TeacherAssignmentInboxSummary {
+  totalAssignments: number
+  activeAssignments: number
+  overdueAssignments: number
+  pendingReviewCount: number
+  totalSubmissions: number
+}
+
+export interface TeacherAssignmentInboxItem {
+  assignmentId: string
+  subjectClassId: string
+  assignmentTitle: string
+  subjectName: string
+  subjectCode?: string
+  className: string
+  classCode?: string
+  categoryName?: string
+  deadline?: string | null
+  submissionCount: number
+  pendingCount: number
+  gradedCount: number
+  lateCount: number
+}
+
+export interface TeacherAssignmentInboxResponse {
+  summary: TeacherAssignmentInboxSummary
+  items: TeacherAssignmentInboxItem[]
+}

@@ -36,6 +36,7 @@ const feedLoading = ref(false);
 const submitting = ref(false);
 const classesError = ref("");
 const feedError = ref("");
+const feedAccessWarning = ref("");
 
 const activeSchoolId = computed(
   () => auth.activeSchoolId ?? auth.defaultContext?.schoolId ?? "",
@@ -44,7 +45,10 @@ const selectedClass = computed(
   () => classes.value.find((item) => item.classId === selectedClassId.value) ?? null,
 );
 const canSubmit = computed(
-  () => Boolean(activeSchoolId.value && selectedClassId.value && content.value.trim()) && !submitting.value,
+  () =>
+    Boolean(activeSchoolId.value && selectedClassId.value && content.value.trim()) &&
+    !submitting.value &&
+    !feedAccessWarning.value,
 );
 
 function mapTeachingClasses(subjects: TeacherSubjectClass[]) {
@@ -85,6 +89,15 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function isForbiddenError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    (error as { response?: { status?: number } }).response?.status === 403
+  );
+}
+
 function classOptionLabel(item: TeacherFeedClass) {
   return item.classCode ? `${item.className} · ${item.classCode}` : item.className;
 }
@@ -118,6 +131,7 @@ async function loadFeed() {
 
   feedLoading.value = true;
   feedError.value = "";
+  feedAccessWarning.value = "";
 
   try {
     const response = await getClassFeed(selectedClassId.value);
@@ -126,10 +140,15 @@ async function loadFeed() {
   } catch (error) {
     posts.value = [];
     classHeader.value = null;
-    feedError.value = getErrorMessage(
-      error,
-      "Feed kelas belum bisa dimuat.",
-    );
+    if (isForbiddenError(error)) {
+      feedAccessWarning.value =
+        "Anda belum memiliki akses aktif ke pengumuman kelas ini. Pastikan guru masih terdaftar aktif di Penempatan Kelas.";
+    } else {
+      feedError.value = getErrorMessage(
+        error,
+        "Feed kelas belum bisa dimuat.",
+      );
+    }
   } finally {
     feedLoading.value = false;
   }
@@ -161,7 +180,13 @@ async function submitFeed() {
     content.value = "";
     await loadFeed();
   } catch (error) {
-    toast.error(getErrorMessage(error, "Pengumuman belum bisa dikirim."));
+    if (isForbiddenError(error)) {
+      feedAccessWarning.value =
+        "Anda belum memiliki akses aktif ke pengumuman kelas ini. Pastikan guru masih terdaftar aktif di Penempatan Kelas.";
+      toast.error("Akses aktif ke kelas ini belum tersedia.");
+    } else {
+      toast.error(getErrorMessage(error, "Pengumuman belum bisa dikirim."));
+    }
   } finally {
     submitting.value = false;
   }
@@ -303,7 +328,12 @@ onMounted(async () => {
             />
             <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p class="text-xs text-[#8b8592]">
-                Attachment dan komentar belum diaktifkan untuk feed MVP.
+                <span v-if="feedAccessWarning">
+                  Pengumuman belum bisa dikirim sampai akses kelas aktif.
+                </span>
+                <span v-else>
+                  Attachment dan komentar belum diaktifkan untuk feed MVP.
+                </span>
               </p>
               <button
                 class="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#4f46e5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338ca] disabled:cursor-not-allowed disabled:opacity-60"
@@ -347,6 +377,16 @@ onMounted(async () => {
                 :key="item"
                 class="h-24 animate-pulse rounded-2xl bg-[#fbfaf8]"
               />
+            </div>
+
+            <div
+              v-else-if="feedAccessWarning"
+              class="rounded-2xl border border-[#fed7aa] bg-[#fff7ed] p-4 text-sm leading-6 text-[#9a3412]"
+            >
+              <div class="flex items-start gap-3">
+                <PhWarningCircle :size="20" class="mt-0.5 shrink-0" />
+                <p>{{ feedAccessWarning }}</p>
+              </div>
             </div>
 
             <div
