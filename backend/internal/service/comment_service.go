@@ -72,7 +72,14 @@ func (s *commentService) GetBySource(sourceType string, sourceID string, schoolI
 	if err := s.ensureCanAccessSource(source, sourceID, schoolID, userID, roles); err != nil {
 		return nil, err
 	}
-	return s.repo.GetBySourceInSchool(source, sourceID, schoolID)
+	comments, err := s.repo.GetBySourceInSchool(source, sourceID, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	if comments == nil {
+		return []*domain.Comment{}, nil
+	}
+	return comments, nil
 }
 
 func (s *commentService) GetByID(id string, schoolID string, userID string, roles []string) (*domain.Comment, error) {

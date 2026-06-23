@@ -72,7 +72,7 @@ func (h *CommentHandler) GetBySource(c *gin.Context) {
 		return
 	}
 
-	var response []dto.CommentResponseDTO
+	response := make([]dto.CommentResponseDTO, 0, len(comments))
 	for _, c := range comments {
 		response = append(response, h.mapCommentToResponse(c, userID))
 	}

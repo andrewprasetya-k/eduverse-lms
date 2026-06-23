@@ -27,7 +27,7 @@ func (r *commentRepository) Create(comment *domain.Comment) error {
 }
 
 func (r *commentRepository) GetBySourceInSchool(sourceType domain.SourceType, sourceID string, schoolID string) ([]*domain.Comment, error) {
-	var results []*domain.Comment
+	results := make([]*domain.Comment, 0)
 	err := r.db.Preload("User").
 		Where("cmn_source_type = ? AND cmn_source_id = ? AND cmn_sch_id = ?", sourceType, sourceID, schoolID).
 		Order("created_at asc").Find(&results).Error
