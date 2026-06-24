@@ -76,7 +76,7 @@ watch(
 
 <template>
   <article
-    class="flex rounded-[22px] border border-[#ebe7df] bg-[#fbfaf8] p-5 lg:h-full lg:min-h-0 lg:flex-col"
+    class="flex h-full min-h-0 flex-col rounded-[22px] border border-[#ebe7df] bg-[#fbfaf8] p-5 lg:overflow-hidden"
   >
     <div class="flex items-start gap-3">
       <div
@@ -115,14 +115,14 @@ watch(
 
     <div v-else class="mt-5 flex min-h-0 flex-1 flex-col">
       <template v-if="note">
-        <p
-          class="line-clamp-5 whitespace-pre-line text-sm leading-6 text-[#4f4858] lg:overflow-y-auto"
-        >
-          {{ note.content }}
-        </p>
-        <p class="mt-3 text-xs text-[#a09aa8]">
-          Disimpan {{ formatDateTime(note.updatedAt) }}
-        </p>
+        <div class="min-h-0 flex-1 overflow-y-auto pr-1">
+          <p class="whitespace-pre-wrap text-sm leading-6 text-[#4f4858]">
+            {{ note.content }}
+          </p>
+          <p class="mt-3 text-xs text-[#a09aa8]">
+            Disimpan {{ formatDateTime(note.updatedAt) }}
+          </p>
+        </div>
       </template>
       <p v-else class="text-sm leading-6 text-[#7a7385]">
         Belum ada catatan. Buka editor untuk menulis ringkasan atau poin penting
