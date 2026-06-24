@@ -45,3 +45,9 @@ This file tracks visible unfinished work that is intentionally kept in the produ
 - Keep placeholder pages visibly intentional and avoid showing fake data.
 - Revisit notification surfaces when realtime delivery is introduced.
 - Revisit feed detail interactions when comments and attachments are supported.
+
+Admin assessment weight UI
+
+- Fix input parsing for number/string values.
+- Ensure total validation blocks invalid submit.
+- Revisit UX after backend weights endpoint is stable.
