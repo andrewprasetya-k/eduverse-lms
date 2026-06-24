@@ -1,47 +1,44 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
-import {
-  PhArrowLeft,
-  PhBookOpen,
-  PhWarningCircle,
-} from '@phosphor-icons/vue'
-import AttachmentPreviewList from '../../components/common/AttachmentPreviewList.vue'
-import StudentNoteCard from '../../components/student/StudentNoteCard.vue'
-import { getMaterialById } from '../../services/classWorkspace'
-import type { MaterialItem } from '../../types/classWorkspace'
-import { formatDateTime } from '../../utils/date'
+import { computed, onMounted, ref } from "vue";
+import { RouterLink, useRoute } from "vue-router";
+import { PhArrowLeft, PhBookOpen, PhWarningCircle } from "@phosphor-icons/vue";
+import AttachmentPreviewList from "../../components/common/AttachmentPreviewList.vue";
+import StudentNoteCard from "../../components/student/StudentNoteCard.vue";
+import { getMaterialById } from "../../services/classWorkspace";
+import type { MaterialItem } from "../../types/classWorkspace";
+import { formatDateTime } from "../../utils/date";
 
-const route = useRoute()
-const subjectClassId = computed(() => String(route.params.sclId ?? ''))
-const materialId = computed(() => String(route.params.matId ?? ''))
-const material = ref<MaterialItem | null>(null)
-const isLoading = ref(true)
-const errorMessage = ref('')
-const didLoad = ref(false)
+const route = useRoute();
+const subjectClassId = computed(() => String(route.params.sclId ?? ""));
+const materialId = computed(() => String(route.params.matId ?? ""));
+const material = ref<MaterialItem | null>(null);
+const isLoading = ref(true);
+const errorMessage = ref("");
+const didLoad = ref(false);
 
 async function loadMaterial() {
   if (!subjectClassId.value || !materialId.value) {
-    isLoading.value = false
-    errorMessage.value = 'Konteks materi tidak lengkap.'
-    return
+    isLoading.value = false;
+    errorMessage.value = "Konteks materi tidak lengkap.";
+    return;
   }
 
-  isLoading.value = true
-  errorMessage.value = ''
-  didLoad.value = false
+  isLoading.value = true;
+  errorMessage.value = "";
+  didLoad.value = false;
 
   try {
-    material.value = await getMaterialById(materialId.value)
-    didLoad.value = true
+    material.value = await getMaterialById(materialId.value);
+    didLoad.value = true;
   } catch {
-    errorMessage.value = 'Detail materi belum bisa dimuat. Periksa koneksi atau coba lagi nanti.'
+    errorMessage.value =
+      "Detail materi belum bisa dimuat. Periksa koneksi atau coba lagi nanti.";
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
 
-onMounted(loadMaterial)
+onMounted(loadMaterial);
 </script>
 
 <template>
@@ -55,13 +52,24 @@ onMounted(loadMaterial)
     </RouterLink>
 
     <section v-if="isLoading" class="max-w-4xl space-y-3">
-      <div class="h-40 animate-pulse rounded-3xl border border-[#ebe7df] bg-white" />
-      <div class="h-28 animate-pulse rounded-3xl border border-[#ebe7df] bg-white" />
-      <div class="h-24 animate-pulse rounded-3xl border border-[#ebe7df] bg-white" />
+      <div
+        class="h-40 animate-pulse rounded-3xl border border-[#ebe7df] bg-white"
+      />
+      <div
+        class="h-28 animate-pulse rounded-3xl border border-[#ebe7df] bg-white"
+      />
+      <div
+        class="h-24 animate-pulse rounded-3xl border border-[#ebe7df] bg-white"
+      />
     </section>
 
-    <section v-else-if="errorMessage" class="soft-card max-w-4xl rounded-[22px] p-5">
-      <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]">
+    <section
+      v-else-if="errorMessage"
+      class="soft-card max-w-4xl rounded-[22px] p-5"
+    >
+      <div
+        class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]"
+      >
         <PhWarningCircle :size="24" weight="duotone" />
       </div>
       <p class="text-sm font-medium text-[#171322]">Tidak bisa memuat materi</p>
@@ -75,13 +83,19 @@ onMounted(loadMaterial)
       </button>
     </section>
 
-    <section v-else-if="didLoad && !material" class="soft-card max-w-4xl rounded-[22px] p-5">
-      <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]">
+    <section
+      v-else-if="didLoad && !material"
+      class="soft-card max-w-4xl rounded-[22px] p-5"
+    >
+      <div
+        class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
+      >
         <PhBookOpen :size="24" weight="duotone" />
       </div>
       <p class="text-sm font-medium text-[#171322]">Materi tidak ditemukan</p>
       <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-        Material ID ini tidak ditemukan atau belum tersedia untuk subject yang sedang dibuka.
+        Material ID ini tidak ditemukan atau belum tersedia untuk subject yang
+        sedang dibuka.
       </p>
     </section>
 
@@ -99,12 +113,17 @@ onMounted(loadMaterial)
             </div>
             <div class="min-w-0">
               <p class="text-sm text-[#7a7385]">
-                {{ material.subjectName || 'Subject material' }}
+                {{ material.subjectName || "Subject material" }}
               </p>
-              <h1 class="mt-2 text-3xl font-medium tracking-normal text-[#171322]">
+              <h1
+                class="mt-2 text-3xl font-medium tracking-normal text-[#171322]"
+              >
                 {{ material.materialTitle }}
               </h1>
-              <p v-if="material.materialType" class="mt-2 text-sm uppercase text-[#4f46e5]">
+              <p
+                v-if="material.materialType"
+                class="mt-2 text-sm uppercase text-[#4f46e5]"
+              >
                 {{ material.materialType }}
               </p>
             </div>
@@ -114,7 +133,7 @@ onMounted(loadMaterial)
             <div class="rounded-2xl bg-[#fbfaf8] p-4">
               <p class="text-xs font-medium text-[#7a7385]">Dibuat oleh</p>
               <p class="mt-2 text-sm text-[#3f3a4a]">
-                {{ material.creatorName || 'Creator tidak tersedia' }}
+                {{ material.creatorName || "Creator tidak tersedia" }}
               </p>
             </div>
             <div class="rounded-2xl bg-[#fbfaf8] p-4">
@@ -151,7 +170,8 @@ onMounted(loadMaterial)
         <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
           <p class="text-sm font-medium text-[#171322]">Progress materi</p>
           <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-            Progress materi direncanakan setelah MVP sekolah. Membuka materi belum menandai progres selesai.
+            Progress materi direncanakan setelah MVP sekolah. Membuka materi
+            belum menandai progres selesai.
           </p>
         </article>
       </div>

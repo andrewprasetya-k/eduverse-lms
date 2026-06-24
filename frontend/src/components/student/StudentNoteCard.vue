@@ -1,38 +1,40 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch } from "vue";
 import {
   PhArrowClockwise,
   PhFloppyDisk,
   PhNotebook,
   PhTrash,
-} from '@phosphor-icons/vue'
+} from "@phosphor-icons/vue";
 import {
   deleteStudentMaterialNote,
   getStudentMaterialNote,
   saveStudentMaterialNote,
-} from '../../services/studentNotes'
-import { useToastStore } from '../../stores/toast'
-import type { StudentMaterialNote } from '../../types/studentNotes'
-import { formatDateTime } from '../../utils/date'
+} from "../../services/studentNotes";
+import { useToastStore } from "../../stores/toast";
+import type { StudentMaterialNote } from "../../types/studentNotes";
+import { formatDateTime } from "../../utils/date";
 
 const props = defineProps<{
-  materialId: string
-}>()
+  materialId: string;
+}>();
 
-const maxLength = 10000
-const toast = useToastStore()
-const note = ref<StudentMaterialNote | null>(null)
-const content = ref('')
-const savedContent = ref('')
-const isLoading = ref(false)
-const isSaving = ref(false)
-const isDeleting = ref(false)
-const hasLoaded = ref(false)
-const errorMessage = ref('')
+const maxLength = 10000;
+const toast = useToastStore();
+const note = ref<StudentMaterialNote | null>(null);
+const content = ref("");
+const savedContent = ref("");
+const isLoading = ref(false);
+const isSaving = ref(false);
+const isDeleting = ref(false);
+const hasLoaded = ref(false);
+const errorMessage = ref("");
 
-const normalizedContent = computed(() => content.value.trim())
-const isTooLong = computed(() => Array.from(content.value).length > maxLength)
-const hasChanges = computed(() => normalizedContent.value !== savedContent.value)
+const normalizedContent = computed(() => content.value.trim());
+const isTooLong = computed(() => Array.from(content.value).length > maxLength);
+const hasChanges = computed(
+  () => normalizedContent.value !== savedContent.value,
+);
 const canSave = computed(
   () =>
     hasLoaded.value &&
@@ -41,124 +43,128 @@ const canSave = computed(
     hasChanges.value &&
     !isSaving.value &&
     !isDeleting.value,
-)
+);
 
 function getNoteErrorMessage(error: unknown, fallback: string) {
-  if (typeof error === 'object' && error !== null && 'response' in error) {
+  if (typeof error === "object" && error !== null && "response" in error) {
     const response = (
       error as {
         response?: {
-          status?: number
-          data?: { error?: unknown; message?: unknown }
-        }
+          status?: number;
+          data?: { error?: unknown; message?: unknown };
+        };
       }
-    ).response
+    ).response;
 
     if (response?.status === 403) {
-      return 'Catatan tidak dapat diakses karena materi ini tidak lagi tersedia di kelas aktifmu.'
+      return "Catatan tidak dapat diakses karena materi ini tidak lagi tersedia di kelas aktifmu.";
     }
     if (response?.status === 404) {
-      return 'Materi untuk catatan ini tidak ditemukan.'
+      return "Materi untuk catatan ini tidak ditemukan.";
     }
-    if (typeof response?.data?.error === 'string') {
-      return response.data.error
+    if (typeof response?.data?.error === "string") {
+      return response.data.error;
     }
-    if (typeof response?.data?.message === 'string') {
-      return response.data.message
+    if (typeof response?.data?.message === "string") {
+      return response.data.message;
     }
   }
-  return fallback
+  return fallback;
 }
 
 async function loadNote() {
-  if (!props.materialId) return
+  if (!props.materialId) return;
 
-  isLoading.value = true
-  hasLoaded.value = false
-  errorMessage.value = ''
+  isLoading.value = true;
+  hasLoaded.value = false;
+  errorMessage.value = "";
 
   try {
-    const response = await getStudentMaterialNote(props.materialId)
-    note.value = response.note
-    content.value = response.note?.content ?? ''
-    savedContent.value = response.note?.content.trim() ?? ''
-    hasLoaded.value = true
+    const response = await getStudentMaterialNote(props.materialId);
+    note.value = response.note;
+    content.value = response.note?.content ?? "";
+    savedContent.value = response.note?.content.trim() ?? "";
+    hasLoaded.value = true;
   } catch (error) {
     errorMessage.value = getNoteErrorMessage(
       error,
-      'Catatan belum bisa dimuat. Coba lagi beberapa saat.',
-    )
+      "Catatan belum bisa dimuat. Coba lagi beberapa saat.",
+    );
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
 
 async function saveNote() {
   if (!canSave.value) {
     if (isTooLong.value) {
-      errorMessage.value = 'Catatan maksimal 10.000 karakter.'
+      errorMessage.value = "Catatan maksimal 10.000 karakter.";
     } else if (!normalizedContent.value) {
-      errorMessage.value = 'Isi catatan wajib diisi.'
+      errorMessage.value = "Isi catatan wajib diisi.";
     }
-    return
+    return;
   }
 
-  isSaving.value = true
-  errorMessage.value = ''
+  isSaving.value = true;
+  errorMessage.value = "";
 
   try {
     const response = await saveStudentMaterialNote(props.materialId, {
       content: normalizedContent.value,
-    })
-    note.value = response.note
-    content.value = response.note?.content ?? normalizedContent.value
-    savedContent.value = content.value.trim()
-    toast.success('Catatan berhasil disimpan.')
+    });
+    note.value = response.note;
+    content.value = response.note?.content ?? normalizedContent.value;
+    savedContent.value = content.value.trim();
+    toast.success("Catatan berhasil disimpan.");
   } catch (error) {
     errorMessage.value = getNoteErrorMessage(
       error,
-      'Catatan belum bisa disimpan. Teks yang kamu tulis tetap tersedia.',
-    )
+      "Catatan belum bisa disimpan. Teks yang kamu tulis tetap tersedia.",
+    );
   } finally {
-    isSaving.value = false
+    isSaving.value = false;
   }
 }
 
 async function deleteNote() {
-  if (!note.value || isDeleting.value) return
-  if (!window.confirm('Hapus catatan pribadi untuk materi ini?')) return
+  if (!note.value || isDeleting.value) return;
+  if (!window.confirm("Hapus catatan pribadi untuk materi ini?")) return;
 
-  isDeleting.value = true
-  errorMessage.value = ''
+  isDeleting.value = true;
+  errorMessage.value = "";
 
   try {
-    await deleteStudentMaterialNote(props.materialId)
-    note.value = null
-    content.value = ''
-    savedContent.value = ''
-    toast.success('Catatan berhasil dihapus.')
+    await deleteStudentMaterialNote(props.materialId);
+    note.value = null;
+    content.value = "";
+    savedContent.value = "";
+    toast.success("Catatan berhasil dihapus.");
   } catch (error) {
     errorMessage.value = getNoteErrorMessage(
       error,
-      'Catatan belum bisa dihapus.',
-    )
+      "Catatan belum bisa dihapus.",
+    );
   } finally {
-    isDeleting.value = false
+    isDeleting.value = false;
   }
 }
 
 watch(
   () => props.materialId,
   () => {
-    void loadNote()
+    void loadNote();
   },
   { immediate: true },
-)
+);
 </script>
 
 <template>
-  <article class="rounded-[22px] border border-[#ebe7df] bg-[#fbfaf8] p-5">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+  <article
+    class="flex rounded-[22px] border border-[#ebe7df] bg-[#fbfaf8] p-5 lg:min-h-[calc(100vh-7rem)] lg:max-h-[calc(100vh-7rem)] lg:flex-col"
+  >
+    <div
+      class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+    >
       <div class="flex items-start gap-3">
         <div
           class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#f3ecff] text-[#7c3aed]"
@@ -168,17 +174,14 @@ watch(
         <div>
           <h2 class="text-base font-medium text-[#171322]">Catatan Saya</h2>
           <p class="mt-1 max-w-2xl text-sm leading-6 text-[#7a7385]">
-            Tulis ringkasan, poin penting, atau hal yang ingin kamu ingat dari materi ini.
+            Tulis ringkasan, poin penting, atau hal yang ingin kamu ingat dari
+            materi ini.
+          </p>
+          <p v-if="note?.updatedAt" class="shrink-0 text-xs text-[#a09aa8]">
+            Disimpan {{ formatDateTime(note.updatedAt) }}
           </p>
         </div>
       </div>
-
-      <p
-        v-if="note?.updatedAt"
-        class="shrink-0 text-xs text-[#a09aa8]"
-      >
-        Disimpan {{ formatDateTime(note.updatedAt) }}
-      </p>
     </div>
 
     <div v-if="isLoading" class="mt-5 space-y-3">
@@ -198,21 +201,27 @@ watch(
       </button>
     </div>
 
-    <form v-else class="mt-5" @submit.prevent="saveNote">
-      <textarea
-        v-model="content"
-        class="min-h-52 w-full resize-y rounded-[18px] border border-[#ebe7df] bg-white px-5 py-4 text-sm leading-7 text-[#374151] outline-none transition placeholder:text-[#a09aa8] focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/10"
-        maxlength="10001"
-        placeholder="Mulai tulis catatanmu di sini..."
-        aria-label="Catatan pribadi untuk materi"
-      />
+    <form
+      v-else
+      class="mt-5 flex min-h-0 flex-1 flex-col"
+      @submit.prevent="saveNote"
+    >
+      <div
+        class="flex min-h-0 flex-1 rounded-[18px] bg-white/80 px-1 py-1 transition focus-within:bg-white focus-within:ring-[#4f46e5]/15"
+      >
+        <textarea
+          v-model="content"
+          class="min-h-80 flex-1 resize-none border-0 bg-transparent px-4 py-4 text-sm leading-7 text-[#374151] outline-none placeholder:text-[#b3adb9] focus:ring-0 lg:min-h-0"
+        />
+      </div>
 
       <div class="mt-2 flex flex-wrap items-center justify-between gap-2">
         <p
           class="text-xs"
           :class="isTooLong ? 'text-[#b42318]' : 'text-[#a09aa8]'"
         >
-          {{ Array.from(content).length.toLocaleString('id-ID') }} / 10.000 karakter
+          {{ Array.from(content).length.toLocaleString("id-ID") }} / 10.000
+          karakter
         </p>
         <p v-if="hasChanges && !isTooLong" class="text-xs text-[#8b8592]">
           Perubahan belum disimpan
@@ -226,7 +235,7 @@ watch(
         {{ errorMessage }}
       </p>
 
-      <div class="mt-4 flex flex-wrap items-center gap-3">
+      <div class="mt-4 flex shrink-0 flex-wrap items-center gap-3">
         <button
           class="inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:bg-[#d8d5dd]"
           :class="canSave ? 'bg-[#4f46e5] hover:bg-[#4338ca]' : 'bg-[#d8d5dd]'"
@@ -234,7 +243,7 @@ watch(
           type="submit"
         >
           <PhFloppyDisk :size="17" weight="duotone" />
-          {{ isSaving ? 'Menyimpan...' : 'Simpan catatan' }}
+          {{ isSaving ? "Menyimpan..." : "Simpan catatan" }}
         </button>
 
         <button
@@ -245,7 +254,7 @@ watch(
           @click="deleteNote"
         >
           <PhTrash :size="17" weight="duotone" />
-          {{ isDeleting ? 'Menghapus...' : 'Hapus' }}
+          {{ isDeleting ? "Menghapus..." : "Hapus" }}
         </button>
       </div>
     </form>
