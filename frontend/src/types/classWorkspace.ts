@@ -25,8 +25,8 @@ export interface MediaAttachment {
   mimeType: string
   fileUrl: string
   thumbnailUrl?: string
-  ownerType: string
-  createdAt: string
+  ownerType?: string
+  createdAt?: string
 }
 
 export interface MaterialItem {

@@ -6,19 +6,19 @@ import {
   PhCalendarBlank,
   PhCheckCircle,
   PhClipboardText,
-  PhFileText,
   PhPaperclip,
   PhTrash,
   PhWarningCircle,
 } from '@phosphor-icons/vue'
+import AttachmentPreviewList from '../../components/common/AttachmentPreviewList.vue'
 import { useAuthStore } from '../../stores/auth'
 import {
   getMySubmissionByAssignment,
-  getSubjectAssignmentDetail,
+  getStudentAssignmentDetail,
   submitAssignment,
 } from '../../services/assignment'
 import { deleteMedia, uploadMediaFile } from '../../services/media'
-import type { AssignmentItem, MySubmissionResponse, SubjectClassHeader } from '../../types/assignment'
+import type { AssignmentItem, MySubmissionResponse } from '../../types/assignment'
 import { formatDateTime } from '../../utils/date'
 
 const route = useRoute()
@@ -26,7 +26,6 @@ const auth = useAuthStore()
 const subjectClassId = computed(() => String(route.params.sclId ?? ''))
 const assignmentId = computed(() => String(route.params.asgId ?? ''))
 const assignment = ref<AssignmentItem | null>(null)
-const subjectClass = ref<SubjectClassHeader | null>(null)
 const isLoading = ref(true)
 const errorMessage = ref('')
 const didLoad = ref(false)
@@ -52,11 +51,9 @@ async function loadAssignment() {
   didLoad.value = false
 
   try {
-    const data = await getSubjectAssignmentDetail(subjectClassId.value, assignmentId.value)
-    subjectClass.value = data.subjectClass
-    assignment.value = data.assignment
+    assignment.value = await getStudentAssignmentDetail(assignmentId.value)
     didLoad.value = true
-    loadMySubmissionStatus()
+    await loadMySubmissionStatus()
   } catch {
     errorMessage.value = 'Detail tugas belum bisa dimuat. Periksa koneksi atau coba lagi nanti.'
   } finally {
@@ -214,7 +211,7 @@ async function handleSubmit() {
           </div>
           <div class="min-w-0">
             <p class="text-sm text-[#7a7385]">
-              {{ subjectClass?.subjectName || subjectClass?.subjectCode || 'Subject assignment' }}
+              {{ assignment.subjectName || assignment.subjectCode || 'Subject assignment' }}
             </p>
             <h1 class="mt-2 text-3xl font-medium tracking-normal text-[#171322]">
               {{ assignment.assignmentTitle }}
@@ -263,21 +260,13 @@ async function handleSubmit() {
         </div>
       </article>
 
-      <article v-if="assignment.attachments?.length" class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
+      <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
         <p class="text-sm font-medium text-[#171322]">Lampiran</p>
-        <div class="mt-3 space-y-2">
-          <a
-            v-for="attachment in assignment.attachments"
-            :key="attachment.mediaId"
-            class="flex max-w-full items-center gap-3 overflow-hidden rounded-2xl bg-[#fbfaf8] px-4 py-3 text-sm text-[#4a4356]"
-            :href="attachment.fileUrl"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <PhFileText :size="18" class="shrink-0 text-[#4f46e5]" />
-            <span class="min-w-0 flex-1 truncate">{{ attachment.mediaName || 'Lampiran tugas' }}</span>
-          </a>
-        </div>
+        <AttachmentPreviewList
+          class="mt-3"
+          :attachments="assignment.attachments"
+          empty-text="Tugas ini tidak memiliki lampiran."
+        />
       </article>
 
       <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
@@ -326,20 +315,10 @@ async function handleSubmit() {
             class="rounded-2xl bg-[#fbfaf8] p-4"
           >
             <p class="text-sm font-medium text-[#171322]">File yang dikumpulkan</p>
-            <div class="mt-3 space-y-2">
-              <a
-                v-for="attachment in submissionStatus.submission.attachments"
-                :key="attachment.mediaId"
-                class="flex max-w-full items-center gap-3 overflow-hidden rounded-2xl bg-white px-4 py-3 text-sm text-[#4a4356]"
-                :href="attachment.fileUrl"
-                rel="noreferrer"
-                target="_blank"
-              >
-                <PhFileText :size="18" class="shrink-0 text-[#4f46e5]" />
-                <span class="min-w-0 flex-1 truncate">{{ attachment.mediaName || 'File submission' }}</span>
-                <span class="shrink-0 text-xs text-[#8b8592]">{{ formatFileSize(attachment.fileSize) }}</span>
-              </a>
-            </div>
+            <AttachmentPreviewList
+              class="mt-3"
+              :attachments="submissionStatus.submission.attachments"
+            />
           </div>
 
           <div

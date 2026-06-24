@@ -30,6 +30,13 @@ export async function getSubjectAssignmentDetail(subjectClassId: string, assignm
   }
 }
 
+export async function getStudentAssignmentDetail(assignmentId: string) {
+  const { data } = await api.get<AssignmentItem>(
+    `/assignments/student/${assignmentId}`,
+  )
+  return data
+}
+
 export async function submitAssignment(assignmentId: string, payload: SubmitAssignmentPayload) {
   const { data } = await api.post<SubmitAssignmentResponse>(
     `/assignments/submit/${assignmentId}`,

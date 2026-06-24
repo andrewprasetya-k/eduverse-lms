@@ -10,11 +10,15 @@ export interface SubjectClassHeader {
 
 export interface AssignmentItem {
   assignmentId: string
+  subjectClassId?: string
+  subjectName?: string
+  subjectCode?: string
   assignmentTitle: string
   assignmentDescription?: string
-  deadline: string
+  deadline?: string | null
   categoryName?: string
   createdAt?: string
+  updatedAt?: string
   allowLateSubmission?: boolean
   attachments?: MediaAttachment[]
 }
@@ -35,13 +39,7 @@ export interface SubmitAssignmentResponse {
 
 export type MySubmissionStatus = 'not_submitted' | 'submitted' | 'graded'
 
-export interface SubmissionAttachment {
-  mediaId: string
-  mediaName: string
-  fileUrl: string
-  mimeType: string
-  fileSize: number
-}
+export interface SubmissionAttachment extends MediaAttachment {}
 
 export interface SubmissionAssessment {
   assessmentId: string

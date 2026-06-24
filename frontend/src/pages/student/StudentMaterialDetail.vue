@@ -4,10 +4,10 @@ import { RouterLink, useRoute } from 'vue-router'
 import {
   PhArrowLeft,
   PhBookOpen,
-  PhFileText,
   PhNotebook,
   PhWarningCircle,
 } from '@phosphor-icons/vue'
+import AttachmentPreviewList from '../../components/common/AttachmentPreviewList.vue'
 import { getMaterialById } from '../../services/classWorkspace'
 import type { MaterialItem } from '../../types/classWorkspace'
 import { formatDateTime } from '../../utils/date'
@@ -135,21 +135,13 @@ onMounted(loadMaterial)
         </div>
       </article>
 
-      <article v-if="material.attachments?.length" class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
+      <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
         <p class="text-sm font-medium text-[#171322]">Lampiran</p>
-        <div class="mt-3 space-y-2">
-          <a
-            v-for="attachment in material.attachments"
-            :key="attachment.mediaId"
-            class="flex max-w-full items-center gap-3 overflow-hidden rounded-2xl bg-[#fbfaf8] px-4 py-3 text-sm text-[#4a4356]"
-            :href="attachment.fileUrl"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <PhFileText :size="18" class="shrink-0 text-[#4f46e5]" />
-            <span class="min-w-0 flex-1 truncate">{{ attachment.mediaName || 'Lampiran materi' }}</span>
-          </a>
-        </div>
+        <AttachmentPreviewList
+          class="mt-3"
+          :attachments="material.attachments"
+          empty-text="Materi ini tidak memiliki lampiran."
+        />
       </article>
 
       <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
