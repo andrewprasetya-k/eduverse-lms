@@ -4,11 +4,11 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
   PhArrowLeft,
   PhBookOpen,
-  PhFileText,
   PhWarningCircle,
   PhPencilSimple,
   PhTrash,
 } from '@phosphor-icons/vue'
+import AttachmentPreviewList from '../../components/common/AttachmentPreviewList.vue'
 import { getMaterialById } from '../../services/classWorkspace'
 import { deleteMaterial } from '../../services/teacherMaterial'
 import type { MaterialItem } from '../../types/classWorkspace'
@@ -176,29 +176,13 @@ onMounted(loadMaterial)
         </div>
       </article>
 
-      <article
-        v-if="material.attachments?.length"
-        class="rounded-[22px] border border-[#ebe7df] bg-white p-5"
-      >
+      <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
         <p class="text-sm font-medium text-[#171322]">Lampiran</p>
-        <div class="mt-3 space-y-2">
-          <a
-            v-for="attachment in material.attachments"
-            :key="attachment.mediaId"
-            class="flex max-w-full items-center gap-3 overflow-hidden rounded-2xl bg-[#faf8f4] px-4 py-3 text-sm text-[#4a4356] transition hover:bg-[#f0e9dd]"
-            :href="attachment.fileUrl"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <PhFileText :size="18" class="shrink-0 text-[#7aa7d9]" />
-            <span class="min-w-0 flex-1 truncate">{{ attachment.mediaName || 'Lampiran materi' }}</span>
-          </a>
-        </div>
-      </article>
-
-      <article v-else class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
-        <p class="text-sm font-medium text-[#171322]">Lampiran</p>
-        <p class="mt-2 text-sm leading-6 text-[#8a8494]">Materi ini tidak memiliki lampiran.</p>
+        <AttachmentPreviewList
+          class="mt-3"
+          :attachments="material.attachments"
+          empty-text="Materi ini tidak memiliki lampiran."
+        />
       </article>
     </section>
   </main>

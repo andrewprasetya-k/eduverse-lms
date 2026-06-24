@@ -8,12 +8,14 @@ import {
   PhCheckCircle,
   PhClipboardText,
   PhFileText,
+  PhPaperclip,
   PhPlusCircle,
   PhUsersThree,
   PhWarningCircle,
   PhPencilSimple,
   PhTrash,
 } from "@phosphor-icons/vue";
+import AttachmentPreviewList from "../../components/common/AttachmentPreviewList.vue";
 import { getSubjectAssignments } from "../../services/assignment";
 import {
   getSubjectClassSubmissions,
@@ -528,6 +530,12 @@ onMounted(loadWorkspace);
                     </RouterLink>
                   </div>
                 </div>
+                <AttachmentPreviewList
+                  v-if="assignment.attachments?.length"
+                  class="mt-4"
+                  :attachments="assignment.attachments"
+                  :initially-expanded="false"
+                />
               </article>
             </div>
 

@@ -7,11 +7,11 @@ import {
   PhCaretRight,
   PhCheckCircle,
   PhClock,
-  PhDownloadSimple,
   PhFile,
   PhPaperPlaneTilt,
   PhUser,
 } from "@phosphor-icons/vue";
+import AttachmentPreviewList from "../../components/common/AttachmentPreviewList.vue";
 import {
   getAssignmentDetailWithSubmissions,
   assessSubmission,
@@ -83,13 +83,6 @@ function updateGradingForm() {
 }
 
 watch(activeIndex, updateGradingForm);
-
-function formatFileSize(size?: number) {
-  if (!size || size <= 0) return "Ukuran tidak tersedia";
-  if (size < 1024) return `${size} B`;
-  if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
-  return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-}
 
 async function handleGrade() {
   if (!currentSubmission.value) return;
@@ -263,46 +256,10 @@ onMounted(loadData);
             File Jawaban ({{ currentSubmission?.attachments?.length || 0 }})
           </h3>
 
-          <div class="grid gap-3">
-            <div
-              v-for="file in currentSubmission?.attachments"
-              :key="file.mediaId"
-              class="bg-white rounded-xl border border-[#EBEBEB] overflow-hidden group hover:border-[#4F46E5]/30 transition"
-            >
-              <div class="p-4 flex items-center justify-between gap-3">
-                <div class="flex min-w-0 flex-1 items-center gap-4 overflow-hidden">
-                  <div
-                    class="w-10 h-10 shrink-0 bg-[#FEF2F2] rounded-lg flex items-center justify-center text-[#DC2626]"
-                  >
-                    <PhFile :size="20" weight="bold" />
-                  </div>
-                  <div class="min-w-0 flex-1 overflow-hidden">
-                    <p class="text-sm font-semibold text-[#111827] truncate">
-                      {{ file.mediaName }}
-                    </p>
-                    <p class="text-[11px] text-[#9CA3AF]">
-                      {{ formatFileSize(file.fileSize) }}
-                    </p>
-                  </div>
-                </div>
-                <a
-                  :href="file.fileUrl"
-                  target="_blank"
-                  class="flex shrink-0 items-center gap-1.5 text-xs font-bold text-[#4F46E5] hover:text-[#4338CA] transition"
-                >
-                  <PhDownloadSimple :size="16" weight="bold" />
-                  Unduh
-                </a>
-              </div>
-              <!-- Preview Area (Simulated) -->
-              <div
-                class="h-48 bg-[#F3F4F6] border-t border-[#EBEBEB] flex flex-col items-center justify-center text-[#9CA3AF]"
-              >
-                <PhFile :size="32" class="mb-2" />
-                <p class="text-xs">Klik unduh untuk melihat dokumen lengkap</p>
-              </div>
-            </div>
-          </div>
+          <AttachmentPreviewList
+            :attachments="currentSubmission?.attachments"
+            empty-text="Siswa tidak mengirim lampiran."
+          />
         </div>
       </section>
 

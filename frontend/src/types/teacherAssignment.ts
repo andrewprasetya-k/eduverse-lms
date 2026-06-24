@@ -28,10 +28,11 @@ export interface SchoolCategoriesResponse {
 
 export interface TeacherSubmissionAttachment {
   mediaId: string
-  mediaName: string
+  mediaName?: string
   fileUrl?: string
   mimeType?: string
   fileSize?: number
+  thumbnailUrl?: string
 }
 
 export interface TeacherSubmissionAssessment {

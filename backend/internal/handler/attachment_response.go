@@ -32,16 +32,16 @@ func mapAttachmentMedia(attachment domain.Attachment, schoolID string) (dto.Medi
 
 func safeHTTPURL(value string) string {
 	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
+	if trimmed == "" || trimmed != value {
 		return ""
 	}
 
-	parsed, err := url.Parse(trimmed)
+	parsed, err := url.Parse(value)
 	if err != nil || parsed.Host == "" {
 		return ""
 	}
 	if parsed.Scheme != "http" && parsed.Scheme != "https" {
 		return ""
 	}
-	return parsed.String()
+	return value
 }

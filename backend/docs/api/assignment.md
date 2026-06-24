@@ -356,6 +356,7 @@ Base URL: `/api/assignments`
 ```
 
 Attachment entries whose media has been soft-deleted or does not belong to the same school are omitted. Non-HTTP(S) file and thumbnail URLs are returned as empty strings.
+The web client uses absolute HTTP(S) `fileUrl` values directly for inline image/PDF preview and does not prefix them with the API base URL.
 
 ### 11. Get Assignment Status
 - **URL:** `/status/:id`

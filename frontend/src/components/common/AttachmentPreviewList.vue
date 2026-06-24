@@ -19,20 +19,26 @@ interface AttachmentPreviewItem {
 interface Props {
   attachments?: AttachmentPreviewItem[];
   emptyText?: string;
+  initiallyExpanded?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   attachments: () => [],
   emptyText: "Tidak ada lampiran.",
+  initiallyExpanded: true,
 });
 
 const failedImages = ref<Record<string, boolean>>({});
+const expandedPreviews = ref<Record<string, boolean>>({});
 
 function isSafeURL(value?: string) {
-  if (!value) return false;
+  if (!value || value.trim() !== value) return false;
   try {
     const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
+    return (
+      (parsed.protocol === "http:" || parsed.protocol === "https:") &&
+      Boolean(parsed.host)
+    );
   } catch {
     return false;
   }
@@ -52,6 +58,23 @@ function previewURL(attachment: AttachmentPreviewItem) {
   if (isSafeURL(attachment.thumbnailUrl)) return attachment.thumbnailUrl;
   if (isSafeURL(attachment.fileUrl)) return attachment.fileUrl;
   return "";
+}
+
+function isPreviewExpanded(attachment: AttachmentPreviewItem) {
+  return expandedPreviews.value[attachment.mediaId] ?? props.initiallyExpanded;
+}
+
+function canPreview(attachment: AttachmentPreviewItem) {
+  return (
+    isSafeURL(attachment.fileUrl) && (isPDF(attachment) || isImage(attachment))
+  );
+}
+
+function togglePreview(attachment: AttachmentPreviewItem) {
+  expandedPreviews.value = {
+    ...expandedPreviews.value,
+    [attachment.mediaId]: !isPreviewExpanded(attachment),
+  };
 }
 
 function formatFileSize(size?: number) {
@@ -88,19 +111,56 @@ function markImageFailed(mediaId: string) {
           v-if="
             isImage(attachment) &&
             previewURL(attachment) &&
-            !failedImages[attachment.mediaId]
+            !failedImages[attachment.mediaId] &&
+            isPreviewExpanded(attachment)
           "
           class="border-b border-[#ebe7df] bg-white"
         >
+          <a
+            v-if="isSafeURL(attachment.fileUrl)"
+            :href="attachment.fileUrl"
+            rel="noopener noreferrer"
+            target="_blank"
+            title="Buka gambar penuh di tab baru"
+          >
+            <img
+              :alt="attachment.mediaName || 'Preview lampiran gambar'"
+              class="max-h-96 w-full object-contain"
+              :src="previewURL(attachment)"
+              @error="markImageFailed(attachment.mediaId)"
+            />
+          </a>
           <img
+            v-else
             :alt="attachment.mediaName || 'Preview lampiran gambar'"
-            class="max-h-80 w-full object-contain"
+            class="max-h-96 w-full object-contain"
             :src="previewURL(attachment)"
             @error="markImageFailed(attachment.mediaId)"
           />
         </div>
 
-        <div class="flex min-w-0 items-center gap-3 p-4">
+        <div
+          v-else-if="
+            isPDF(attachment) &&
+            isSafeURL(attachment.fileUrl) &&
+            isPreviewExpanded(attachment)
+          "
+          class="border-b border-[#ebe7df] bg-white p-2 sm:p-3"
+        >
+          <iframe
+            class="h-105 w-full rounded-xl border border-[#ebe7df] bg-white sm:h-130"
+            :src="attachment.fileUrl"
+            :title="`Preview ${attachment.mediaName || 'PDF'}`"
+            loading="lazy"
+          />
+          <p class="mt-2 text-xs leading-5 text-[#8b8592]">
+            Jika preview tidak tampil, gunakan tombol Buka PDF di tab baru.
+          </p>
+        </div>
+
+        <div
+          class="flex min-w-0 flex-col gap-3 p-4 sm:flex-row sm:items-center"
+        >
           <div
             class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#4f46e5]"
           >
@@ -131,16 +191,32 @@ function markImageFailed(mediaId: string) {
             </p>
           </div>
 
-          <a
+          <div
             v-if="isSafeURL(attachment.fileUrl)"
-            class="inline-flex shrink-0 items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-medium text-[#4f46e5] transition hover:bg-[#eef2ff] focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/30"
-            :href="attachment.fileUrl"
-            rel="noopener noreferrer"
-            target="_blank"
+            class="flex shrink-0 flex-wrap gap-2"
           >
-            <PhArrowSquareOut :size="16" />
-            {{ isPDF(attachment) ? "Buka PDF" : "Buka file" }}
-          </a>
+            <button
+              v-if="canPreview(attachment)"
+              class="rounded-xl bg-white px-3 py-2 text-xs font-medium text-[#6b6475] transition hover:bg-[#f3f4f6] hover:text-[#171322]"
+              type="button"
+              @click="togglePreview(attachment)"
+            >
+              {{
+                isPreviewExpanded(attachment)
+                  ? "Sembunyikan preview"
+                  : "Tampilkan preview"
+              }}
+            </button>
+            <a
+              class="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-medium text-[#4f46e5] transition hover:bg-[#eef2ff] focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/30"
+              :href="attachment.fileUrl"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <PhArrowSquareOut :size="16" />
+              {{ isPDF(attachment) ? "Buka PDF di tab baru" : "Buka file" }}
+            </a>
+          </div>
         </div>
       </article>
     </div>

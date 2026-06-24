@@ -20,10 +20,10 @@ export interface SubjectClassesResponse {
 
 export interface MediaAttachment {
   mediaId: string
-  mediaName: string
-  fileSize: number
-  mimeType: string
-  fileUrl: string
+  mediaName?: string
+  fileSize?: number
+  mimeType?: string
+  fileUrl?: string
   thumbnailUrl?: string
   ownerType?: string
   createdAt?: string
