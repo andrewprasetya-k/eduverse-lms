@@ -110,8 +110,18 @@ func (s *feedService) GetByClass(classID string, schoolID string, userID string,
 		return nil, 0, err
 	}
 
+	sourceIDs := make([]string, 0, len(feeds))
 	for _, f := range feeds {
-		atts, _ := s.attService.GetBySource(string(domain.SourceFeed), f.ID)
+		sourceIDs = append(sourceIDs, f.ID)
+	}
+	attachmentsBySource, err := s.attService.GetBySources(string(domain.SourceFeed), sourceIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for _, f := range feeds {
+		atts := attachmentsBySource[f.ID]
+		f.Attachments = make([]domain.Attachment, 0, len(atts))
 		for _, a := range atts {
 			f.Attachments = append(f.Attachments, *a)
 		}

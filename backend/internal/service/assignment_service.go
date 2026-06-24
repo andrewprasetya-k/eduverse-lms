@@ -111,8 +111,18 @@ func (s *assignmentService) GetAssignmentsBySubjectClass(subjectClassID string, 
 		return nil, 0, err
 	}
 
+	sourceIDs := make([]string, 0, len(results))
 	for _, asg := range results {
-		atts, _ := s.attService.GetBySource(string(domain.SourceAssignment), asg.ID)
+		sourceIDs = append(sourceIDs, asg.ID)
+	}
+	attachmentsBySource, err := s.attService.GetBySources(string(domain.SourceAssignment), sourceIDs)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	for _, asg := range results {
+		atts := attachmentsBySource[asg.ID]
+		asg.Attachments = make([]domain.Attachment, 0, len(atts))
 		for _, a := range atts {
 			asg.Attachments = append(asg.Attachments, *a)
 		}
@@ -142,9 +152,18 @@ func (s *assignmentService) GetAssignmentWithSubmissions(id string) (*domain.Ass
 		return nil, err
 	}
 
-	// Load attachments for each submission
+	sourceIDs := make([]string, 0, len(asg.Submissions))
 	for i := range asg.Submissions {
-		atts, _ := s.attService.GetBySource(string(domain.SourceSubmission), asg.Submissions[i].ID)
+		sourceIDs = append(sourceIDs, asg.Submissions[i].ID)
+	}
+	attachmentsBySource, err := s.attService.GetBySources(string(domain.SourceSubmission), sourceIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range asg.Submissions {
+		atts := attachmentsBySource[asg.Submissions[i].ID]
+		asg.Submissions[i].Attachments = make([]domain.Attachment, 0, len(atts))
 		for _, a := range atts {
 			asg.Submissions[i].Attachments = append(asg.Submissions[i].Attachments, *a)
 		}
@@ -159,9 +178,21 @@ func (s *assignmentService) GetSubjectClassSubmissions(subjectClassID string, sc
 		return nil, err
 	}
 
+	sourceIDs := make([]string, 0)
 	for _, asg := range assignments {
 		for i := range asg.Submissions {
-			atts, _ := s.attService.GetBySource(string(domain.SourceSubmission), asg.Submissions[i].ID)
+			sourceIDs = append(sourceIDs, asg.Submissions[i].ID)
+		}
+	}
+	attachmentsBySource, err := s.attService.GetBySources(string(domain.SourceSubmission), sourceIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, asg := range assignments {
+		for i := range asg.Submissions {
+			atts := attachmentsBySource[asg.Submissions[i].ID]
+			asg.Submissions[i].Attachments = make([]domain.Attachment, 0, len(atts))
 			for _, a := range atts {
 				asg.Submissions[i].Attachments = append(asg.Submissions[i].Attachments, *a)
 			}

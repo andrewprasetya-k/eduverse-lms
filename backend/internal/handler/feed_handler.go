@@ -174,7 +174,7 @@ func (h *FeedHandler) GetByClass(c *gin.Context) {
 }
 
 func (h *FeedHandler) mapToResponse(f *domain.Feed, commentCount int) dto.FeedResponseDTO {
-	var atts []dto.MediaResponseDTO
+	atts := make([]dto.MediaResponseDTO, 0, len(f.Attachments))
 	for _, a := range f.Attachments {
 		atts = append(atts, dto.MediaResponseDTO{
 			ID:       a.Media.ID,

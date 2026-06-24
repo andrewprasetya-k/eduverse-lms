@@ -151,13 +151,18 @@ func (s *materialService) FindAll(search string, subjectClassID string, page int
 		return nil, 0, err
 	}
 
+	sourceIDs := make([]string, 0, len(materials))
 	for _, mat := range materials {
-		atts, err := s.attService.GetBySource(string(domain.SourceMaterial), mat.ID)
-		if err != nil {
-			return nil, 0, err
-		}
+		sourceIDs = append(sourceIDs, mat.ID)
+	}
+	attachmentsBySource, err := s.attService.GetBySources(string(domain.SourceMaterial), sourceIDs)
+	if err != nil {
+		return nil, 0, err
+	}
 
-		mat.Attachments = nil
+	for _, mat := range materials {
+		atts := attachmentsBySource[mat.ID]
+		mat.Attachments = make([]domain.Attachment, 0, len(atts))
 		for _, a := range atts {
 			mat.Attachments = append(mat.Attachments, *a)
 		}

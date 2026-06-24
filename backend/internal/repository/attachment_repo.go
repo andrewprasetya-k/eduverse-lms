@@ -8,6 +8,7 @@ import (
 type AttachmentRepository interface {
 	Create(att *domain.Attachment) error
 	GetBySource(sourceType domain.SourceType, sourceID string) ([]*domain.Attachment, error)
+	GetBySources(sourceType domain.SourceType, sourceIDs []string) ([]*domain.Attachment, error)
 	Delete(id string) error
 	DeleteBySource(sourceType domain.SourceType, sourceID string) error
 	ReplaceBySource(schoolID string, sourceType domain.SourceType, sourceID string, mediaIDs []string) error
@@ -29,6 +30,22 @@ func (r *attachmentRepository) GetBySource(sourceType domain.SourceType, sourceI
 	var results []*domain.Attachment
 	err := r.db.Preload("Media").
 		Where("att_source_type = ? AND att_source_id = ?", sourceType, sourceID).
+		Find(&results).Error
+	return results, err
+}
+
+func (r *attachmentRepository) GetBySources(sourceType domain.SourceType, sourceIDs []string) ([]*domain.Attachment, error) {
+	results := make([]*domain.Attachment, 0)
+	if len(sourceIDs) == 0 {
+		return results, nil
+	}
+
+	activeMediaIDs := r.db.Model(&domain.Media{}).Select("med_id")
+	err := r.db.
+		Preload("Media").
+		Where("att_source_type = ? AND att_source_id IN ?", sourceType, sourceIDs).
+		Where("att_med_id IN (?)", activeMediaIDs).
+		Order("att_source_id ASC, created_at ASC").
 		Find(&results).Error
 	return results, err
 }
