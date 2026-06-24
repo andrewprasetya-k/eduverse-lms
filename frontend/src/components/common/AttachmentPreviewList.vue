@@ -153,9 +153,6 @@ function markImageFailed(mediaId: string) {
             :title="`Preview ${attachment.mediaName || 'PDF'}`"
             loading="lazy"
           />
-          <p class="mt-2 text-xs leading-5 text-[#8b8592]">
-            Jika preview tidak tampil, gunakan tombol Buka PDF di tab baru.
-          </p>
         </div>
 
         <div
@@ -195,18 +192,6 @@ function markImageFailed(mediaId: string) {
             v-if="isSafeURL(attachment.fileUrl)"
             class="flex shrink-0 flex-wrap gap-2"
           >
-            <button
-              v-if="canPreview(attachment)"
-              class="rounded-xl bg-white px-3 py-2 text-xs font-medium text-[#6b6475] transition hover:bg-[#f3f4f6] hover:text-[#171322]"
-              type="button"
-              @click="togglePreview(attachment)"
-            >
-              {{
-                isPreviewExpanded(attachment)
-                  ? "Sembunyikan preview"
-                  : "Tampilkan preview"
-              }}
-            </button>
             <a
               class="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-medium text-[#4f46e5] transition hover:bg-[#eef2ff] focus:outline-none focus:ring-2 focus:ring-[#4f46e5]/30"
               :href="attachment.fileUrl"
@@ -214,7 +199,9 @@ function markImageFailed(mediaId: string) {
               target="_blank"
             >
               <PhArrowSquareOut :size="16" />
-              {{ isPDF(attachment) ? "Buka PDF di tab baru" : "Buka file" }}
+              {{
+                isPDF(attachment) ? "Buka Attachment di tab baru" : "Buka file"
+              }}
             </a>
           </div>
         </div>
