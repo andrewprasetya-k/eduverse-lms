@@ -151,55 +151,85 @@ onMounted(loadAssignments);
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 bg-[#f8f7f4]">
-    <section class="px-5 py-5 sm:px-6 lg:px-8">
-      <header class="mb-5 flex flex-col gap-2">
-        <p class="text-sm text-[#7a7385]">Tugas siswa · {{ schoolName }}</p>
-        <h1 class="text-2xl font-medium tracking-normal text-[#171322]">
-          Tugas Saya
-        </h1>
-        <p class="max-w-2xl text-sm leading-6 text-[#7a7385]">
-          Pantau tugas dari semua kelas aktif. Pengumpulan tetap dilakukan dari
-          halaman detail tugas.
-        </p>
-      </header>
+  <main class="min-h-screen min-w-0 flex-1 overflow-x-hidden bg-[#f8f7f4]">
+    <header class="border-b border-[#ebe7df] bg-white">
+      <div
+        class="flex min-w-0 flex-col gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8"
+      >
+        <div class="min-w-0">
+          <h1 class="text-xl font-medium text-[#171322] sm:text-2xl">
+            Tugas Saya
+          </h1>
+          <p class="mt-1 max-w-2xl text-xs leading-5 text-[#6b7280] sm:text-sm">
+            Pantau tugas dari semua kelas aktif. Pengumpulan tetap dilakukan
+            dari halaman detail tugas.
+          </p>
+        </div>
+        <div
+          class="inline-flex min-w-0 max-w-full items-center self-start rounded-lg border border-[#ebe7df] bg-[#f9fafb] px-3 py-2 text-xs text-[#6b7280] lg:self-auto"
+        >
+          <span class="shrink-0">Sekolah aktif</span>
+          <span class="mx-2 text-[#d1d5db]">·</span>
+          <span class="min-w-0 truncate font-medium text-[#171322]">
+            {{ schoolName }}
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <section class="mx-auto max-w-screen min-w-0 px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
 
       <section
         v-if="isLoading"
-        class="grid gap-3 md:grid-cols-2 xl:grid-cols-5"
+        class="space-y-5"
       >
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div
+            v-for="item in 5"
+            :key="item"
+            class="h-28 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+          />
+        </div>
         <div
-          v-for="item in 5"
-          :key="item"
-          class="h-28 animate-pulse rounded-[20px] border border-[#ebe7df] bg-white"
+          class="h-64 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
         />
       </section>
 
       <section
         v-else-if="errorMessage"
-        class="soft-card max-w-2xl rounded-[22px] p-5"
+        class="flex min-h-[55vh] items-center justify-center"
       >
-        <div
-          class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]"
+        <article
+          class="w-full max-w-xl rounded-xl border border-[#f1d6d3] bg-white p-6"
         >
-          <PhWarningCircle :size="24" weight="duotone" />
-        </div>
-        <p class="text-sm font-medium text-[#171322]">
-          Tidak bisa memuat tugas
-        </p>
-        <p class="mt-2 text-sm leading-6 text-[#7a7385]">{{ errorMessage }}</p>
-        <button
-          class="mt-5 rounded-2xl bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white"
-          type="button"
-          @click="loadAssignments"
-        >
-          Coba lagi
-        </button>
+          <div class="flex items-start gap-3">
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1f0] text-[#dc2626]"
+            >
+              <PhWarningCircle :size="22" weight="duotone" />
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-medium text-[#171322]">
+                Tugas tidak dapat dimuat
+              </h2>
+              <p class="mt-1 text-sm leading-6 text-[#7a7385]">
+                {{ errorMessage }}
+              </p>
+              <button
+                class="mt-4 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+                type="button"
+                @click="loadAssignments"
+              >
+                Coba lagi
+              </button>
+            </div>
+          </div>
+        </article>
       </section>
 
       <template v-else>
-        <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          <article class="rounded-[20px] border border-[#ebe7df] bg-white p-4">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
             <PhClipboardText
               :size="22"
               class="text-[#4f46e5]"
@@ -210,28 +240,28 @@ onMounted(loadAssignments);
               {{ summary.totalAssignments }}
             </p>
           </article>
-          <article class="rounded-[20px] border border-[#ebe7df] bg-white p-4">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
             <PhClock :size="22" class="text-[#ea580c]" weight="duotone" />
             <p class="mt-3 text-xs text-[#8b8592]">Belum dikumpulkan</p>
             <p class="mt-1 text-2xl font-medium text-[#b45309]">
               {{ summary.notSubmittedCount }}
             </p>
           </article>
-          <article class="rounded-[20px] border border-[#ebe7df] bg-white p-4">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
             <PhCheckCircle :size="22" class="text-[#4f46e5]" weight="duotone" />
             <p class="mt-3 text-xs text-[#8b8592]">Sudah dikumpulkan</p>
             <p class="mt-1 text-2xl font-medium text-[#4f46e5]">
               {{ summary.submittedCount }}
             </p>
           </article>
-          <article class="rounded-[20px] border border-[#ebe7df] bg-white p-4">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
             <PhSealCheck :size="22" class="text-[#059669]" weight="duotone" />
             <p class="mt-3 text-xs text-[#8b8592]">Sudah dinilai</p>
             <p class="mt-1 text-2xl font-medium text-[#027a48]">
               {{ summary.gradedCount }}
             </p>
           </article>
-          <article class="rounded-[20px] border border-[#ebe7df] bg-white p-4">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
             <PhWarningCircle
               :size="22"
               class="text-[#dc2626]"
@@ -245,23 +275,23 @@ onMounted(loadAssignments);
         </section>
 
         <section
-          class="mt-5 rounded-[22px] border border-[#ebe7df] bg-white p-5"
+          class="mt-5 min-w-0 rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
         >
           <div
             class="flex flex-col gap-4 border-b border-[#ebe7df] pb-4 lg:flex-row lg:items-end lg:justify-between"
           >
-            <div>
+            <div class="min-w-0">
               <p class="text-sm font-medium text-[#171322]">Daftar tugas</p>
               <p class="mt-1 text-sm text-[#7a7385]">
                 {{ items.length }} tugas dari kelas aktif di sekolah ini.
               </p>
             </div>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex min-w-0 flex-wrap gap-2">
               <button
                 v-for="tab in filterTabs"
                 :key="tab.id"
                 type="button"
-                class="rounded-2xl px-4 py-2.5 text-sm font-medium transition"
+                class="max-w-full rounded-lg px-3 py-2 text-xs font-medium transition sm:px-4 sm:py-2.5 sm:text-sm"
                 :class="
                   activeFilter === tab.id
                     ? 'bg-[#4f46e5] text-white'
@@ -275,12 +305,12 @@ onMounted(loadAssignments);
             </div>
           </div>
 
-          <div v-if="items.length === 0" class="py-10 text-center">
-            <PhClipboardText
-              :size="34"
-              class="mx-auto text-[#b5afbf]"
-              weight="duotone"
-            />
+          <div v-if="items.length === 0" class="py-12 text-center">
+            <div
+              class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
+            >
+              <PhClipboardText :size="25" weight="duotone" />
+            </div>
             <h2 class="mt-3 text-lg font-medium text-[#171322]">
               Belum ada tugas
             </h2>
@@ -290,12 +320,15 @@ onMounted(loadAssignments);
             </p>
           </div>
 
-          <div v-else-if="filteredItems.length === 0" class="py-10 text-center">
-            <PhCheckCircle
-              :size="34"
-              class="mx-auto text-[#b5afbf]"
-              weight="duotone"
-            />
+          <div
+            v-else-if="filteredItems.length === 0"
+            class="py-12 text-center"
+          >
+            <div
+              class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
+            >
+              <PhCheckCircle :size="25" weight="duotone" />
+            </div>
             <h2 class="mt-3 text-lg font-medium text-[#171322]">
               Tidak ada tugas pada filter ini
             </h2>
@@ -308,7 +341,7 @@ onMounted(loadAssignments);
             <article
               v-for="item in filteredItems"
               :key="`${item.subjectClassId}-${item.assignmentId}`"
-              class="rounded-[18px] bg-[#fbfaf8] p-5 ring-1 ring-black/5"
+              class="min-w-0 rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 sm:p-5"
             >
               <div
                 class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
@@ -386,7 +419,7 @@ onMounted(loadAssignments);
                       asgId: item.assignmentId,
                     },
                   }"
-                  class="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-[#4f46e5] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+                  class="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-[#4f46e5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338ca] sm:w-auto"
                 >
                   Buka tugas
                   <PhArrowRight :size="16" />
