@@ -34,6 +34,41 @@ func (h *StudentNoteHandler) GetMaterialNote(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.StudentNoteEnvelopeDTO{Note: mapStudentNoteResponse(note)})
 }
 
+func (h *StudentNoteHandler) GetAccessibleNotes(c *gin.Context) {
+	schoolID, userID, ok := getStudentNoteContext(c)
+	if !ok {
+		return
+	}
+
+	notes, err := h.service.GetAccessibleNotes(schoolID, userID)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+
+	response := make([]dto.StudentGlobalNoteItemDTO, 0, len(notes))
+	for _, note := range notes {
+		response = append(response, dto.StudentGlobalNoteItemDTO{
+			ID:             note.ID,
+			MaterialID:     note.MaterialID,
+			MaterialTitle:  note.MaterialTitle,
+			MaterialType:   note.MaterialType,
+			SubjectClassID: note.SubjectClassID,
+			SubjectID:      note.SubjectID,
+			SubjectName:    note.SubjectName,
+			SubjectCode:    note.SubjectCode,
+			ClassID:        note.ClassID,
+			ClassName:      note.ClassName,
+			ClassCode:      note.ClassCode,
+			Content:        note.Content,
+			CreatedAt:      note.CreatedAt,
+			UpdatedAt:      note.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, dto.StudentGlobalNotesDTO{Notes: response})
+}
+
 func (h *StudentNoteHandler) GetSubjectClassNotes(c *gin.Context) {
 	subjectClassID := c.Param("subjectClassId")
 	schoolID, userID, ok := getStudentNoteContext(c)

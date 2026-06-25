@@ -18,6 +18,7 @@ var (
 type StudentNoteService interface {
 	GetMaterialNote(materialID string, schoolID string, userID string) (*domain.StudentNote, error)
 	GetSubjectClassNotes(subjectClassID string, schoolID string, userID string) ([]domain.StudentNoteWithMaterial, error)
+	GetAccessibleNotes(schoolID string, userID string) ([]domain.StudentGlobalNote, error)
 	SaveMaterialNote(materialID string, schoolID string, userID string, content string) (*domain.StudentNote, error)
 	DeleteMaterialNote(materialID string, schoolID string, userID string) error
 }
@@ -61,6 +62,10 @@ func (s *studentNoteService) GetSubjectClassNotes(subjectClassID string, schoolI
 	}
 
 	return s.repo.GetByUserSubjectClassInSchool(schoolID, userID, subjectClassID)
+}
+
+func (s *studentNoteService) GetAccessibleNotes(schoolID string, userID string) ([]domain.StudentGlobalNote, error) {
+	return s.repo.GetAccessibleByUserInSchool(schoolID, userID)
 }
 
 func (s *studentNoteService) SaveMaterialNote(materialID string, schoolID string, userID string, content string) (*domain.StudentNote, error) {

@@ -14,7 +14,41 @@ All endpoints require:
 
 Teacher and admin roles cannot read or mutate student notes.
 
-## 1. Get Material Note
+## 1. List Accessible Material Notes
+
+- **Method:** `GET`
+- **URL:** `/`
+
+Returns all private material notes owned by the current JWT user that are still accessible in the active school. Notes from soft-unenrolled classes, deleted materials, deleted classes, another school, or another user are excluded.
+
+The endpoint uses one joined query across notes, materials, subject classes, subjects, classes, active student enrollments, and school users. Results are sorted by `updatedAt` descending.
+
+```json
+{
+  "notes": [
+    {
+      "noteId": "uuid",
+      "materialId": "uuid",
+      "materialTitle": "Pengenalan Ekosistem",
+      "materialType": "pdf",
+      "subjectClassId": "uuid",
+      "subjectId": "uuid",
+      "subjectName": "Biologi",
+      "subjectCode": "BIO",
+      "classId": "uuid",
+      "className": "Kelas 10 IPA",
+      "classCode": "10-IPA",
+      "content": "Ringkasan pribadi student.",
+      "createdAt": "2026-06-24T10:00:00Z",
+      "updatedAt": "2026-06-24T10:10:00Z"
+    }
+  ]
+}
+```
+
+When no accessible notes exist, the endpoint returns `{ "notes": [] }`.
+
+## 2. Get Material Note
 
 - **Method:** `GET`
 - **URL:** `/material/:materialId`
@@ -45,7 +79,7 @@ The material must exist, belong to the active school, and be accessible to the c
 
 A missing note is not a `404`. A missing or inaccessible material remains an error.
 
-## 2. Save Material Note
+## 3. Save Material Note
 
 - **Method:** `PUT`
 - **URL:** `/material/:materialId`
@@ -68,7 +102,7 @@ Rules:
 
 The response uses the same `{ "note": ... }` shape as GET.
 
-## 3. Delete Material Note
+## 4. Delete Material Note
 
 - **Method:** `DELETE`
 - **URL:** `/material/:materialId`
@@ -81,7 +115,7 @@ The operation hard-deletes only the current JWT user's note for the material in 
 }
 ```
 
-## 4. List Notes by Subject Class
+## 5. List Notes by Subject Class
 
 - **Method:** `GET`
 - **URL:** `/subject-class/:subjectClassId`

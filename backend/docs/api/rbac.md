@@ -255,6 +255,7 @@ Content-Type: application/json
 | `/assignments/assess/:id` | POST/PATCH/DELETE | ❌ | ❌ | ✅* | ❌ |
 | `/medias/upload` | POST | ❌ | ✅** | ✅** | ✅** |
 | `/medias/:id` | DELETE | ❌ | ✅** | ✅***** | ✅***** |
+| `/notes` | GET | ❌ | ❌ | ❌ | ✅****** |
 | `/notes/material/:materialId` | GET/PUT/DELETE | ❌ | ❌ | ❌ | ✅****** |
 | `/notes/subject-class/:subjectClassId` | GET | ❌ | ❌ | ❌ | ✅****** |
 

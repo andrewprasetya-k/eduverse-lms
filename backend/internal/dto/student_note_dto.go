@@ -30,3 +30,24 @@ type StudentNoteCollectionItemDTO struct {
 type StudentNoteCollectionDTO struct {
 	Notes []StudentNoteCollectionItemDTO `json:"notes"`
 }
+
+type StudentGlobalNoteItemDTO struct {
+	ID             string    `json:"noteId"`
+	MaterialID     string    `json:"materialId"`
+	MaterialTitle  string    `json:"materialTitle"`
+	MaterialType   string    `json:"materialType"`
+	SubjectClassID string    `json:"subjectClassId"`
+	SubjectID      string    `json:"subjectId"`
+	SubjectName    string    `json:"subjectName"`
+	SubjectCode    string    `json:"subjectCode"`
+	ClassID        string    `json:"classId"`
+	ClassName      string    `json:"className"`
+	ClassCode      string    `json:"classCode"`
+	Content        string    `json:"content"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+}
+
+type StudentGlobalNotesDTO struct {
+	Notes []StudentGlobalNoteItemDTO `json:"notes"`
+}

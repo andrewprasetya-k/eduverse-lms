@@ -10,6 +10,7 @@ import (
 type studentNoteRepositoryStub struct {
 	note              *domain.StudentNote
 	subjectClassNotes []domain.StudentNoteWithMaterial
+	globalNotes       []domain.StudentGlobalNote
 	savedNote         *domain.StudentNote
 	deleted           bool
 }
@@ -23,6 +24,13 @@ func (r *studentNoteRepositoryStub) GetByUserSubjectClassInSchool(string, string
 		return make([]domain.StudentNoteWithMaterial, 0), nil
 	}
 	return r.subjectClassNotes, nil
+}
+
+func (r *studentNoteRepositoryStub) GetAccessibleByUserInSchool(string, string) ([]domain.StudentGlobalNote, error) {
+	if r.globalNotes == nil {
+		return make([]domain.StudentGlobalNote, 0), nil
+	}
+	return r.globalNotes, nil
 }
 
 func (r *studentNoteRepositoryStub) Upsert(note *domain.StudentNote) (*domain.StudentNote, error) {
@@ -119,6 +127,43 @@ func TestStudentNoteGetSubjectClassNotesRequiresActiveEnrollment(t *testing.T) {
 	_, err := service.GetSubjectClassNotes("subject-class-1", "school-1", "user-1")
 	if err == nil || !strings.Contains(err.Error(), "forbidden:") {
 		t.Fatalf("expected forbidden error, got %v", err)
+	}
+}
+
+func TestStudentNoteGetAccessibleNotesReturnsCollection(t *testing.T) {
+	repo := &studentNoteRepositoryStub{
+		globalNotes: []domain.StudentGlobalNote{
+			{
+				ID:             "note-1",
+				MaterialID:     "material-1",
+				MaterialTitle:  "Materi pertama",
+				SubjectClassID: "subject-class-1",
+				SubjectName:    "Biologi",
+				ClassName:      "Kelas 10",
+				Content:        "Ringkasan",
+			},
+		},
+	}
+	service := newStudentNoteTestService(repo, true)
+
+	notes, err := service.GetAccessibleNotes("school-1", "user-1")
+	if err != nil {
+		t.Fatalf("GetAccessibleNotes returned error: %v", err)
+	}
+	if len(notes) != 1 || notes[0].SubjectName != "Biologi" {
+		t.Fatalf("expected accessible notes, got %#v", notes)
+	}
+}
+
+func TestStudentNoteGetAccessibleNotesReturnsEmptyCollection(t *testing.T) {
+	service := newStudentNoteTestService(&studentNoteRepositoryStub{}, true)
+
+	notes, err := service.GetAccessibleNotes("school-1", "user-1")
+	if err != nil {
+		t.Fatalf("GetAccessibleNotes returned error: %v", err)
+	}
+	if notes == nil || len(notes) != 0 {
+		t.Fatalf("expected non-nil empty notes, got %#v", notes)
 	}
 }
 

@@ -124,6 +124,7 @@ Authorization: Bearer <your-jwt-token>
 - `POST /materials/progress` - Update material progress
 
 ## 🗒️ Student Material Notes
+- `GET /notes` - List the current student's accessible material notes across active enrolled classes
 - `GET /notes/material/:materialId` - Get the current student's private note, or `{ "note": null }`
 - `PUT /notes/material/:materialId` - Create or update one plain-text note for the accessible material
 - `DELETE /notes/material/:materialId` - Hard-delete the current student's note for the accessible material
