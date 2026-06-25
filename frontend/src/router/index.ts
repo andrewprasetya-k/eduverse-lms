@@ -37,6 +37,7 @@ import TeacherMaterialDetail from "../pages/teacher/TeacherMaterialDetail.vue";
 import TeacherSubmissions from "../pages/teacher/TeacherSubmissions.vue";
 import TeacherAssignments from "../pages/teacher/TeacherAssignments.vue";
 import TeacherFeed from "../pages/teacher/TeacherFeed.vue";
+import HomePage from "../pages/preview/HomePage.vue";
 
 export const dashboardByRole: Record<RoleName, string> = {
   super_admin: "/superadmin/dashboard",
@@ -50,10 +51,20 @@ const router = createRouter({
   routes: [
     {
       path: "/",
-      redirect: "/login",
+      redirect: "/home",
     },
     {
       path: "/",
+      children: [
+        {
+          path: "home",
+          name: "home",
+          component: HomePage,
+        },
+      ],
+    },
+    {
+      path: "/login",
       component: AuthLayout,
       children: [
         {
