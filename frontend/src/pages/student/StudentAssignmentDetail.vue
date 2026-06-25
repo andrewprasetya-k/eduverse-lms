@@ -177,321 +177,443 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
-    <RouterLink
-      class="mb-5 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
-      :to="`/student/subjects/${subjectClassId}`"
-    >
-      <PhArrowLeft :size="18" />
-      Kembali ke subject
-    </RouterLink>
+  <main class="min-h-screen min-w-0 flex-1 bg-[#f8f7f4]">
+    <header class="border-b border-[#ebe7df] bg-white">
+      <div
+        class="flex min-w-0 items-center gap-2 px-5 py-3 text-xs text-[#6b7280] sm:px-6 lg:px-8"
+      >
+        <RouterLink
+          class="inline-flex shrink-0 items-center gap-1.5 transition hover:text-[#4f46e5]"
+          :to="`/student/subjects/${subjectClassId}`"
+        >
+          <PhArrowLeft :size="15" />
+          Mata pelajaran
+        </RouterLink>
+        <span class="text-[#d1d5db]">/</span>
+        <span
+          v-if="assignment?.subjectName || assignment?.subjectCode"
+          class="hidden min-w-0 truncate sm:inline"
+        >
+          {{ assignment.subjectName || assignment.subjectCode }}
+        </span>
+        <span
+          v-if="assignment?.subjectName || assignment?.subjectCode"
+          class="hidden text-[#d1d5db] sm:inline"
+        >
+          /
+        </span>
+        <span class="min-w-0 truncate font-medium text-[#171322]">
+          {{ assignment?.assignmentTitle || "Detail tugas" }}
+        </span>
+      </div>
+    </header>
 
-    <section v-if="isLoading" class="max-w-4xl space-y-3">
+    <section
+      v-if="isLoading"
+      class="grid gap-5 px-5 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8 lg:py-6"
+    >
+      <div class="space-y-4">
+        <div
+          class="h-52 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+        />
+        <div
+          class="h-72 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+        />
+      </div>
       <div
-        class="h-40 animate-pulse rounded-3xl border border-[#ebe7df] bg-white"
-      />
-      <div
-        class="h-28 animate-pulse rounded-3xl border border-[#ebe7df] bg-white"
+        class="h-96 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
       />
     </section>
 
     <section
       v-else-if="errorMessage"
-      class="soft-card max-w-4xl rounded-[22px] p-5"
+      class="flex min-h-[calc(100vh-49px)] items-center justify-center px-5 py-10"
     >
-      <div
-        class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]"
+      <article
+        class="w-full max-w-xl rounded-xl border border-[#f1d6d3] bg-white p-6"
       >
-        <PhWarningCircle :size="24" weight="duotone" />
-      </div>
-      <p class="text-sm font-medium text-[#171322]">Tidak bisa memuat tugas</p>
-      <p class="mt-2 text-sm leading-6 text-[#7a7385]">{{ errorMessage }}</p>
-      <button
-        class="mt-5 rounded-2xl bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white"
-        type="button"
-        @click="loadAssignment"
-      >
-        Coba lagi
-      </button>
+        <div class="flex items-start gap-3">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1f0] text-[#dc2626]"
+          >
+            <PhWarningCircle :size="22" weight="duotone" />
+          </div>
+          <div>
+            <h1 class="text-base font-medium text-[#171322]">
+              Tidak bisa memuat tugas
+            </h1>
+            <p class="mt-1 text-sm leading-6 text-[#7a7385]">
+              {{ errorMessage }}
+            </p>
+            <button
+              class="mt-4 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+              type="button"
+              @click="loadAssignment"
+            >
+              Coba lagi
+            </button>
+          </div>
+        </div>
+      </article>
     </section>
 
     <section
       v-else-if="didLoad && !assignment"
-      class="soft-card max-w-4xl rounded-[22px] p-5"
+      class="flex min-h-[calc(100vh-49px)] items-center justify-center px-5 py-10"
     >
-      <div
-        class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
+      <article
+        class="w-full max-w-xl rounded-xl border border-[#ebe7df] bg-white p-6 text-center"
       >
-        <PhClipboardText :size="24" weight="duotone" />
-      </div>
-      <p class="text-sm font-medium text-[#171322]">Tugas tidak ditemukan</p>
-      <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-        Assignment ID ini tidak ditemukan pada subject class yang sedang dibuka.
-      </p>
+        <div
+          class="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
+        >
+          <PhClipboardText :size="22" weight="duotone" />
+        </div>
+        <h1 class="mt-4 text-base font-medium text-[#171322]">
+          Tugas tidak ditemukan
+        </h1>
+        <p class="mt-1 text-sm leading-6 text-[#7a7385]">
+          Tugas ini tidak tersedia atau sudah tidak dapat diakses.
+        </p>
+        <RouterLink
+          class="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+          :to="`/student/subjects/${subjectClassId}`"
+        >
+          <PhArrowLeft :size="16" />
+          Kembali ke mata pelajaran
+        </RouterLink>
+      </article>
     </section>
 
-    <section v-else-if="assignment" class="max-w-4xl space-y-4">
-      <article class="soft-card rounded-[22px] p-5">
-        <div class="mb-5 flex items-start gap-4">
-          <div
-            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
-          >
-            <PhClipboardText :size="24" weight="duotone" />
-          </div>
-          <div class="min-w-0">
-            <p class="text-sm text-[#7a7385]">
-              {{
-                assignment.subjectName ||
-                assignment.subjectCode ||
-                "Subject assignment"
-              }}
-            </p>
-            <h1
-              class="mt-2 text-3xl font-medium tracking-normal text-[#171322]"
+    <section
+      v-else-if="assignment"
+      class="mx-auto grid max-w-7xl min-w-0 gap-5 px-5 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:px-8 lg:py-6"
+    >
+      <div class="min-w-0 space-y-4">
+        <article class="rounded-xl border border-[#ebe7df] bg-white p-5 sm:p-6">
+          <div class="flex min-w-0 items-start gap-4">
+            <div
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
             >
-              {{ assignment.assignmentTitle }}
-            </h1>
-            <p
-              v-if="assignment.categoryName"
-              class="mt-2 text-sm text-[#4f46e5]"
-            >
-              {{ assignment.categoryName }}
-            </p>
-          </div>
-        </div>
-
-        <div class="grid gap-3 sm:grid-cols-3">
-          <div class="rounded-2xl bg-[#fbfaf8] p-4">
-            <div class="mb-2 flex items-center gap-2 text-[#4f46e5]">
-              <PhCalendarBlank :size="17" />
-              <p class="text-xs font-medium">Deadline</p>
+              <PhClipboardText :size="22" weight="duotone" />
             </div>
-            <p class="text-sm text-[#3f3a4a]">
-              {{ formatDateTime(assignment.deadline) }}
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span
+                  v-if="assignment.categoryName"
+                  class="rounded-full bg-[#eef2ff] px-2.5 py-1 text-[11px] font-medium text-[#4f46e5]"
+                >
+                  {{ assignment.categoryName }}
+                </span>
+                <span
+                  v-if="assignment.subjectName || assignment.subjectCode"
+                  class="rounded-full bg-[#f8f7f4] px-2.5 py-1 text-[11px] text-[#6b7280]"
+                >
+                  {{ assignment.subjectName || assignment.subjectCode }}
+                </span>
+              </div>
+              <h1
+                class="mt-3 wrap-break-word text-xl font-medium leading-7 text-[#171322] sm:text-2xl"
+              >
+                {{ assignment.assignmentTitle }}
+              </h1>
+              <div
+                class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#6b7280]"
+              >
+                <span class="inline-flex items-center gap-1.5">
+                  <PhCalendarBlank :size="15" />
+                  {{
+                    assignment.deadline
+                      ? `Tenggat ${formatDateTime(assignment.deadline)}`
+                      : "Tanpa tenggat"
+                  }}
+                </span>
+                <span>
+                  {{
+                    assignment.allowLateSubmission
+                      ? "Dapat dikumpulkan setelah tanggal tenggat"
+                      : "Tidak dapat dikumpulkan setelah tanggal tenggat"
+                  }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 border-t border-[#f0ede8] pt-5">
+            <h2 class="text-sm font-medium text-[#171322]">Instruksi tugas</h2>
+            <p
+              v-if="assignment.assignmentDescription"
+              class="mt-3 whitespace-pre-line wrap-break-word text-sm leading-7 text-[#4a4356]"
+            >
+              {{ assignment.assignmentDescription }}
+            </p>
+            <p v-else class="mt-3 text-sm leading-6 text-[#7a7385]">
+              Instruksi tugas belum tersedia.
             </p>
           </div>
-          <div class="rounded-2xl bg-[#fbfaf8] p-4">
-            <p class="text-xs font-medium text-[#7a7385]">Late submission</p>
-            <p class="mt-2 text-sm text-[#3f3a4a]">
+        </article>
+
+        <article class="rounded-xl border border-[#ebe7df] bg-white p-5 sm:p-6">
+          <div class="flex items-center gap-2">
+            <PhPaperclip :size="18" class="text-[#4f46e5]" />
+            <h2 class="text-sm font-medium text-[#171322]">
+              Lampiran dari guru
+            </h2>
+          </div>
+          <p class="mt-1 text-xs leading-5 text-[#7a7385]">
+            Buka atau pratinjau file pendukung yang disertakan pada tugas ini.
+          </p>
+          <AttachmentPreviewList
+            class="mt-4"
+            :attachments="assignment.attachments"
+            empty-text="Tugas ini tidak memiliki lampiran."
+          />
+        </article>
+      </div>
+
+      <aside class="min-w-0 lg:sticky lg:top-6">
+        <article class="rounded-xl border border-[#ebe7df] bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-sm font-medium text-[#171322]">
+                Pengumpulan tugas
+              </p>
+              <p class="mt-1 text-xs leading-5 text-[#7a7385]">
+                File dan status pengumpulanmu.
+              </p>
+            </div>
+            <span
+              v-if="
+                !isSubmissionLoading &&
+                !submissionError &&
+                submissionStatus?.status
+              "
+              class="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium"
+              :class="
+                submissionStatus.status === 'graded'
+                  ? 'bg-[#eef2ff] text-[#4f46e5]'
+                  : submissionStatus.status === 'submitted'
+                    ? 'bg-[#ecfdf3] text-[#027a48]'
+                    : 'bg-[#fff7ed] text-[#ea580c]'
+              "
+            >
               {{
-                assignment.allowLateSubmission ? "Diizinkan" : "Tidak diizinkan"
+                submissionStatus.status === "graded"
+                  ? "Sudah dinilai"
+                  : submissionStatus.status === "submitted"
+                    ? "Sudah dikumpulkan"
+                    : "Belum dikumpulkan"
               }}
-            </p>
+            </span>
           </div>
-          <div class="rounded-2xl bg-[#fbfaf8] p-4">
-            <p class="text-xs font-medium text-[#7a7385]">Dibuat</p>
-            <p class="mt-2 text-sm text-[#3f3a4a]">
-              {{ formatDateTime(assignment.createdAt) }}
+
+          <dl
+            class="mt-4 divide-y divide-[#f0ede8] rounded-lg bg-[#fbfaf8] px-3"
+          >
+            <div class="flex items-start justify-between gap-4 py-3">
+              <dt class="text-xs text-[#7a7385]">Tenggat</dt>
+              <dd class="text-right text-xs font-medium text-[#171322]">
+                {{
+                  assignment.deadline
+                    ? formatDateTime(assignment.deadline)
+                    : "Tidak ada tenggat"
+                }}
+              </dd>
+            </div>
+            <div
+              v-if="assignment.createdAt"
+              class="flex items-start justify-between gap-4 py-3"
+            >
+              <dt class="text-xs text-[#7a7385]">Dibuat</dt>
+              <dd class="text-right text-xs font-medium text-[#171322]">
+                {{ formatDateTime(assignment.createdAt) }}
+              </dd>
+            </div>
+          </dl>
+
+          <div
+            v-if="isSubmissionLoading"
+            class="mt-4 h-28 animate-pulse rounded-xl bg-[#fbfaf8]"
+          />
+
+          <div
+            v-else-if="submissionError"
+            class="mt-4 rounded-xl bg-[#fff1f0] p-4"
+          >
+            <p class="text-sm leading-6 text-[#b42318]">
+              {{ submissionError }}
             </p>
+            <button
+              class="mt-3 rounded-lg bg-white px-3 py-2 text-xs font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
+              type="button"
+              @click="loadMySubmissionStatus"
+            >
+              Coba lagi
+            </button>
           </div>
-        </div>
 
-        <div class="mt-5 rounded-2xl bg-white p-4">
-          <p class="text-sm font-medium text-[#171322]">Deskripsi</p>
-          <p
-            v-if="assignment.assignmentDescription"
-            class="mt-3 whitespace-pre-line text-sm leading-6 text-[#6b6475]"
+          <div
+            v-else-if="
+              submissionStatus?.status === 'submitted' ||
+              submissionStatus?.status === 'graded'
+            "
+            class="mt-4 space-y-4"
           >
-            {{ assignment.assignmentDescription }}
-          </p>
-          <p v-else class="mt-3 text-sm leading-6 text-[#7a7385]">
-            Deskripsi tugas belum tersedia.
-          </p>
-        </div>
-      </article>
+            <div class="rounded-xl border border-[#d1fae5] bg-[#ecfdf3] p-4">
+              <div class="flex items-start gap-3">
+                <PhCheckCircle
+                  :size="20"
+                  class="mt-0.5 shrink-0 text-[#027a48]"
+                  weight="duotone"
+                />
+                <div>
+                  <p class="text-sm font-medium text-[#171322]">
+                    {{
+                      submissionStatus.status === "graded"
+                        ? "Tugas sudah dinilai"
+                        : "Tugas sudah dikumpulkan"
+                    }}
+                  </p>
+                  <p class="mt-1 text-xs leading-5 text-[#667085]">
+                    Dikumpulkan
+                    {{
+                      formatDateTime(submissionStatus.submission?.submittedAt)
+                    }}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-      <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
-        <p class="text-sm font-medium text-[#171322]">Lampiran</p>
-        <AttachmentPreviewList
-          class="mt-3"
-          :attachments="assignment.attachments"
-          empty-text="Tugas ini tidak memiliki lampiran."
-        />
-      </article>
+            <div
+              v-if="
+                submissionStatus.status === 'graded' &&
+                submissionStatus.submission?.assessment
+              "
+              class="rounded-xl border border-[#c7d2fe] bg-[#eef2ff] p-4"
+            >
+              <p class="text-xs font-medium text-[#4f46e5]">
+                Nilai dan feedback
+              </p>
+              <p class="mt-2 text-3xl font-medium text-[#171322]">
+                {{ submissionStatus.submission.assessment.score }}
+              </p>
+              <p
+                v-if="submissionStatus.submission.assessment.feedback"
+                class="mt-3 border-t border-[#c7d2fe] pt-3 whitespace-pre-line wrap-break-word text-sm leading-6 text-[#4a4356]"
+              >
+                {{ submissionStatus.submission.assessment.feedback }}
+              </p>
+              <p class="mt-3 text-[11px] leading-5 text-[#7a7385]">
+                Dinilai oleh
+                {{
+                  submissionStatus.submission.assessment.assessorName || "Guru"
+                }}
+                ·
+                {{
+                  formatDateTime(
+                    submissionStatus.submission.assessment.assessedAt,
+                  )
+                }}
+              </p>
+            </div>
 
-      <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
-        <p class="text-sm font-medium text-[#171322]">Pengumpulan tugas</p>
-        <p class="mt-2 text-sm leading-6 text-[#7a7385]">Status pengumpulan.</p>
+            <div
+              v-if="submissionStatus.submission?.attachments?.length"
+              class="min-w-0"
+            >
+              <p class="text-xs font-medium text-[#171322]">
+                File yang dikumpulkan
+              </p>
+              <AttachmentPreviewList
+                class="mt-3"
+                :attachments="submissionStatus.submission.attachments"
+              />
+            </div>
+          </div>
 
-        <div
-          v-if="isSubmissionLoading"
-          class="mt-4 h-24 animate-pulse rounded-2xl bg-[#fbfaf8]"
-        />
-
-        <div
-          v-else-if="submissionError"
-          class="mt-4 rounded-2xl bg-[#fff1f0] p-4"
-        >
-          <p class="text-sm text-[#b42318]">{{ submissionError }}</p>
-          <button
-            class="mt-3 rounded-xl bg-white px-3 py-1.5 text-sm font-medium text-[#4f46e5]"
-            type="button"
-            @click="loadMySubmissionStatus"
-          >
-            Coba lagi
-          </button>
-        </div>
-
-        <div
-          v-else-if="
-            submissionStatus?.status === 'submitted' ||
-            submissionStatus?.status === 'graded'
-          "
-          class="mt-4 space-y-4"
-        >
-          <div class="rounded-2xl bg-[#ecfdf3] p-4">
-            <div class="flex items-start gap-3">
-              <PhCheckCircle
-                :size="22"
-                class="mt-0.5 shrink-0 text-[#027a48]"
+          <template v-else>
+            <div
+              class="mt-4 rounded-xl border border-dashed border-[#d8d2c8] bg-[#fbfaf8] p-4 text-center"
+            >
+              <PhPaperclip
+                :size="24"
+                class="mx-auto text-[#9ca3af]"
                 weight="duotone"
               />
-              <div>
-                <p class="text-sm font-medium text-[#171322]">
-                  {{
-                    submissionStatus.status === "graded"
-                      ? "Tugas sudah dinilai"
-                      : "Tugas sudah dikumpulkan"
-                  }}
-                </p>
-                <p class="mt-1 text-sm text-[#667085]">
-                  Dikumpulkan:
-                  {{ formatDateTime(submissionStatus.submission?.submittedAt) }}
-                </p>
+              <p class="mt-2 text-sm font-medium text-[#3f3a4a]">
+                Pilih file jawaban
+              </p>
+              <p class="mt-1 text-xs leading-5 text-[#8b8592]">
+                Kamu dapat memilih lebih dari satu file.
+              </p>
+              <label
+                class="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#ddd8e4] bg-white px-3 py-2 text-xs font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
+              >
+                <PhPaperclip :size="16" />
+                Pilih file
+                <input
+                  class="hidden"
+                  multiple
+                  type="file"
+                  @change="handleFileChange"
+                />
+              </label>
+            </div>
+
+            <div v-if="selectedFiles.length > 0" class="mt-4 space-y-2">
+              <div
+                v-for="(file, index) in selectedFiles"
+                :key="`${file.name}-${file.size}-${index}`"
+                class="flex max-w-full items-center justify-between gap-3 overflow-hidden rounded-lg border border-[#ebe7df] bg-white px-3 py-3"
+              >
+                <div class="min-w-0 flex-1 overflow-hidden">
+                  <p class="truncate text-xs font-medium text-[#3f3a4a]">
+                    {{ file.name }}
+                  </p>
+                  <p class="mt-1 text-[11px] text-[#8b8592]">
+                    {{ formatFileSize(file.size) }}
+                  </p>
+                </div>
+                <button
+                  class="shrink-0 rounded-lg p-2 text-[#dc2626] transition hover:bg-[#fff1f0]"
+                  type="button"
+                  title="Hapus file"
+                  @click="removeFile(index)"
+                >
+                  <PhTrash :size="16" />
+                </button>
               </div>
             </div>
-          </div>
-          <div
-            v-if="
-              submissionStatus.status === 'graded' &&
-              submissionStatus.submission?.assessment
-            "
-            class="rounded-2xl bg-[#eef2ff] p-4"
-          >
-            <p class="text-sm font-medium text-[#171322]">Penilaian</p>
-            <p class="mt-3 text-3xl font-medium text-[#4f46e5]">
-              {{ submissionStatus.submission.assessment.score }}
+
+            <p
+              v-if="submitError"
+              class="mt-4 rounded-lg bg-[#fff1f0] p-3 text-sm leading-5 text-[#b42318]"
+            >
+              {{ submitError }}
             </p>
             <p
-              v-if="submissionStatus.submission.assessment.feedback"
-              class="mt-3 whitespace-pre-line text-sm leading-6 text-[#4a4356]"
+              v-if="submitSuccess"
+              class="mt-4 rounded-lg bg-[#ecfdf3] p-3 text-sm leading-5 text-[#027a48]"
             >
-              {{ submissionStatus.submission.assessment.feedback }}
+              {{ submitSuccess }}
             </p>
-            <p class="mt-3 text-xs text-[#8b8592]">
-              Dinilai oleh
-              {{
-                submissionStatus.submission.assessment.assessorName || "Guru"
-              }}
-              ·
-              {{
-                formatDateTime(
-                  submissionStatus.submission.assessment.assessedAt,
-                )
-              }}
-            </p>
-          </div>
-          <div
-            v-if="submissionStatus.submission?.attachments?.length"
-            class="rounded-2xl bg-[#fbfaf8] p-4"
-          >
-            <p class="text-sm font-medium text-[#171322]">
-              File yang dikumpulkan
-            </p>
-            <AttachmentPreviewList
-              class="mt-3"
-              :attachments="submissionStatus.submission.attachments"
-            />
-          </div>
 
-          <p
-            v-else
-            class="rounded-2xl bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
-          >
-            Menunggu penilaian dari guru.
-          </p>
-        </div>
-
-        <template v-else>
-          <p class="mt-4 text-sm leading-6 text-[#7a7385]">
-            Upload file tugas, lalu kirim submission. Identitas siswa diambil
-            dari token login.
-          </p>
-
-          <div
-            class="mt-4 rounded-2xl border border-dashed border-[#d8d2c8] bg-[#fbfaf8] p-4"
-          >
-            <label
-              class="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-white px-4 py-2 text-sm font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
+            <button
+              class="mt-4 w-full rounded-lg px-4 py-2.5 text-sm font-medium text-white transition"
+              :class="
+                isSubmitting || selectedFiles.length === 0
+                  ? 'cursor-not-allowed bg-[#d8d5dd]'
+                  : 'bg-[#4f46e5] hover:bg-[#4338ca]'
+              "
+              :disabled="isSubmitting || selectedFiles.length === 0"
+              type="button"
+              @click="handleSubmit"
             >
-              <PhPaperclip :size="18" />
-              Pilih file
-              <input
-                class="hidden"
-                multiple
-                type="file"
-                @change="handleFileChange"
-              />
-            </label>
-
-            <p class="mt-3 text-xs leading-5 text-[#8b8592]">
-              File akan diupload ke storage backend terlebih dahulu, lalu media
-              ID dikirim ke endpoint submission.
-            </p>
-          </div>
-
-          <div v-if="selectedFiles.length > 0" class="mt-4 space-y-2">
-            <div
-              v-for="(file, index) in selectedFiles"
-              :key="`${file.name}-${file.size}-${index}`"
-              class="flex max-w-full items-center justify-between gap-3 overflow-hidden rounded-2xl bg-[#fbfaf8] px-4 py-3"
-            >
-              <div class="min-w-0 flex-1 overflow-hidden">
-                <p class="truncate text-sm font-medium text-[#3f3a4a]">
-                  {{ file.name }}
-                </p>
-                <p class="mt-1 text-xs text-[#8b8592]">
-                  {{ formatFileSize(file.size) }}
-                </p>
-              </div>
-              <button
-                class="shrink-0 rounded-xl p-2 text-[#f2756a] transition hover:bg-[#fff1f0]"
-                type="button"
-                @click="removeFile(index)"
-              >
-                <PhTrash :size="17" />
-              </button>
-            </div>
-          </div>
-
-          <p
-            v-if="submitError"
-            class="mt-4 rounded-2xl bg-[#fff1f0] p-3 text-sm text-[#b42318]"
-          >
-            {{ submitError }}
-          </p>
-          <p
-            v-if="submitSuccess"
-            class="mt-4 rounded-2xl bg-[#ecfdf3] p-3 text-sm text-[#027a48]"
-          >
-            {{ submitSuccess }}
-          </p>
-
-          <button
-            class="mt-4 rounded-2xl px-4 py-2 text-sm font-medium text-white transition"
-            :class="
-              isSubmitting || selectedFiles.length === 0
-                ? 'bg-[#d8d5dd]'
-                : 'bg-[#4f46e5] hover:bg-[#4338ca]'
-            "
-            :disabled="isSubmitting || selectedFiles.length === 0"
-            type="button"
-            @click="handleSubmit"
-          >
-            {{ isSubmitting ? "Mengumpulkan..." : "Kumpulkan tugas" }}
-          </button>
-        </template>
-      </article>
+              {{ isSubmitting ? "Mengumpulkan..." : "Kumpulkan tugas" }}
+            </button>
+          </template>
+        </article>
+      </aside>
     </section>
   </main>
 </template>
