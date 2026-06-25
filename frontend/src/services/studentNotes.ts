@@ -1,5 +1,6 @@
 import { api } from './api'
 import type {
+  StudentGlobalMaterialNotesResponse,
   SaveStudentMaterialNotePayload,
   StudentMaterialNoteResponse,
   StudentSubjectMaterialNotesResponse,
@@ -34,6 +35,13 @@ export async function getStudentSubjectClassNotes(subjectClassId: string) {
   const { data } = await api.get<StudentSubjectMaterialNotesResponse>(
     `/notes/subject-class/${subjectClassId}`,
   )
+  return {
+    notes: data.notes ?? [],
+  }
+}
+
+export async function getStudentNotes() {
+  const { data } = await api.get<StudentGlobalMaterialNotesResponse>('/notes')
   return {
     notes: data.notes ?? [],
   }

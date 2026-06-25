@@ -15,6 +15,7 @@ import StudentAssignmentDetail from "../pages/student/StudentAssignmentDetail.vu
 import StudentAssignments from "../pages/student/StudentAssignments.vue";
 import StudentMaterialDetail from "../pages/student/StudentMaterialDetail.vue";
 import StudentMaterialNoteEditor from "../pages/student/StudentMaterialNoteEditor.vue";
+import StudentNotes from "../pages/student/StudentNotes.vue";
 import StudentSubjects from "../pages/student/StudentSubjects.vue";
 import StudentGrades from "../pages/student/StudentGrades.vue";
 import TeacherDashboard from "../pages/teacher/TeacherDashboard.vue";
@@ -139,13 +140,7 @@ const router = createRouter({
         {
           path: "notes",
           name: "student-notes",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Learning notes",
-            title: "Catatan belajar",
-            description:
-              "Catatan belajar direncanakan untuk membantu siswa menyimpan ringkasan per materi setelah MVP sekolah.",
-          },
+          component: StudentNotes,
         },
         {
           path: "profile",
