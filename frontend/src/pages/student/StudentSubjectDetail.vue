@@ -322,12 +322,6 @@ onMounted(loadSubject);
                         >Deadline:
                         {{ formatDateTime(assignment.deadline) }}</span
                       >
-                      <span
-                        v-if="assignment.allowLateSubmission"
-                        class="rounded-full bg-[#fef3c7] px-2 py-0.5 text-[#92400e]"
-                      >
-                        Bisa terlambat
-                      </span>
                     </div>
                     <p class="mt-2 text-xs text-[#c4b5fd]">
                       Status dan pengumpulan tersedia dari detail tugas
@@ -344,8 +338,9 @@ onMounted(loadSubject);
               Catatan pribadi direncanakan setelah MVP sekolah
             </h2>
             <p class="mt-4 max-w-xl text-sm leading-6 text-[#6b6475]">
-              Area ini disiapkan untuk catatan belajar per materi. Saat ini belum ada penyimpanan
-              catatan, jadi tidak ada data contoh yang ditampilkan.
+              Area ini disiapkan untuk catatan belajar per materi. Saat ini
+              belum ada penyimpanan catatan, jadi tidak ada data contoh yang
+              ditampilkan.
             </p>
           </template>
         </article>
