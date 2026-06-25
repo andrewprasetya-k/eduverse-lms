@@ -6,12 +6,15 @@ import {
   PhClipboardText,
   PhFileText,
   PhNotebook,
+  PhArrowRight,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import { getSubjectMaterials } from "../../services/classWorkspace";
 import { getSubjectAssignments } from "../../services/assignment";
+import { getStudentSubjectClassNotes } from "../../services/studentNotes";
 import type { MaterialItem } from "../../types/classWorkspace";
 import type { AssignmentItem } from "../../types/assignment";
+import type { StudentSubjectMaterialNote } from "../../types/studentNotes";
 import { formatDateTime } from "../../utils/date";
 
 const route = useRoute();
@@ -20,6 +23,10 @@ const subjectClassId = computed(() => String(route.params.sclId ?? ""));
 const activeTab = ref("materials");
 const materials = ref<MaterialItem[]>([]);
 const assignments = ref<AssignmentItem[]>([]);
+const notes = ref<StudentSubjectMaterialNote[]>([]);
+const notesLoaded = ref(false);
+const notesLoading = ref(false);
+const notesError = ref("");
 const subjectTitle = ref(String(route.query.title ?? "Detail Mata Pelajaran"));
 const teacherName = ref("");
 const isLoading = ref(true);
@@ -54,9 +61,13 @@ async function loadSubject() {
     return;
   }
 
+  if (activeTab.value === "notes") {
+    await loadNotes();
+    return;
+  }
+
   isLoading.value = true;
   errorMessage.value = "";
-
   try {
     if (activeTab.value === "materials") {
       const data = await getSubjectMaterials(subjectClassId.value);
@@ -80,6 +91,26 @@ async function loadSubject() {
       "Detail mata pelajaran belum bisa dimuat. Periksa koneksi atau coba lagi nanti.";
   } finally {
     isLoading.value = false;
+  }
+}
+
+async function loadNotes(force = false) {
+  if (!subjectClassId.value || (notesLoaded.value && !force)) {
+    return;
+  }
+
+  notesLoading.value = true;
+  notesError.value = "";
+
+  try {
+    const data = await getStudentSubjectClassNotes(subjectClassId.value);
+    notes.value = data.notes;
+    notesLoaded.value = true;
+  } catch {
+    notesError.value =
+      "Catatan belum bisa dimuat. Periksa koneksi atau coba lagi nanti.";
+  } finally {
+    notesLoading.value = false;
   }
 }
 
@@ -335,13 +366,110 @@ onMounted(loadSubject);
           <template v-else>
             <p class="text-sm font-medium text-[#4f46e5]">Catatan</p>
             <h2 class="mt-3 text-2xl font-medium text-[#171322]">
-              Catatan pribadi direncanakan setelah MVP sekolah
+              Catatan materi saya
             </h2>
-            <p class="mt-4 max-w-xl text-sm leading-6 text-[#6b6475]">
-              Area ini disiapkan untuk catatan belajar per materi. Saat ini
-              belum ada penyimpanan catatan, jadi tidak ada data contoh yang
-              ditampilkan.
+            <p class="mt-2 max-w-xl text-sm leading-6 text-[#6b6475]">
+              Buka kembali catatan pribadi yang kamu simpan dari materi pada
+              mata pelajaran ini.
             </p>
+
+            <div v-if="notesLoading" class="mt-5 space-y-3">
+              <div
+                v-for="item in 3"
+                :key="item"
+                class="h-36 animate-pulse rounded-md bg-white"
+              />
+            </div>
+
+            <div v-else-if="notesError" class="mt-5 rounded-md bg-white p-4">
+              <div class="flex items-start gap-3">
+                <PhWarningCircle
+                  :size="22"
+                  class="mt-0.5 shrink-0 text-[#f2756a]"
+                  weight="duotone"
+                />
+                <div>
+                  <p class="text-sm font-medium text-[#171322]">
+                    Tidak bisa memuat catatan
+                  </p>
+                  <p class="mt-1 text-sm leading-6 text-[#7a7385]">
+                    {{ notesError }}
+                  </p>
+                  <button
+                    class="mt-4 rounded-md bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white"
+                    type="button"
+                    @click="loadNotes(true)"
+                  >
+                    Coba lagi
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-else-if="notes.length === 0"
+              class="mt-5 rounded-md bg-white p-4"
+            >
+              <p class="text-sm font-medium text-[#171322]">
+                Belum ada catatan untuk materi di mata pelajaran ini.
+              </p>
+              <p class="mt-2 text-sm leading-6 text-[#7a7385]">
+                Catatan yang kamu simpan dari halaman materi akan tampil di
+                sini.
+              </p>
+            </div>
+
+            <div v-else class="mt-5 space-y-3">
+              <article
+                v-for="note in notes"
+                :key="note.noteId"
+                class="rounded-md border border-[#ebe7df] bg-white p-4"
+              >
+                <div
+                  class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+                >
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-[#171322]">
+                      {{ note.materialTitle }}
+                    </p>
+                    <p class="mt-1 text-xs text-[#a09aa8]">
+                      Diperbarui {{ formatDateTime(note.updatedAt) }}
+                    </p>
+                    <p
+                      class="mt-3 line-clamp-5 whitespace-pre-line wrap-break-word text-sm leading-6 text-[#6b6475]"
+                    >
+                      {{ note.content }}
+                    </p>
+                  </div>
+
+                  <div class="flex shrink-0 flex-wrap gap-2">
+                    <button
+                      class="rounded-md border border-[#ddd8e4] px-3 py-2 text-xs font-medium text-[#6b6475] transition hover:bg-[#f8f7f4]"
+                      type="button"
+                      @click="
+                        router.push(
+                          `/student/subjects/${subjectClassId}/materials/${note.materialId}`,
+                        )
+                      "
+                    >
+                      Lihat materi
+                    </button>
+                    <button
+                      class="inline-flex items-center gap-2 rounded-md bg-[#4f46e5] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#4338ca]"
+                      type="button"
+                      @click="
+                        router.push(
+                          `/student/subjects/${subjectClassId}/materials/${note.materialId}/note`,
+                        )
+                      "
+                    >
+                      Buka catatan
+                      <PhArrowRight :size="14" />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            </div>
           </template>
         </article>
 

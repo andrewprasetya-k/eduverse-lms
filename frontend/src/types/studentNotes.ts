@@ -13,3 +13,11 @@ export interface StudentMaterialNoteResponse {
 export interface SaveStudentMaterialNotePayload {
   content: string
 }
+
+export interface StudentSubjectMaterialNote extends StudentMaterialNote {
+  materialTitle: string
+}
+
+export interface StudentSubjectMaterialNotesResponse {
+  notes: StudentSubjectMaterialNote[]
+}

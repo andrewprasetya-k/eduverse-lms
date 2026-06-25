@@ -425,7 +425,7 @@ onMounted(loadDashboard);
             <RouterLink
               v-for="subject in subjects.slice(0, 4)"
               :key="subject.subjectClassId"
-              class="rounded-[18px] border border-[#ebe7df] bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
+              class="rounded-[18px] bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
               :to="`/student/subjects/${subject.subjectClassId}`"
             >
               <div
