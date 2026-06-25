@@ -143,14 +143,17 @@ async function loadInitialData() {
               mediaId: a.mediaId,
               mediaName: a.mediaName,
               fileSize: a.fileSize,
-              fileUrl: a.fileUrl
+              fileUrl: a.fileUrl,
             }));
             form.value.mediaIds = mat.attachments.map((a: any) => a.mediaId);
           }
         }
       } else if (assignmentId.value) {
         activeTab.value = "assignment";
-        const asgData = await getSubjectAssignmentDetail(subjectClassId.value, assignmentId.value);
+        const asgData = await getSubjectAssignmentDetail(
+          subjectClassId.value,
+          assignmentId.value,
+        );
         if (asgData && asgData.assignment) {
           const asg = asgData.assignment;
           form.value.title = asg.assignmentTitle;
@@ -159,19 +162,24 @@ async function loadInitialData() {
           if (asg.deadline) {
             const dateObj = new Date(asg.deadline);
             form.value.deadlineDate = dateObj.toISOString().split("T")[0];
-            form.value.deadlineTime = dateObj.toISOString().split("T")[1].substring(0, 5);
+            form.value.deadlineTime = dateObj
+              .toISOString()
+              .split("T")[1]
+              .substring(0, 5);
           }
           if (asg.attachments) {
             existingAttachments.value = asg.attachments.map((a: any) => ({
               mediaId: a.mediaId,
               mediaName: a.mediaName,
               fileSize: a.fileSize,
-              fileUrl: a.fileUrl
+              fileUrl: a.fileUrl,
             }));
             form.value.mediaIds = asg.attachments.map((a: any) => a.mediaId);
           }
           // find category ID by name
-          const cat = categories.value.find(c => c.categoryName === asg.categoryName);
+          const cat = categories.value.find(
+            (c) => c.categoryName === asg.categoryName,
+          );
           if (cat) {
             form.value.categoryId = cat.categoryId;
           }
@@ -310,307 +318,422 @@ onMounted(loadInitialData);
 </script>
 
 <template>
-  <main class="max-h-screen flex-1 px-4 py-5 sm:px-6 lg:px-8">
-    <div class="flex w-full max-w-none flex-col gap-5">
-      <!-- Topbar / Breadcrumb -->
-      <div class="mb-5 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <button
-            @click="router.back()"
-            class="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#111827] transition"
-          >
-            <PhArrowLeft :size="18" />
-            <span class="hidden sm:inline">{{
-              subject?.subjectName || "Kembali"
-            }}</span>
-          </button>
-          <span class="text-[#D1D5DB]">/</span>
-          <h1 class="text-sm font-semibold text-[#111827]">{{ isEditMode ? 'Edit Konten' : 'Buat Konten Baru' }}</h1>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <button
-            @click="router.back()"
-            class="px-4 py-2 text-sm font-medium text-[#374151] bg-white border border-[#EBEBEB] rounded-xl hover:bg-[#F9FAFB] transition"
-          >
-            Batal
-          </button>
-          <button
-            @click="handleSubmit"
-            :disabled="isSubmitDisabled"
-            class="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-[#4F46E5] rounded-xl hover:bg-[#4338CA] transition disabled:opacity-50"
-          >
-            <PhPaperPlaneTilt v-if="!submitting" :size="18" weight="bold" />
-            {{ submitting ? "Menyimpan..." : (isEditMode ? "Simpan Perubahan" : "Terbitkan") }}
-          </button>
-        </div>
-      </div>
-
+  <main class="min-h-screen min-w-0 flex-1 overflow-x-hidden bg-[#f8f7f4]">
+    <header class="border-b border-[#ebe7df] bg-white">
       <div
-        v-if="errorMessage"
-        class="mb-5 rounded-[18px] border border-[#FECACA] bg-[#FEF2F2] p-4 text-sm leading-6 text-[#B42318]"
-      >
-        {{ errorMessage }}
-      </div>
-
-      <div
-        v-if="loading"
-        class="rounded-[18px] bg-white p-5 text-sm text-[#6B7280] shadow-sm ring-1 ring-black/5"
-      >
-        Memuat data pendukung...
-      </div>
-
-      <!-- Type Switcher -->
-      <div
-        v-if="!loading"
-        class="mb-5 flex w-fit gap-2 rounded-2xl bg-[#F3F4F6] p-1.5"
+        class="flex min-w-0 items-center gap-2 px-5 py-3 text-xs text-[#6b7280] sm:px-6 lg:px-8"
       >
         <button
-          @click="!isEditMode && (activeTab = 'material')"
-          :class="[
-            'flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-xl transition',
+          type="button"
+          class="inline-flex shrink-0 items-center gap-1.5 transition hover:text-[#4f46e5]"
+          @click="router.back()"
+        >
+          <PhArrowLeft :size="15" />
+          Mata pelajaran
+        </button>
+        <span class="text-[#d1d5db]">/</span>
+        <span class="min-w-0 truncate font-medium text-[#171322]">
+          {{ isEditMode ? "Edit" : "Buat" }}
+          {{ activeTab === "material" ? "Materi" : "Tugas" }}
+        </span>
+      </div>
+
+      <div
+        class="flex min-w-0 flex-col gap-3 border-t border-[#f3f1ec] px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8"
+      >
+        <div class="min-w-0">
+          <p class="text-xs font-medium uppercase tracking-wide text-[#7b61a8]">
+            {{ subject?.subjectName || "Konten mata pelajaran" }}
+          </p>
+          <h1 class="mt-1 text-xl font-semibold text-[#171322] sm:text-2xl">
+            {{ isEditMode ? "Edit" : "Buat" }}
+            {{ activeTab === "material" ? "Materi" : "Tugas" }}
+          </h1>
+          <p class="mt-1 text-sm text-[#6b7280]">
+            <template v-if="subject">
+              {{ subject.className }}
+              <span v-if="subject.subjectCode">
+                · {{ subject.subjectCode }}
+              </span>
+            </template>
+            <template v-else> Lengkapi informasi konten untuk siswa. </template>
+          </p>
+        </div>
+        <span
+          class="inline-flex self-start rounded-lg px-2.5 py-1.5 text-xs font-medium lg:self-auto"
+          :class="
             activeTab === 'material'
-              ? 'bg-white text-[#4F46E5] shadow-sm'
-              : 'text-[#6B7280]',
-            !isEditMode && activeTab !== 'material' ? 'hover:text-[#111827] cursor-pointer' : (isEditMode && activeTab !== 'material' ? 'opacity-50 cursor-not-allowed' : '')
-          ]"
-          :disabled="isEditMode"
+              ? 'bg-[#eef2ff] text-[#4f46e5]'
+              : 'bg-[#fff7ed] text-[#ea580c]'
+          "
         >
-          <PhFileText :size="18" weight="duotone" />
-          Materi
-        </button>
-        <button
-          @click="!isEditMode && (activeTab = 'assignment')"
-          :class="[
-            'flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-xl transition',
-            activeTab === 'assignment'
-              ? 'bg-white text-[#4F46E5] shadow-sm'
-              : 'text-[#6B7280]',
-            !isEditMode && activeTab !== 'assignment' ? 'hover:text-[#111827] cursor-pointer' : (isEditMode && activeTab !== 'assignment' ? 'opacity-50 cursor-not-allowed' : '')
-          ]"
-          :disabled="isEditMode"
-        >
-          <PhClipboardText :size="18" weight="duotone" />
-          Tugas
-        </button>
+          {{ activeTab === "material" ? "Materi" : "Tugas" }}
+        </span>
       </div>
+    </header>
 
-      <div v-if="!loading" class="grid gap-5 lg:grid-cols-[1fr_320px]">
-        <!-- Main Form -->
-        <div class="space-y-5">
-          <section
-            class="rounded-[18px] border border-[#EBEBEB] bg-white p-5 shadow-sm"
-          >
-            <h2
-              class="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#374151]"
-            >
-              <PhInfo :size="16" weight="bold" />
-              Informasi Utama
-            </h2>
+    <section class="px-5 py-5 sm:px-6 lg:px-8">
+      <section
+        v-if="errorMessage"
+        class="mb-5 flex items-start gap-3 rounded-xl border border-[#fecaca] bg-[#fef2f2] p-4 text-sm leading-6 text-[#b42318]"
+      >
+        <PhInfo :size="19" class="mt-0.5 shrink-0" weight="duotone" />
+        <p>{{ errorMessage }}</p>
+      </section>
 
-            <div class="space-y-5">
-              <div>
-                <label class="block text-sm font-medium text-[#6B7280] mb-2"
-                  >Judul
-                  {{ activeTab === "material" ? "Materi" : "Tugas" }}</label
-                >
-                <input
-                  v-model="form.title"
-                  type="text"
-                  class="w-full px-4 py-3 bg-[#F9FAFB] border border-[#EBEBEB] rounded-2xl outline-none focus:border-[#4F46E5] transition"
-                  placeholder="Contoh: Pengenalan Aljabar Linear"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-[#6B7280] mb-2"
-                  >Deskripsi (Opsional)</label
-                >
-                <textarea
-                  v-model="form.description"
-                  rows="5"
-                  class="w-full px-4 py-3 bg-[#F9FAFB] border border-[#EBEBEB] rounded-2xl outline-none focus:border-[#4F46E5] transition resize-none"
-                  placeholder="Berikan instruksi atau detail tambahan..."
-                ></textarea>
-              </div>
-            </div>
-          </section>
-
-          <section
-            class="rounded-[18px] border border-[#EBEBEB] bg-white p-5 shadow-sm"
-          >
-            <h2
-              class="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#374151]"
-            >
-              <PhFileText :size="16" weight="bold" />
-              Lampiran & Media
-            </h2>
-
-            <MediaUploader
-              v-if="hasRequiredContext"
-              :key="uploaderKey"
-              :school-id="activeSchoolId"
-              :owner-type="activeTab"
-              :initial-media="existingAttachments"
-              v-model:is-uploading="isUploadingMedia"
-              v-model:has-upload-error="hasMediaUploadError"
-              cleanup-on-remove
-              @update:media-ids="form.mediaIds = $event"
+      <template v-if="loading">
+        <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div class="space-y-4">
+            <div
+              class="h-56 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
             />
-            <p
-              v-else
-              class="rounded-2xl bg-[#FEF2F2] p-4 text-sm leading-6 text-[#B42318]"
-            >
-              Lampiran belum bisa diunggah sampai konteks school dan subject
-              tersedia.
-            </p>
-            <p
-              v-if="isUploadingMedia"
-              class="mt-3 rounded-2xl bg-[#EEF2FF] p-4 text-sm leading-6 text-[#4338CA]"
-            >
-              Tunggu sampai upload selesai sebelum menerbitkan.
-            </p>
-            <p
-              v-if="hasMediaUploadError"
-              class="mt-3 rounded-2xl bg-[#FEF2F2] p-4 text-sm leading-6 text-[#B42318]"
-            >
-              Ada lampiran yang gagal diunggah. Hapus atau unggah ulang file
-              tersebut.
-            </p>
-          </section>
+            <div
+              class="h-48 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+            />
+          </div>
+          <div
+            class="h-80 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+          />
+        </div>
+      </template>
+
+      <template v-else>
+        <div
+          class="mb-5 flex max-w-full gap-2 overflow-x-auto rounded-xl border border-[#ebe7df] bg-white p-1.5 sm:w-fit"
+        >
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition sm:min-w-28"
+            :class="[
+              activeTab === 'material'
+                ? 'bg-[#eef2ff] text-[#4f46e5]'
+                : 'text-[#6b7280]',
+              !isEditMode && activeTab !== 'material'
+                ? 'cursor-pointer hover:bg-[#f9fafb] hover:text-[#111827]'
+                : isEditMode && activeTab !== 'material'
+                  ? 'cursor-not-allowed opacity-50'
+                  : '',
+            ]"
+            :disabled="isEditMode"
+            @click="!isEditMode && (activeTab = 'material')"
+          >
+            <PhFileText :size="17" weight="duotone" />
+            Materi
+          </button>
+          <button
+            type="button"
+            class="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition sm:min-w-28"
+            :class="[
+              activeTab === 'assignment'
+                ? 'bg-[#eef2ff] text-[#4f46e5]'
+                : 'text-[#6b7280]',
+              !isEditMode && activeTab !== 'assignment'
+                ? 'cursor-pointer hover:bg-[#f9fafb] hover:text-[#111827]'
+                : isEditMode && activeTab !== 'assignment'
+                  ? 'cursor-not-allowed opacity-50'
+                  : '',
+            ]"
+            :disabled="isEditMode"
+            @click="!isEditMode && (activeTab = 'assignment')"
+          >
+            <PhClipboardText :size="17" weight="duotone" />
+            Tugas
+          </button>
         </div>
 
-        <!-- Sidebar Settings -->
-        <aside class="space-y-5">
-          <section
-            class="rounded-[18px] border border-[#EBEBEB] bg-white p-5 shadow-sm"
-          >
-            <h2
-              class="mb-5 text-xs font-bold uppercase tracking-wider text-[#374151]"
+        <div class="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div class="min-w-0 space-y-5">
+            <section
+              class="rounded-xl border border-[#ebe7df] bg-white p-5 sm:p-6"
             >
-              Pengaturan
-            </h2>
-
-            <div v-if="activeTab === 'material'" class="space-y-4">
-              <div>
-                <label class="block text-xs font-medium text-[#6B7280] mb-2"
-                  >Tipe Materi</label
+              <div class="flex items-start gap-3">
+                <div
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
                 >
-                <select
-                  v-model="form.materialType"
-                  class="w-full px-3 py-2.5 bg-[#F9FAFB] border border-[#EBEBEB] rounded-xl outline-none text-sm"
-                >
-                  <option value="pdf">PDF</option>
-                  <option value="video">Video</option>
-                  <option value="ppt">PPT / Slide</option>
-                  <option value="other">Lainnya</option>
-                </select>
-              </div>
-            </div>
-
-            <div v-else class="space-y-5">
-              <div>
-                <label class="block text-xs font-medium text-[#6B7280] mb-2"
-                  >Kategori Tugas</label
-                >
-                <select
-                  v-model="form.categoryId"
-                  :disabled="categories.length === 0"
-                  class="w-full px-3 py-2.5 bg-[#F9FAFB] border border-[#EBEBEB] rounded-xl outline-none text-sm"
-                >
-                  <option
-                    v-for="cat in categories"
-                    :key="cat.categoryId"
-                    :value="cat.categoryId"
-                  >
-                    {{ cat.categoryName }}
-                  </option>
-                </select>
-                <p
-                  v-if="categoryErrorMessage || categories.length === 0"
-                  class="mt-2 text-xs leading-5 text-[#B42318]"
-                >
-                  {{ categoryErrorMessage || "Kategori tugas belum tersedia." }}
-                </p>
-              </div>
-
-              <div>
-                <label class="block text-xs font-medium text-[#6B7280] mb-2"
-                  >Deadline</label
-                >
-                <div class="space-y-2">
-                  <div class="relative">
-                    <PhCalendarBlank
-                      :size="16"
-                      class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
-                    />
-                    <input
-                      v-model="form.deadlineDate"
-                      type="date"
-                      class="w-full pl-10 pr-3 py-2 bg-[#F9FAFB] border border-[#EBEBEB] rounded-xl outline-none text-sm"
-                    />
-                  </div>
-                  <div class="relative">
-                    <PhClock
-                      :size="16"
-                      class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
-                    />
-                    <input
-                      v-model="form.deadlineTime"
-                      type="time"
-                      class="w-full pl-10 pr-3 py-2 bg-[#F9FAFB] border border-[#EBEBEB] rounded-xl outline-none text-sm"
-                    />
-                  </div>
+                  <PhInfo :size="20" weight="duotone" />
+                </div>
+                <div>
+                  <h2 class="text-base font-semibold text-[#171322]">
+                    Informasi utama
+                  </h2>
+                  <p class="mt-1 text-xs leading-5 text-[#8a8494]">
+                    Isi judul dan
+                    {{
+                      activeTab === "material"
+                        ? "deskripsi materi"
+                        : "instruksi tugas"
+                    }}
+                    untuk siswa.
+                  </p>
                 </div>
               </div>
 
-              <div class="pt-2 border-t border-[#F3F4F6]">
-                <label
-                  class="flex items-center justify-between cursor-pointer group"
-                >
-                  <div class="space-y-0.5">
-                    <p class="text-xs font-medium text-[#374151]">
-                      Izinkan Terlambat
-                    </p>
-                    <p class="text-[10px] text-[#9CA3AF]">
-                      Siswa tetap bisa submit
-                    </p>
-                  </div>
-                  <div
-                    @click="form.allowLate = !form.allowLate"
-                    :class="[
-                      'w-10 h-5 rounded-full relative transition duration-200',
-                      form.allowLate ? 'bg-[#4F46E5]' : 'bg-[#E5E7EB]',
-                    ]"
+              <div class="mt-5 space-y-5">
+                <div>
+                  <label
+                    class="block text-sm font-medium text-[#374151]"
+                    for="content-title"
                   >
-                    <div
-                      :class="[
-                        'absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition transform duration-200',
-                        form.allowLate ? 'translate-x-5' : 'translate-x-0',
-                      ]"
-                    ></div>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </section>
+                    Judul
+                    {{ activeTab === "material" ? "materi" : "tugas" }}
+                  </label>
+                  <input
+                    id="content-title"
+                    v-model="form.title"
+                    type="text"
+                    class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#a09aa8] focus:border-[#4f46e5] focus:bg-white"
+                    placeholder="Contoh: Pengenalan Aljabar Linear"
+                  />
+                </div>
 
-          <!-- Status Card -->
-          <div class="rounded-[18px] border border-[#FED7AA] bg-[#FFF7ED] p-5">
-            <h3
-              class="mb-3 text-xs font-bold uppercase tracking-wider text-[#EA580C]"
+                <div>
+                  <label
+                    class="block text-sm font-medium text-[#374151]"
+                    for="content-description"
+                  >
+                    {{
+                      activeTab === "material"
+                        ? "Deskripsi materi"
+                        : "Deskripsi atau instruksi"
+                    }}
+                    <span class="font-normal text-[#9ca3af]">(opsional)</span>
+                  </label>
+                  <textarea
+                    id="content-description"
+                    v-model="form.description"
+                    rows="7"
+                    class="mt-2 w-full resize-none rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-4 py-3 text-sm leading-6 text-[#374151] outline-none transition placeholder:text-[#a09aa8] focus:border-[#4f46e5] focus:bg-white"
+                    placeholder="Berikan instruksi atau detail tambahan..."
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section
+              class="rounded-xl border border-[#ebe7df] bg-white p-5 sm:p-6"
             >
-              Status Publikasi
-            </h3>
-            <p class="text-[11px] leading-relaxed text-[#9A3412]">
-              Konten ini akan langsung tersedia bagi siswa yang terdaftar di
-              kelas
-              <strong>{{ subject?.className }}</strong> segera setelah
-              diterbitkan.
-            </p>
+              <div class="flex items-start gap-3">
+                <div
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f3f4f6] text-[#6b7280]"
+                >
+                  <PhFileText :size="20" weight="duotone" />
+                </div>
+                <div>
+                  <h2 class="text-base font-semibold text-[#171322]">
+                    Lampiran dan media
+                  </h2>
+                  <p class="mt-1 text-xs leading-5 text-[#8a8494]">
+                    Tambahkan file pendukung yang dibutuhkan siswa.
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-5">
+                <MediaUploader
+                  v-if="hasRequiredContext"
+                  :key="uploaderKey"
+                  :school-id="activeSchoolId"
+                  :owner-type="activeTab"
+                  :initial-media="existingAttachments"
+                  v-model:is-uploading="isUploadingMedia"
+                  v-model:has-upload-error="hasMediaUploadError"
+                  cleanup-on-remove
+                  @update:media-ids="form.mediaIds = $event"
+                />
+                <p
+                  v-else
+                  class="rounded-lg border border-[#fecaca] bg-[#fef2f2] p-4 text-sm leading-6 text-[#b42318]"
+                >
+                  Lampiran belum bisa diunggah sampai konteks sekolah dan mata
+                  pelajaran tersedia.
+                </p>
+                <p
+                  v-if="isUploadingMedia"
+                  class="mt-3 rounded-lg bg-[#eef2ff] p-4 text-sm leading-6 text-[#4338ca]"
+                >
+                  Tunggu sampai upload selesai sebelum menerbitkan.
+                </p>
+                <p
+                  v-if="hasMediaUploadError"
+                  class="mt-3 rounded-lg bg-[#fef2f2] p-4 text-sm leading-6 text-[#b42318]"
+                >
+                  Ada lampiran yang gagal diunggah. Hapus atau unggah ulang file
+                  tersebut.
+                </p>
+              </div>
+            </section>
           </div>
-        </aside>
-      </div>
-    </div>
+
+          <aside class="min-w-0">
+            <div class="space-y-4 lg:sticky lg:top-6">
+              <section class="rounded-xl border border-[#ebe7df] bg-white p-5">
+                <p
+                  class="text-[10px] font-medium uppercase tracking-[0.08em] text-[#9ca3af]"
+                >
+                  Metadata
+                </p>
+                <h2 class="mt-1 text-base font-semibold text-[#171322]">
+                  Pengaturan konten
+                </h2>
+
+                <div v-if="activeTab === 'material'" class="mt-5">
+                  <label
+                    class="block text-xs font-medium text-[#6b7280]"
+                    for="material-type"
+                  >
+                    Tipe materi
+                  </label>
+                  <select
+                    id="material-type"
+                    v-model="form.materialType"
+                    class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#374151] outline-none transition focus:border-[#4f46e5] focus:bg-white"
+                  >
+                    <option value="pdf">PDF</option>
+                    <option value="video">Video</option>
+                    <option value="ppt">PPT / Slide</option>
+                    <option value="other">Lainnya</option>
+                  </select>
+                </div>
+
+                <div v-else class="mt-5 space-y-5">
+                  <div>
+                    <label
+                      class="block text-xs font-medium text-[#6b7280]"
+                      for="assignment-category"
+                    >
+                      Kategori tugas
+                    </label>
+                    <select
+                      id="assignment-category"
+                      v-model="form.categoryId"
+                      :disabled="categories.length === 0"
+                      class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#374151] outline-none transition focus:border-[#4f46e5] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <option
+                        v-for="cat in categories"
+                        :key="cat.categoryId"
+                        :value="cat.categoryId"
+                      >
+                        {{ cat.categoryName }}
+                      </option>
+                    </select>
+                    <p
+                      v-if="categoryErrorMessage || categories.length === 0"
+                      class="mt-2 text-xs leading-5 text-[#b42318]"
+                    >
+                      {{
+                        categoryErrorMessage || "Kategori tugas belum tersedia."
+                      }}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p class="text-xs font-medium text-[#6b7280]">Tenggat</p>
+                    <div class="mt-2 grid gap-2">
+                      <div class="relative">
+                        <PhCalendarBlank
+                          :size="16"
+                          class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
+                        />
+                        <input
+                          v-model="form.deadlineDate"
+                          type="date"
+                          class="w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] py-2.5 pl-10 pr-3 text-sm text-[#374151] outline-none transition focus:border-[#4f46e5] focus:bg-white"
+                        />
+                      </div>
+                      <div class="relative">
+                        <PhClock
+                          :size="16"
+                          class="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]"
+                        />
+                        <input
+                          v-model="form.deadlineTime"
+                          type="time"
+                          class="w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] py-2.5 pl-10 pr-3 text-sm text-[#374151] outline-none transition focus:border-[#4f46e5] focus:bg-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="border-t border-[#f3f4f6] pt-4">
+                    <div class="flex items-center justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="text-xs font-medium text-[#374151]">
+                          Izinkan terlambat
+                        </p>
+                        <p class="mt-1 text-[11px] leading-4 text-[#9ca3af]">
+                          Siswa tetap dapat mengumpulkan setelah tenggat.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        class="relative h-5 w-10 shrink-0 rounded-full transition"
+                        :class="
+                          form.allowLate ? 'bg-[#4f46e5]' : 'bg-[#e5e7eb]'
+                        "
+                        :aria-pressed="form.allowLate"
+                        @click="form.allowLate = !form.allowLate"
+                      >
+                        <span
+                          class="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform"
+                          :class="
+                            form.allowLate ? 'translate-x-5' : 'translate-x-0'
+                          "
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section
+                class="rounded-xl border border-[#fed7aa] bg-[#fff7ed] p-4"
+              >
+                <p
+                  class="text-[10px] font-medium uppercase tracking-[0.08em] text-[#ea580c]"
+                >
+                  Publikasi
+                </p>
+                <p class="mt-2 text-xs leading-5 text-[#9a3412]">
+                  Konten akan langsung tersedia bagi siswa di
+                  <strong>{{ subject?.className }}</strong> setelah disimpan.
+                </p>
+              </section>
+
+              <section class="rounded-xl border border-[#ebe7df] bg-white p-4">
+                <div class="grid gap-2">
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#4f46e5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338ca] disabled:cursor-not-allowed disabled:opacity-50"
+                    :disabled="isSubmitDisabled"
+                    @click="handleSubmit"
+                  >
+                    <PhPaperPlaneTilt
+                      v-if="!submitting"
+                      :size="17"
+                      weight="bold"
+                    />
+                    {{
+                      submitting
+                        ? "Menyimpan..."
+                        : isEditMode
+                          ? "Simpan perubahan"
+                          : "Publish"
+                    }}
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center rounded-lg border border-[#ebe7df] bg-white px-4 py-2.5 text-sm font-medium text-[#374151] transition hover:bg-[#f9fafb]"
+                    @click="router.back()"
+                  >
+                    Batal
+                  </button>
+                </div>
+              </section>
+            </div>
+          </aside>
+        </div>
+      </template>
+    </section>
   </main>
 </template>

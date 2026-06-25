@@ -316,7 +316,7 @@ onMounted(loadInbox);
                   </div>
 
                   <h3
-                    class="mt-3 break-words text-base font-semibold text-[#171322] sm:text-lg"
+                    class="mt-3 wrap-break-word text-base font-semibold text-[#171322] sm:text-lg"
                   >
                     {{ item.assignmentTitle }}
                   </h3>
