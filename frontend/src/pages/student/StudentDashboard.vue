@@ -335,281 +335,363 @@ onMounted(loadDashboard);
 
 <template>
   <main
-    class="grid min-h-screen flex-1 grid-cols-1 overflow-hidden lg:grid-cols-[1fr_320px]"
+    class="grid min-h-screen min-w-0 flex-1 grid-cols-1 overflow-x-hidden bg-[#f8f7f4] lg:grid-cols-[minmax(0,1fr)_320px]"
   >
-    <section class="flex flex-col gap-6 px-5 py-6 sm:px-8 lg:px-10">
-      <header class="flex flex-col gap-2">
-        <p class="text-sm text-[#7a7385]">
-          {{ schoolName }} -
-          {{
-            activeClassTitle ? `Kelas ${activeClassTitle}` : "Tanpa kelas aktif"
-          }}
-        </p>
-        <h1 class="text-2xl font-medium tracking-normal text-[#171322]">
-          Selamat datang, {{ firstName }}
-        </h1>
-        <p class="text-sm text-[#7a7385]">
-          Ruang belajar hari ini mengikuti kelas aktif dan mata pelajaran di
-          dalamnya.
-        </p>
+    <section class="min-w-0">
+      <header class="border-b border-[#ebe7df] bg-white">
+        <div
+          class="flex min-w-0 flex-col gap-3 px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8"
+        >
+          <div class="min-w-0">
+            <h1 class="text-xl font-medium text-[#171322] sm:text-2xl">
+              Selamat datang, {{ firstName }}
+            </h1>
+            <p
+              class="mt-1 max-w-2xl text-xs leading-5 text-[#6b7280] sm:text-sm"
+            >
+              Ruang belajar hari ini mengikuti kelas aktif dan mata pelajaran di
+              dalamnya.
+            </p>
+          </div>
+          <div
+            class="inline-flex min-w-0 max-w-full items-center self-start rounded-lg border border-[#ebe7df] bg-[#f9fafb] px-3 py-2 text-xs text-[#6b7280] lg:self-auto"
+          >
+            <span class="min-w-0 truncate font-medium text-[#171322]">
+              {{ schoolName }}
+            </span>
+            <span class="mx-2 shrink-0 text-[#d1d5db]">·</span>
+            <span class="min-w-0 truncate">
+              {{
+                activeClassTitle
+                  ? `Kelas ${activeClassTitle}`
+                  : "Tanpa kelas aktif"
+              }}
+            </span>
+          </div>
+        </div>
       </header>
 
-      <div v-if="errorMessage" class="soft-card rounded-[22px] p-5">
-        <div class="flex items-start gap-3 text-sm text-[#b42318]">
-          <PhWarningCircle :size="20" class="mt-0.5" weight="duotone" />
-          <p>{{ errorMessage }}</p>
-        </div>
-      </div>
-
-      <!-- <section class="soft-card rounded-[22px] p-5">
-        <div
-          class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"
+      <div class="space-y-5 px-5 py-5 sm:px-6 lg:px-8 lg:py-6">
+        <section
+          v-if="errorMessage"
+          class="rounded-xl border border-[#f1d6d3] bg-white p-5 sm:p-6"
         >
-          <select
-            v-if="activeClassStore.classes.length > 1"
-            class="rounded-2xl border border-[#ebe7df] bg-white px-4 py-2 text-sm text-[#3f3a4a] outline-none"
-            :value="activeClassStore.activeClassId ?? ''"
-            @change="handleActiveClassChange"
-          >
-            <option
-              v-for="item in activeClassStore.classes"
-              :key="item.classId"
-              :value="item.classId"
+          <div class="flex items-start gap-3">
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1f0] text-[#dc2626]"
             >
-              {{ item.classTitle || item.classId }}
-            </option>
-          </select>
-        </div>
-      </section> -->
-
-      <section
-        v-if="isLoading"
-        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-      >
-        <div
-          v-for="item in 3"
-          :key="item"
-          class="h-36 animate-pulse rounded-[18px] border border-[#ebe7df] bg-white"
-        />
-      </section>
-
-      <section
-        v-else-if="!activeClassStore.activeClassId"
-        class="soft-card rounded-[22px] p-6"
-      >
-        <p class="text-sm font-medium text-[#171322]">Belum ada kelas aktif</p>
-        <p class="mt-2 text-sm text-[#7a7385]">
-          Kelas akan muncul setelah akunmu terdaftar sebagai anggota kelas di
-          sekolah aktif.
-        </p>
-      </section>
-
-      <section v-else class="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <article class="soft-card rounded-[22px] p-5">
-          <div class="mb-5 flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-[#171322]">
-                Daftar mata pelajaran
-              </p>
-              <p class="mt-1 text-xs text-[#8b8592]">
-                Buka mata pelajaran untuk melihat materi dan tugas.
-              </p>
+              <PhWarningCircle :size="22" weight="duotone" />
             </div>
-            <RouterLink
-              class="text-sm font-medium text-[#4f46e5]"
-              to="/student/subjects"
-            >
-              Lihat semua
-            </RouterLink>
-          </div>
-
-          <div v-if="subjects.length > 0" class="grid gap-3 sm:grid-cols-2">
-            <RouterLink
-              v-for="subject in subjects.slice(0, 4)"
-              :key="subject.subjectClassId"
-              class="rounded-[18px] bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
-              :to="`/student/subjects/${subject.subjectClassId}`"
-            >
-              <div
-                class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl text-white"
-                :style="{
-                  backgroundColor: getSubjectColor(
-                    subject.subjectClassId ||
-                      subject.subjectName ||
-                      subject.subjectCode,
-                  ),
-                }"
-              >
-                <PhBookOpen :size="21" weight="duotone" />
-              </div>
-              <p class="text-sm font-medium text-[#171322]">
-                {{
-                  subject.subjectName ||
-                  subject.subjectCode ||
-                  "Mata pelajaran"
-                }}
+            <div class="min-w-0">
+              <h2 class="text-base font-medium text-[#171322]">
+                Dashboard tidak dapat dimuat
+              </h2>
+              <p class="mt-1 text-sm leading-6 text-[#7a7385]">
+                {{ errorMessage }}
               </p>
-              <p class="mt-2 text-xs leading-5 text-[#7a7385]">
-                {{ subject.teacherName || "Guru belum tersedia" }}
-              </p>
-            </RouterLink>
-          </div>
-
-          <div v-else class="rounded-2xl bg-[#fbfaf8] p-5">
-            <p class="text-sm font-medium text-[#171322]">
-              Belum ada mata pelajaran
-            </p>
-            <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-              Mata pelajaran akan tampil setelah tersedia pada kelas aktif.
-            </p>
-          </div>
-        </article>
-
-        <article class="soft-card rounded-[22px] p-5">
-          <div class="mb-5 flex items-center justify-between gap-3">
-            <div class="flex min-w-0 items-start gap-3">
-              <div
-                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
+              <button
+                class="mt-4 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+                type="button"
+                @click="loadDashboard()"
               >
-                <PhClipboardText :size="21" weight="duotone" />
-              </div>
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-[#171322]">Tugas Saya</p>
-                <p class="mt-1 text-xs text-[#8b8592]">
-                  Lihat tugas dari mata pelajaran yang kamu ikuti.
-                </p>
-              </div>
+                Coba lagi
+              </button>
             </div>
-            <RouterLink
-              to="/student/assignments"
-              class="shrink-0 text-sm font-medium text-[#4f46e5]"
-            >
-              Lihat semua
-            </RouterLink>
           </div>
+        </section>
 
-          <div v-if="assignmentsLoading" class="space-y-2">
+        <section v-if="isLoading" class="space-y-4">
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <div
               v-for="item in 3"
               :key="item"
-              class="h-16 animate-pulse rounded-2xl bg-[#fbfaf8]"
+              class="h-36 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
             />
           </div>
-
-          <div
-            v-else-if="assignmentsError"
-            class="rounded-2xl bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
-          >
-            {{ assignmentsError }}
+          <div class="grid gap-4 xl:grid-cols-2">
+            <div
+              v-for="item in 2"
+              :key="`panel-${item}`"
+              class="h-64 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+            />
           </div>
+        </section>
 
-          <div
-            v-else-if="assignmentPreview.length === 0"
-            class="rounded-2xl bg-[#fbfaf8] p-4"
+        <section
+          v-else-if="!activeClassStore.activeClassId"
+          class="flex min-h-[50vh] items-center justify-center"
+        >
+          <article
+            class="w-full max-w-xl rounded-xl border border-[#ebe7df] bg-white p-8 text-center"
           >
-            <p class="text-sm font-medium text-[#171322]">Belum ada tugas</p>
-            <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-              Tugas akan muncul setelah guru membuat tugas untuk mata pelajaran
-              di kelasmu.
+            <div
+              class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
+            >
+              <PhBookOpen :size="25" weight="duotone" />
+            </div>
+            <h2 class="mt-3 text-lg font-medium text-[#171322]">
+              Belum ada kelas aktif
+            </h2>
+            <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-[#7a7385]">
+              Kelas akan muncul setelah akunmu terdaftar sebagai anggota kelas
+              di sekolah aktif.
             </p>
-          </div>
+          </article>
+        </section>
 
-          <div v-else class="space-y-2">
-            <RouterLink
-              v-for="assignment in assignmentPreview"
-              :key="`${assignment.subjectClassId}-${assignment.assignmentId}`"
-              :to="`/student/subjects/${assignment.subjectClassId}/assignments/${assignment.assignmentId}`"
-              class="block rounded-2xl bg-[#fbfaf8] p-4 transition hover:bg-white hover:shadow-[0_12px_28px_rgba(66,55,40,0.08)]"
-            >
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0">
-                  <p class="truncate text-sm font-medium text-[#171322]">
-                    {{ assignment.assignmentTitle }}
-                  </p>
-                  <p class="mt-1 truncate text-xs text-[#7a7385]">
-                    {{ assignment.subjectName }}
-                    <span v-if="assignment.subjectCode">
-                      · {{ assignment.subjectCode }}
-                    </span>
-                  </p>
-                </div>
-                <span
-                  class="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium"
-                  :class="assignmentStatusClasses(assignment)"
-                >
-                  {{ assignmentStatusLabel(assignment) }}
-                </span>
-              </div>
-              <div
-                class="mt-3 flex items-center justify-between gap-3 text-xs text-[#8b8592]"
-              >
-                <span>Tenggat {{ formatDate(assignment.deadline) }}</span>
-                <PhArrowRight :size="14" class="shrink-0 text-[#4f46e5]" />
-              </div>
-            </RouterLink>
-          </div>
-        </article>
-      </section>
-
-      <section class="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <article class="soft-card rounded-[22px] p-5">
-          <div class="mb-4 flex items-center justify-between">
-            <p class="text-sm font-medium text-[#171322]">Feed kelas</p>
-            <RouterLink
-              class="text-sm font-medium text-[#4f46e5]"
-              to="/student/feed"
-            >
-              Buka feed
-            </RouterLink>
-          </div>
-
-          <div v-if="feedPosts.length > 0" class="space-y-3">
-            <article
-              v-for="post in feedPosts.slice(0, 3)"
-              :key="post.feedId"
-              class="rounded-2xl bg-[#fbfaf8] p-5"
-            >
-              <p class="text-sm leading-6 text-[#3f3a4a]">{{ post.content }}</p>
-              <p class="mt-2 text-xs text-[#a09aa8]">
-                {{ post.creatorName || "Pengirim tidak tersedia" }} ·
-                {{ formatDateTime(post.createdAt) }}
-              </p>
-            </article>
-          </div>
-
-          <p
-            v-else
-            class="rounded-2xl bg-[#fbfaf8] p-5 text-sm leading-6 text-[#7a7385]"
+        <section v-else class="grid min-w-0 gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+          <article
+            class="min-w-0 rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
           >
-            Belum ada pengumuman untuk kelas aktif.
-          </p>
-        </article>
+            <div class="mb-4 flex min-w-0 items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-[#171322]">
+                  Daftar mata pelajaran
+                </p>
+                <p class="mt-1 text-xs text-[#8b8592]">
+                  Buka materi dan tugas dari kelas aktif.
+                </p>
+              </div>
+              <RouterLink
+                class="shrink-0 text-xs font-medium text-[#4f46e5] transition hover:text-[#4338ca] sm:text-sm"
+                to="/student/subjects"
+              >
+                Lihat semua
+              </RouterLink>
+            </div>
 
-        <article class="soft-card rounded-[22px] p-5 opacity-90">
-          <p class="text-sm font-medium text-[#171322]">Komunikasi kelas</p>
-          <p class="mt-1 text-xs text-[#8b8592]">
-            Chat belum aktif. Untuk saat ini, gunakan Feed kelas untuk mengikuti
-            pengumuman.
-          </p>
-          <div class="mt-4 space-y-3">
-            <div class="flex gap-3 rounded-2xl bg-[#eef2ff] p-4">
-              <PhChatCircleText
-                :size="20"
-                class="mt-0.5 shrink-0 text-[#4f46e5]"
-              />
-              <p class="text-sm leading-6 text-[#6b6475]">
-                Feed kelas menjadi kanal pengumuman dan diskusi ringan bersama
-                guru.
+            <div v-if="subjects.length > 0" class="grid gap-3 sm:grid-cols-2">
+              <RouterLink
+                v-for="subject in subjects.slice(0, 4)"
+                :key="subject.subjectClassId"
+                class="group min-w-0 overflow-hidden rounded-lg border border-[#ebe7df] bg-[#fbfaf8] transition hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
+                :to="`/student/subjects/${subject.subjectClassId}`"
+              >
+                <div
+                  class="h-1.5 w-full"
+                  :style="{
+                    backgroundColor: getSubjectColor(
+                      subject.subjectClassId ||
+                        subject.subjectName ||
+                        subject.subjectCode,
+                    ),
+                  }"
+                />
+                <div class="flex min-w-0 items-start gap-3 p-4">
+                  <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white"
+                    :style="{
+                      backgroundColor: getSubjectColor(
+                        subject.subjectClassId ||
+                          subject.subjectName ||
+                          subject.subjectCode,
+                      ),
+                    }"
+                  >
+                    <PhBookOpen :size="18" weight="duotone" />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p
+                      class="line-clamp-2 wrap-break-word text-sm font-medium text-[#171322]"
+                    >
+                      {{
+                        subject.subjectName ||
+                        subject.subjectCode ||
+                        "Mata pelajaran"
+                      }}
+                    </p>
+                    <p class="mt-1 truncate text-xs leading-5 text-[#7a7385]">
+                      {{ subject.teacherName || "Guru belum tersedia" }}
+                    </p>
+                  </div>
+                  <PhArrowRight
+                    :size="15"
+                    class="mt-1 shrink-0 text-[#a09aa8] transition group-hover:translate-x-0.5 group-hover:text-[#4f46e5]"
+                  />
+                </div>
+              </RouterLink>
+            </div>
+
+            <div
+              v-else
+              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-5"
+            >
+              <p class="text-sm font-medium text-[#171322]">
+                Belum ada mata pelajaran
+              </p>
+              <p class="mt-2 text-sm leading-6 text-[#7a7385]">
+                Mata pelajaran akan tampil setelah tersedia pada kelas aktif.
               </p>
             </div>
-          </div>
-        </article>
-      </section>
+          </article>
+
+          <article
+            class="min-w-0 rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
+          >
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <div class="flex min-w-0 items-start gap-3">
+                <div
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eef2ff] text-[#4f46e5]"
+                >
+                  <PhClipboardText :size="19" weight="duotone" />
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-[#171322]">Tugas Saya</p>
+                  <p class="mt-1 text-xs text-[#8b8592]">
+                    Prioritas tugas dari semua mata pelajaran.
+                  </p>
+                </div>
+              </div>
+              <RouterLink
+                to="/student/assignments"
+                class="shrink-0 text-xs font-medium text-[#4f46e5] transition hover:text-[#4338ca] sm:text-sm"
+              >
+                Lihat semua
+              </RouterLink>
+            </div>
+
+            <div v-if="assignmentsLoading" class="space-y-2">
+              <div
+                v-for="item in 3"
+                :key="item"
+                class="h-16 animate-pulse rounded-lg bg-[#fbfaf8]"
+              />
+            </div>
+
+            <div
+              v-else-if="assignmentsError"
+              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
+            >
+              {{ assignmentsError }}
+            </div>
+
+            <div
+              v-else-if="assignmentPreview.length === 0"
+              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4"
+            >
+              <p class="text-sm font-medium text-[#171322]">Belum ada tugas</p>
+              <p class="mt-2 text-sm leading-6 text-[#7a7385]">
+                Tugas akan muncul setelah guru membuat tugas untuk mata
+                pelajaran di kelasmu.
+              </p>
+            </div>
+
+            <div v-else class="divide-y divide-[#ebe7df]">
+              <RouterLink
+                v-for="assignment in assignmentPreview"
+                :key="`${assignment.subjectClassId}-${assignment.assignmentId}`"
+                :to="`/student/subjects/${assignment.subjectClassId}/assignments/${assignment.assignmentId}`"
+                class="group block min-w-0 py-3 first:pt-0 last:pb-0"
+              >
+                <div class="flex min-w-0 items-start justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <p
+                      class="truncate text-sm font-medium text-[#171322] transition group-hover:text-[#4f46e5]"
+                    >
+                      {{ assignment.assignmentTitle }}
+                    </p>
+                    <p class="mt-1 truncate text-xs text-[#7a7385]">
+                      {{ assignment.subjectName }}
+                      <span v-if="assignment.subjectCode">
+                        · {{ assignment.subjectCode }}
+                      </span>
+                    </p>
+                    <p class="mt-1.5 text-[11px] text-[#8b8592]">
+                      Tenggat {{ formatDate(assignment.deadline) }}
+                    </p>
+                  </div>
+                  <div class="flex shrink-0 flex-col items-end gap-2">
+                    <span
+                      class="rounded-full px-2.5 py-1 text-[10px] font-medium"
+                      :class="assignmentStatusClasses(assignment)"
+                    >
+                      {{ assignmentStatusLabel(assignment) }}
+                    </span>
+                    <PhArrowRight
+                      :size="14"
+                      class="text-[#a09aa8] transition group-hover:translate-x-0.5 group-hover:text-[#4f46e5]"
+                    />
+                  </div>
+                </div>
+              </RouterLink>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid min-w-0 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+          <article
+            class="min-w-0 rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
+          >
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-[#171322]">Feed kelas</p>
+                <p class="mt-1 text-xs text-[#8b8592]">
+                  Pengumuman terbaru dari kelas aktif.
+                </p>
+              </div>
+              <RouterLink
+                class="shrink-0 text-xs font-medium text-[#4f46e5] transition hover:text-[#4338ca] sm:text-sm"
+                to="/student/feed"
+              >
+                Buka feed
+              </RouterLink>
+            </div>
+
+            <div v-if="feedPosts.length > 0" class="divide-y divide-[#ebe7df]">
+              <article
+                v-for="post in feedPosts.slice(0, 3)"
+                :key="post.feedId"
+                class="min-w-0 py-3 first:pt-0 last:pb-0"
+              >
+                <p
+                  class="line-clamp-3 wrap-break-word text-sm leading-6 text-[#3f3a4a]"
+                >
+                  {{ post.content }}
+                </p>
+                <p class="mt-2 text-xs text-[#a09aa8]">
+                  {{ post.creatorName || "Pengirim tidak tersedia" }} ·
+                  {{ formatDateTime(post.createdAt) }}
+                </p>
+              </article>
+            </div>
+
+            <p
+              v-else
+              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-5 text-sm leading-6 text-[#7a7385]"
+            >
+              Belum ada pengumuman untuk kelas aktif.
+            </p>
+          </article>
+
+          <article
+            class="min-w-0 rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
+          >
+            <p class="text-sm font-medium text-[#171322]">Komunikasi kelas</p>
+            <p class="mt-1 text-xs text-[#8b8592]">
+              Chat belum aktif. Gunakan Feed kelas untuk mengikuti pengumuman.
+            </p>
+            <div class="mt-4">
+              <div class="flex gap-3 rounded-lg bg-[#eef2ff] p-4">
+                <PhChatCircleText
+                  :size="20"
+                  class="mt-0.5 shrink-0 text-[#4f46e5]"
+                />
+                <p class="text-sm leading-6 text-[#6b6475]">
+                  Feed kelas menjadi ruang informasi bersama guru untuk saat
+                  ini.
+                </p>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
     </section>
 
-    <aside class="border-l border-[#ebe7df] bg-white/95">
+    <aside
+      class="min-w-0 border-t border-[#ebe7df] bg-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-l lg:border-t-0"
+    >
       <div
-        class="flex items-center justify-between gap-3 border-b border-[#ebe7df] px-5"
+        class="flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-[#ebe7df] px-5"
       >
         <button
           class="flex items-center gap-2 border-b-2 border-[#4f46e5] px-1 py-4 text-sm font-medium text-[#4f46e5]"
@@ -618,13 +700,13 @@ onMounted(loadDashboard);
           <PhBell :size="18" />
           Notifikasi
         </button>
-        <div class="flex items-center gap-3">
-          <span class="text-xs text-[#a09aa8]">
+        <div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
+          <span class="whitespace-nowrap text-xs text-[#a09aa8]">
             {{ unreadCount }} belum dibaca
           </span>
           <button
             v-if="unreadCount > 0"
-            class="rounded-full bg-[#eef2ff] px-3 py-1.5 text-xs font-medium text-[#4f46e5] transition hover:bg-[#e0e7ff] disabled:cursor-not-allowed disabled:opacity-60"
+            class="rounded-lg bg-[#eef2ff] px-3 py-1.5 text-xs font-medium text-[#4f46e5] transition hover:bg-[#e0e7ff] disabled:cursor-not-allowed disabled:opacity-60"
             type="button"
             :disabled="markingAllNotifications"
             @click="markAllNotificationsRead"
@@ -640,14 +722,14 @@ onMounted(loadDashboard);
         <div
           v-for="item in 3"
           :key="item"
-          class="h-16 animate-pulse rounded-2xl bg-[#f0ede8]"
+          class="h-16 animate-pulse rounded-lg bg-[#f0ede8]"
         />
       </div>
       <div v-else-if="notifications.length > 0" class="space-y-1 p-4">
         <button
           v-for="item in notifications"
           :key="item.notificationId"
-          class="flex w-full gap-3 rounded-2xl p-3 text-left transition hover:bg-[#f8f7f4] disabled:cursor-wait disabled:opacity-75"
+          class="flex min-w-0 w-full gap-3 rounded-lg p-3 text-left transition hover:bg-[#f8f7f4] disabled:cursor-wait disabled:opacity-75"
           :class="!item.isRead ? 'bg-[#f5f7ff]' : ''"
           type="button"
           :disabled="markingNotificationIds.has(item.notificationId)"
@@ -686,7 +768,9 @@ onMounted(loadDashboard);
         </button>
       </div>
       <div v-else class="p-4">
-        <div class="rounded-2xl bg-[#fbfaf8] p-4 text-sm text-[#7a7385]">
+        <div
+          class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm text-[#7a7385]"
+        >
           Belum ada notifikasi terbaru.
         </div>
       </div>
