@@ -38,7 +38,7 @@ onMounted(loadSubjects);
 <template>
   <main class="min-h-screen min-w-0 flex-1 overflow-x-hidden bg-[#f8f7f4]">
     <header class="border-b border-[#ebe7df] bg-white">
-      <div class="px-5 py-4 sm:px-6 lg:px-8">
+      <div class="px-5 py-5 sm:px-6 lg:px-8">
         <h1 class="text-xl font-medium text-[#171322] sm:text-2xl">
           Mata Pelajaran yang Diajar
         </h1>
@@ -52,10 +52,7 @@ onMounted(loadSubjects);
     <section
       class="mx-auto max-w-screen min-w-0 px-5 py-5 sm:px-6 lg:px-8 lg:py-6"
     >
-      <section
-        v-if="loading"
-        class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
-      >
+      <section v-if="loading" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <div
           v-for="item in 6"
           :key="item"
@@ -128,102 +125,102 @@ onMounted(loadSubjects);
         </div>
 
         <div class="grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <RouterLink
-          v-for="subject in subjects"
-          :key="subject.subjectClassId"
-          :to="`/teacher/subjects/${subject.subjectClassId}`"
-          class="group min-w-0 overflow-hidden rounded-xl border border-[#ebe7df] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
-        >
-          <div
-            class="h-1.5 w-full"
-            :style="{
-              backgroundColor: getSubjectColor(
-                subject.subjectClassId ||
-                  subject.subjectName ||
-                  subject.subjectCode,
-              ),
-            }"
-          />
-          <div class="p-4 sm:p-5">
-            <div class="flex min-w-0 items-start gap-3">
-              <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white"
-                :style="{
-                  backgroundColor: getSubjectColor(
-                    subject.subjectClassId ||
-                      subject.subjectName ||
-                      subject.subjectCode,
-                  ),
-                }"
-              >
-                <PhBookOpen :size="20" weight="duotone" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-xs text-[#7a7385]">
-                  {{ subject.className || subject.classCode || "Kelas" }}
-                </p>
-                <h2
-                  class="mt-1 line-clamp-2 wrap-break-word text-base font-medium text-[#171322]"
+          <RouterLink
+            v-for="subject in subjects"
+            :key="subject.subjectClassId"
+            :to="`/teacher/subjects/${subject.subjectClassId}`"
+            class="group min-w-0 overflow-hidden rounded-xl border border-[#ebe7df] bg-white transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(66,55,40,0.08)]"
+          >
+            <div
+              class="h-1.5 w-full"
+              :style="{
+                backgroundColor: getSubjectColor(
+                  subject.subjectClassId ||
+                    subject.subjectName ||
+                    subject.subjectCode,
+                ),
+              }"
+            />
+            <div class="p-4 sm:p-5">
+              <div class="flex min-w-0 items-start gap-3">
+                <div
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-white"
+                  :style="{
+                    backgroundColor: getSubjectColor(
+                      subject.subjectClassId ||
+                        subject.subjectName ||
+                        subject.subjectCode,
+                    ),
+                  }"
                 >
-                  {{ subject.subjectName || "Mata pelajaran" }}
-                </h2>
-                <p
-                  v-if="subject.subjectCode || subject.classCode"
-                  class="mt-1 truncate text-xs text-[#8a8494]"
-                >
-                  {{
-                    [subject.subjectCode, subject.classCode]
-                      .filter(Boolean)
-                      .join(" · ")
-                  }}
-                </p>
+                  <PhBookOpen :size="20" weight="duotone" />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-xs text-[#7a7385]">
+                    {{ subject.className || subject.classCode || "Kelas" }}
+                  </p>
+                  <h2
+                    class="mt-1 line-clamp-2 wrap-break-word text-base font-medium text-[#171322]"
+                  >
+                    {{ subject.subjectName || "Mata pelajaran" }}
+                  </h2>
+                  <p
+                    v-if="subject.subjectCode || subject.classCode"
+                    class="mt-1 truncate text-xs text-[#8a8494]"
+                  >
+                    {{
+                      [subject.subjectCode, subject.classCode]
+                        .filter(Boolean)
+                        .join(" · ")
+                    }}
+                  </p>
+                </div>
+                <PhArrowRight
+                  :size="17"
+                  class="mt-1 shrink-0 text-[#a09aa8] transition group-hover:translate-x-0.5 group-hover:text-[#4f46e5]"
+                />
               </div>
-              <PhArrowRight
-                :size="17"
-                class="mt-1 shrink-0 text-[#a09aa8] transition group-hover:translate-x-0.5 group-hover:text-[#4f46e5]"
-              />
-            </div>
 
-            <dl class="mt-4 grid grid-cols-2 gap-2 text-xs">
-              <div class="rounded-lg bg-[#fbfaf8] p-3">
-                <dt class="flex items-center gap-1.5 text-[#8a8494]">
-                  <PhUsersThree :size="15" weight="duotone" />
-                  Siswa
-                </dt>
-                <dd class="mt-1 text-base font-medium text-[#171322]">
-                  {{ subject.studentCount }}
-                </dd>
-              </div>
-              <div class="rounded-lg bg-[#fbfaf8] p-3">
-                <dt class="flex items-center gap-1.5 text-[#8a8494]">
-                  <PhFileText :size="15" weight="duotone" />
-                  Materi
-                </dt>
-                <dd class="mt-1 text-base font-medium text-[#171322]">
-                  {{ subject.materialCount }}
-                </dd>
-              </div>
-              <div class="rounded-lg bg-[#fbfaf8] p-3">
-                <dt class="flex items-center gap-1.5 text-[#8a8494]">
-                  <PhClipboardText :size="15" weight="duotone" />
-                  Tugas
-                </dt>
-                <dd class="mt-1 text-base font-medium text-[#171322]">
-                  {{ subject.assignmentCount }}
-                </dd>
-              </div>
-              <div class="rounded-lg bg-[#fff7ed] p-3">
-                <dt class="flex items-center gap-1.5 text-[#b45309]">
-                  <PhWarningCircle :size="15" weight="duotone" />
-                  Perlu dinilai
-                </dt>
-                <dd class="mt-1 text-base font-medium text-[#b45309]">
-                  {{ subject.pendingSubmissions }}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        </RouterLink>
+              <dl class="mt-4 grid grid-cols-2 gap-2 text-xs">
+                <div class="rounded-lg bg-[#fbfaf8] p-3">
+                  <dt class="flex items-center gap-1.5 text-[#8a8494]">
+                    <PhUsersThree :size="15" weight="duotone" />
+                    Siswa
+                  </dt>
+                  <dd class="mt-1 text-base font-medium text-[#171322]">
+                    {{ subject.studentCount }}
+                  </dd>
+                </div>
+                <div class="rounded-lg bg-[#fbfaf8] p-3">
+                  <dt class="flex items-center gap-1.5 text-[#8a8494]">
+                    <PhFileText :size="15" weight="duotone" />
+                    Materi
+                  </dt>
+                  <dd class="mt-1 text-base font-medium text-[#171322]">
+                    {{ subject.materialCount }}
+                  </dd>
+                </div>
+                <div class="rounded-lg bg-[#fbfaf8] p-3">
+                  <dt class="flex items-center gap-1.5 text-[#8a8494]">
+                    <PhClipboardText :size="15" weight="duotone" />
+                    Tugas
+                  </dt>
+                  <dd class="mt-1 text-base font-medium text-[#171322]">
+                    {{ subject.assignmentCount }}
+                  </dd>
+                </div>
+                <div class="rounded-lg bg-[#fff7ed] p-3">
+                  <dt class="flex items-center gap-1.5 text-[#b45309]">
+                    <PhWarningCircle :size="15" weight="duotone" />
+                    Perlu dinilai
+                  </dt>
+                  <dd class="mt-1 text-base font-medium text-[#b45309]">
+                    {{ subject.pendingSubmissions }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </RouterLink>
         </div>
       </section>
     </section>

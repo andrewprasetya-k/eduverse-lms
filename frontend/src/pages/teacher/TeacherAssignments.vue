@@ -153,7 +153,7 @@ onMounted(loadAssignments);
 <template>
   <main class="min-h-screen min-w-0 flex-1 overflow-x-hidden bg-[#f8f7f4]">
     <header class="border-b border-[#ebe7df] bg-white">
-      <div class="px-5 py-4 sm:px-6 lg:px-8">
+      <div class="px-5 py-5 sm:px-6 lg:px-8">
         <h1 class="text-xl font-medium text-[#171322] sm:text-2xl">
           Tugas Saya
         </h1>
