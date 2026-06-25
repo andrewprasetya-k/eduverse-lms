@@ -180,7 +180,7 @@ async function handleSubmit() {
   <main class="min-h-screen min-w-0 flex-1 bg-[#f8f7f4]">
     <header class="border-b border-[#ebe7df] bg-white">
       <div
-        class="flex min-w-0 items-center gap-2 px-5 py-3 text-xs text-[#6b7280] sm:px-6 lg:px-8"
+        class="flex min-w-0 items-center gap-2 px-5 py-5 text-xs text-[#6b7280] sm:px-6 lg:px-8"
       >
         <RouterLink
           class="inline-flex shrink-0 items-center gap-1.5 transition hover:text-[#4f46e5]"
@@ -377,9 +377,6 @@ async function handleSubmit() {
             <div>
               <p class="text-sm font-medium text-[#171322]">
                 Pengumpulan tugas
-              </p>
-              <p class="mt-1 text-xs leading-5 text-[#7a7385]">
-                File dan status pengumpulanmu.
               </p>
             </div>
             <span
