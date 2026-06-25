@@ -285,8 +285,8 @@ onMounted(loadAssignments);
               Belum ada tugas
             </h2>
             <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#7a7385]">
-              Tugas akan tampil setelah teacher menerbitkan assignment pada
-              subject class dari kelas aktifmu.
+              Tugas akan tampil setelah guru menerbitkan tugas pada mata
+              pelajaran di kelas aktifmu.
             </p>
           </div>
 
@@ -318,7 +318,7 @@ onMounted(loadAssignments);
                     <span
                       class="rounded-full bg-[#eef2ff] px-3 py-1.5 text-[#4f46e5]"
                     >
-                      {{ item.subjectName || "Subject" }}
+                      {{ item.subjectName || "Mata pelajaran" }}
                     </span>
                     <span
                       v-if="item.subjectCode"

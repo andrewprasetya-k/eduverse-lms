@@ -349,7 +349,8 @@ onMounted(loadDashboard);
           Selamat datang, {{ firstName }}
         </h1>
         <p class="text-sm text-[#7a7385]">
-          Ruang belajar hari ini mengikuti kelas aktif dan subject di dalamnya.
+          Ruang belajar hari ini mengikuti kelas aktif dan mata pelajaran di
+          dalamnya.
         </p>
       </header>
 
@@ -398,18 +399,20 @@ onMounted(loadDashboard);
       >
         <p class="text-sm font-medium text-[#171322]">Belum ada kelas aktif</p>
         <p class="mt-2 text-sm text-[#7a7385]">
-          Kelas akan muncul setelah akunmu terdaftar sebagai member kelas di
+          Kelas akan muncul setelah akunmu terdaftar sebagai anggota kelas di
           sekolah aktif.
         </p>
       </section>
 
       <section v-else class="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <article class="soft-card rounded-[22px] p-5 pl-0">
+        <article class="soft-card rounded-[22px] p-5">
           <div class="mb-5 flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-[#171322]">List subject</p>
+              <p class="text-sm font-medium text-[#171322]">
+                Daftar mata pelajaran
+              </p>
               <p class="mt-1 text-xs text-[#8b8592]">
-                Buka subject untuk melihat materi dan tugas.
+                Buka mata pelajaran untuk melihat materi dan tugas.
               </p>
             </div>
             <RouterLink
@@ -440,7 +443,11 @@ onMounted(loadDashboard);
                 <PhBookOpen :size="21" weight="duotone" />
               </div>
               <p class="text-sm font-medium text-[#171322]">
-                {{ subject.subjectName || subject.subjectCode || "Subject" }}
+                {{
+                  subject.subjectName ||
+                  subject.subjectCode ||
+                  "Mata pelajaran"
+                }}
               </p>
               <p class="mt-2 text-xs leading-5 text-[#7a7385]">
                 {{ subject.teacherName || "Guru belum tersedia" }}
@@ -448,15 +455,17 @@ onMounted(loadDashboard);
             </RouterLink>
           </div>
 
-          <div v-else class="rounded-2xl bg-[#fbfaf8] p-5 pl-0">
-            <p class="text-sm font-medium text-[#171322]">Belum ada subject</p>
+          <div v-else class="rounded-2xl bg-[#fbfaf8] p-5">
+            <p class="text-sm font-medium text-[#171322]">
+              Belum ada mata pelajaran
+            </p>
             <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-              Subject akan tampil setelah kelas aktif memiliki subject class.
+              Mata pelajaran akan tampil setelah tersedia pada kelas aktif.
             </p>
           </div>
         </article>
 
-        <article class="soft-card rounded-[22px] p-5 pl-0">
+        <article class="soft-card rounded-[22px] p-5">
           <div class="mb-5 flex items-center justify-between gap-3">
             <div class="flex min-w-0 items-start gap-3">
               <div
@@ -467,7 +476,7 @@ onMounted(loadDashboard);
               <div class="min-w-0">
                 <p class="text-sm font-medium text-[#171322]">Tugas Saya</p>
                 <p class="mt-1 text-xs text-[#8b8592]">
-                  Lihat tugas dari subject yang kamu ikuti.
+                  Lihat tugas dari mata pelajaran yang kamu ikuti.
                 </p>
               </div>
             </div>
@@ -500,8 +509,8 @@ onMounted(loadDashboard);
           >
             <p class="text-sm font-medium text-[#171322]">Belum ada tugas</p>
             <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-              Tugas akan muncul setelah guru membuat tugas untuk subject di
-              kelasmu.
+              Tugas akan muncul setelah guru membuat tugas untuk mata pelajaran
+              di kelasmu.
             </p>
           </div>
 
@@ -534,7 +543,7 @@ onMounted(loadDashboard);
               <div
                 class="mt-3 flex items-center justify-between gap-3 text-xs text-[#8b8592]"
               >
-                <span>Deadline {{ formatDate(assignment.deadline) }}</span>
+                <span>Tenggat {{ formatDate(assignment.deadline) }}</span>
                 <PhArrowRight :size="14" class="shrink-0 text-[#4f46e5]" />
               </div>
             </RouterLink>
@@ -558,11 +567,11 @@ onMounted(loadDashboard);
             <article
               v-for="post in feedPosts.slice(0, 3)"
               :key="post.feedId"
-              class="rounded-2xl bg-[#fbfaf8] p-5 pl-0"
+              class="rounded-2xl bg-[#fbfaf8] p-5"
             >
               <p class="text-sm leading-6 text-[#3f3a4a]">{{ post.content }}</p>
               <p class="mt-2 text-xs text-[#a09aa8]">
-                {{ post.creatorName || "Creator tidak tersedia" }} ·
+                {{ post.creatorName || "Pengirim tidak tersedia" }} ·
                 {{ formatDateTime(post.createdAt) }}
               </p>
             </article>
@@ -572,15 +581,15 @@ onMounted(loadDashboard);
             v-else
             class="rounded-2xl bg-[#fbfaf8] p-5 text-sm leading-6 text-[#7a7385]"
           >
-            Belum ada posting feed untuk kelas aktif.
+            Belum ada pengumuman untuk kelas aktif.
           </p>
         </article>
 
-        <article class="soft-card rounded-[22px] p-5 pl-0 opacity-90">
-          <p class="text-sm font-medium text-[#171322]">Fitur berikutnya</p>
+        <article class="soft-card rounded-[22px] p-5 opacity-90">
+          <p class="text-sm font-medium text-[#171322]">Komunikasi kelas</p>
           <p class="mt-1 text-xs text-[#8b8592]">
-            Chat tetap terlihat sebagai rencana setelah MVP sekolah. Catatan
-            materi sudah tersedia dari halaman subject dan materi.
+            Chat belum aktif. Untuk saat ini, gunakan Feed kelas untuk mengikuti
+            pengumuman.
           </p>
           <div class="mt-4 space-y-3">
             <div class="flex gap-3 rounded-2xl bg-[#eef2ff] p-4">
@@ -589,8 +598,8 @@ onMounted(loadDashboard);
                 class="mt-0.5 shrink-0 text-[#4f46e5]"
               />
               <p class="text-sm leading-6 text-[#6b6475]">
-                Chat direncanakan untuk komunikasi kelas dan subject. Saat ini
-                Feed kelas menjadi kanal pengumuman.
+                Feed kelas menjadi kanal pengumuman dan diskusi ringan bersama
+                guru.
               </p>
             </div>
           </div>

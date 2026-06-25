@@ -83,32 +83,34 @@ onMounted(loadSubjects);
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 bg-[#f8f7f4]">
+  <main class="min-h-screen min-w-0 flex-1 bg-[#f8f7f4]">
     <section
       class="border-b border-[#ebe7df] bg-white px-5 py-3 sm:px-6 lg:px-8"
     >
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <span class="text-xs text-[#9a95a3]">Kelas aktif:</span>
+      <div class="flex min-w-0 flex-wrap items-center justify-between gap-3">
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <span class="shrink-0 text-xs text-[#9a95a3]">Kelas aktif:</span>
           <div
-            class="flex items-center gap-2 rounded-xl border border-[#ebe7df] bg-[#f9fafb] px-3 py-2"
+            class="flex min-w-0 max-w-full items-center gap-2 rounded-xl border border-[#ebe7df] bg-[#f9fafb] px-3 py-2"
           >
             <div
               class="flex h-5 w-5 items-center justify-center rounded-md bg-[#4f46e5] text-[10px] text-white"
             >
               {{ activeClass?.classTitle?.slice(0, 2).toUpperCase() || "EV" }}
             </div>
-            <div>
-              <p class="text-xs font-medium text-[#171322]">
+            <div class="min-w-0">
+              <p class="truncate text-xs font-medium text-[#171322]">
                 {{ activeClass?.classTitle || "Belum ada kelas aktif" }}
               </p>
-              <p class="text-[11px] text-[#7a7385]">{{ schoolName }}</p>
+              <p class="truncate text-[11px] text-[#7a7385]">
+                {{ schoolName }}
+              </p>
             </div>
-            <PhCaretDown :size="14" class="text-[#a09aa8]" />
+            <PhCaretDown :size="14" class="shrink-0 text-[#a09aa8]" />
           </div>
           <select
             v-if="classes.length > 1"
-            class="rounded-xl border border-[#ebe7df] bg-white px-3 py-2 text-xs text-[#3f3a4a] outline-none transition focus:border-[#4f46e5]"
+            class="min-w-0 max-w-full rounded-xl border border-[#ebe7df] bg-white px-3 py-2 text-xs text-[#3f3a4a] outline-none transition focus:border-[#4f46e5]"
             :value="activeClassStore.activeClassId ?? ''"
             @change="
               changeActiveClass(($event.target as HTMLSelectElement).value)
@@ -141,7 +143,7 @@ onMounted(loadSubjects);
             Mata pelajaran
           </h1>
           <p class="mt-1 text-sm text-[#7a7385]">
-            {{ subjects.length }} subject class tersedia
+            {{ subjects.length }} mata pelajaran tersedia
             <span v-if="activeClass?.classTitle">
               · {{ activeClass.classTitle }}</span
             >
@@ -208,7 +210,7 @@ onMounted(loadSubjects);
           <PhBooks :size="24" weight="duotone" />
         </div>
         <p class="text-sm font-medium text-[#171322]">
-          Subject class belum tersedia
+          Mata pelajaran belum tersedia
         </p>
         <p class="mt-2 text-sm leading-6 text-[#7a7385]">
           Kelas aktif belum memiliki mata pelajaran yang bisa ditampilkan.
@@ -236,7 +238,7 @@ onMounted(loadSubjects);
                 ),
               }"
             >
-              <span class="text-base font-medium">
+              <span class="wrap-break-word text-base font-medium">
                 {{
                   subject.subjectName || subject.subjectCode || "Mata pelajaran"
                 }}
