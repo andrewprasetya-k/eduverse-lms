@@ -4,12 +4,15 @@ import { RouterLink } from "vue-router";
 import {
   PhArrowRight,
   PhBookOpen,
+  PhClock,
+  PhFileText,
   PhNotebook,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import { getStudentNotes } from "../../services/studentNotes";
 import type { StudentGlobalMaterialNote } from "../../types/studentNotes";
 import { formatDateTime } from "../../utils/date";
+import { getSubjectColor } from "../../utils/color";
 
 interface NoteGroup {
   key: string;
@@ -22,21 +25,32 @@ interface NoteGroup {
 }
 
 const notes = ref<StudentGlobalMaterialNote[]>([]);
+const selectedNoteId = ref("");
 const isLoading = ref(true);
 const errorMessage = ref("");
+
+const sortedNotes = computed(() =>
+  [...notes.value].sort(
+    (a, b) => getTime(b.updatedAt) - getTime(a.updatedAt),
+  ),
+);
+
+const selectedNote = computed(
+  () =>
+    notes.value.find((note) => note.noteId === selectedNoteId.value) ??
+    sortedNotes.value[0] ??
+    null,
+);
 
 const groupedNotes = computed<NoteGroup[]>(() => {
   const groups = new Map<string, NoteGroup>();
 
-  for (const note of notes.value) {
+  for (const note of sortedNotes.value) {
     const key = `${note.classId}:${note.subjectId}`;
     const existing = groups.get(key);
 
     if (existing) {
       existing.notes.push(note);
-      if (getTime(note.updatedAt) > getTime(existing.latestUpdatedAt)) {
-        existing.latestUpdatedAt = note.updatedAt;
-      }
       continue;
     }
 
@@ -51,16 +65,9 @@ const groupedNotes = computed<NoteGroup[]>(() => {
     });
   }
 
-  return [...groups.values()]
-    .map((group) => ({
-      ...group,
-      notes: [...group.notes].sort(
-        (a, b) => getTime(b.updatedAt) - getTime(a.updatedAt),
-      ),
-    }))
-    .sort(
-      (a, b) => getTime(b.latestUpdatedAt) - getTime(a.latestUpdatedAt),
-    );
+  return [...groups.values()].sort(
+    (a, b) => getTime(b.latestUpdatedAt) - getTime(a.latestUpdatedAt),
+  );
 });
 
 async function loadNotes() {
@@ -70,6 +77,16 @@ async function loadNotes() {
   try {
     const response = await getStudentNotes();
     notes.value = response.notes;
+
+    const selectedStillExists = response.notes.some(
+      (note) => note.noteId === selectedNoteId.value,
+    );
+    if (!selectedStillExists) {
+      selectedNoteId.value =
+        [...response.notes].sort(
+          (a, b) => getTime(b.updatedAt) - getTime(a.updatedAt),
+        )[0]?.noteId ?? "";
+    }
   } catch {
     errorMessage.value =
       "Catatan belum bisa dimuat. Periksa koneksi atau coba lagi nanti.";
@@ -78,171 +95,298 @@ async function loadNotes() {
   }
 }
 
+function selectNote(noteId: string) {
+  selectedNoteId.value = noteId;
+}
+
 function getTime(value?: string | null) {
   if (!value) return 0;
   const time = new Date(value).getTime();
   return Number.isNaN(time) ? 0 : time;
 }
 
+function groupLabel(group: NoteGroup) {
+  const subject = group.subjectCode
+    ? `${group.subjectName} · ${group.subjectCode}`
+    : group.subjectName;
+  const className = group.classCode
+    ? `${group.className} · ${group.classCode}`
+    : group.className;
+  return `${subject || "Mata pelajaran"} — ${className || "Kelas"}`;
+}
+
 onMounted(loadNotes);
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-6 sm:px-8 lg:px-10">
-    <header class="mb-6">
-      <p class="text-sm font-medium text-[#4f46e5]">Ruang belajar pribadi</p>
-      <h1 class="mt-2 text-3xl font-medium text-[#171322]">Catatan Saya</h1>
-      <p class="mt-2 max-w-2xl text-sm leading-6 text-[#6b6475]">
-        Kumpulan catatan dari materi yang masih dapat kamu akses di sekolah
-        aktif.
-      </p>
+  <main class="min-h-screen min-w-0 flex-1 bg-[#f8f7f4]">
+    <header class="border-b border-[#ebe7df] bg-white px-5 py-4 sm:px-6 lg:px-8">
+      <div
+        class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wide text-[#9ca3af]">
+            Ruang belajar pribadi
+          </p>
+          <h1 class="mt-1 text-2xl font-medium text-[#171322]">
+            Catatan Saya
+          </h1>
+          <p class="mt-1 text-sm leading-6 text-[#6b6475]">
+            Baca kembali catatan materi yang masih tersedia di kelas aktifmu.
+          </p>
+        </div>
+        <p
+          v-if="!isLoading && !errorMessage"
+          class="text-xs text-[#9ca3af]"
+        >
+          {{ notes.length }} catatan tersimpan
+        </p>
+      </div>
     </header>
 
-    <section v-if="isLoading" class="space-y-5">
+    <section
+      v-if="isLoading"
+      class="grid min-h-[calc(100vh-116px)] lg:grid-cols-[300px_minmax(0,1fr)]"
+    >
+      <div class="border-r border-[#ebe7df] bg-white p-4">
+        <div class="h-5 w-28 animate-pulse rounded bg-[#f1efeb]" />
+        <div class="mt-5 space-y-3">
+          <div
+            v-for="item in 5"
+            :key="item"
+            class="h-24 animate-pulse rounded-xl bg-[#f8f7f4]"
+          />
+        </div>
+      </div>
+      <div class="p-5 sm:p-6 lg:p-8">
+        <div
+          class="mx-auto h-full min-h-120 max-w-4xl animate-pulse rounded-[22px] border border-[#ebe7df] bg-white"
+        />
+      </div>
+    </section>
+
+    <section
+      v-else-if="errorMessage"
+      class="flex min-h-[calc(100vh-116px)] items-center justify-center px-5 py-10"
+    >
       <article
-        v-for="item in 3"
-        :key="item"
-        class="animate-pulse rounded-[18px] border border-[#ebe7df] bg-white p-5"
+        class="w-full max-w-xl rounded-[22px] border border-[#f1d6d3] bg-white p-6"
       >
-        <div class="h-5 w-48 rounded bg-[#f1efeb]" />
-        <div class="mt-3 h-4 w-32 rounded bg-[#f1efeb]" />
-        <div class="mt-5 grid gap-3 lg:grid-cols-2">
-          <div class="h-40 rounded-xl bg-[#f8f7f4]" />
-          <div class="h-40 rounded-xl bg-[#f8f7f4]" />
+        <div class="flex items-start gap-3">
+          <PhWarningCircle
+            :size="24"
+            class="mt-0.5 shrink-0 text-[#dc2626]"
+            weight="duotone"
+          />
+          <div>
+            <h2 class="text-base font-medium text-[#171322]">
+              Catatan tidak dapat dimuat
+            </h2>
+            <p class="mt-1 text-sm leading-6 text-[#6b6475]">
+              {{ errorMessage }}
+            </p>
+            <button
+              class="mt-4 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+              type="button"
+              @click="loadNotes"
+            >
+              Coba lagi
+            </button>
+          </div>
         </div>
       </article>
     </section>
 
     <section
-      v-else-if="errorMessage"
-      class="rounded-[18px] border border-[#f1d6d3] bg-white p-6"
+      v-else-if="notes.length === 0"
+      class="flex min-h-[calc(100vh-116px)] items-center justify-center px-5 py-10"
     >
-      <div class="flex items-start gap-3">
-        <PhWarningCircle
-          :size="24"
-          class="mt-0.5 shrink-0 text-[#dc2626]"
-          weight="duotone"
-        />
-        <div>
-          <h2 class="text-base font-medium text-[#171322]">
-            Catatan tidak dapat dimuat
-          </h2>
-          <p class="mt-1 text-sm leading-6 text-[#6b6475]">
-            {{ errorMessage }}
-          </p>
-          <button
-            class="mt-4 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
-            type="button"
-            @click="loadNotes"
-          >
-            Coba lagi
-          </button>
+      <article
+        class="w-full max-w-xl rounded-[22px] border border-[#ebe7df] bg-white p-8 text-center"
+      >
+        <div
+          class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
+        >
+          <PhNotebook :size="24" weight="duotone" />
         </div>
-      </div>
+        <h2 class="mt-4 text-base font-medium text-[#171322]">
+          Belum ada catatan
+        </h2>
+        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-[#6b6475]">
+          Belum ada catatan. Buka materi dan tulis catatan untuk mulai
+          membangun ruang belajarmu.
+        </p>
+        <RouterLink
+          class="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+          to="/student/subjects"
+        >
+          Buka mata pelajaran
+          <PhArrowRight :size="16" />
+        </RouterLink>
+      </article>
     </section>
 
     <section
-      v-else-if="notes.length === 0"
-      class="rounded-[18px] border border-[#ebe7df] bg-white p-8 text-center"
+      v-else
+      class="grid min-h-[calc(100vh-116px)] lg:h-[calc(100vh-116px)] lg:grid-cols-[300px_minmax(0,1fr)] lg:overflow-hidden"
     >
-      <div
-        class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
+      <aside
+        class="min-w-0 border-b border-[#ebe7df] bg-white lg:border-b-0 lg:border-r"
       >
-        <PhNotebook :size="24" weight="duotone" />
-      </div>
-      <h2 class="mt-4 text-base font-medium text-[#171322]">
-        Belum ada catatan
-      </h2>
-      <p class="mx-auto mt-2 max-w-lg text-sm leading-6 text-[#6b6475]">
-        Belum ada catatan. Buka materi dan tulis catatan untuk mulai membangun
-        ruang belajarmu.
-      </p>
-      <RouterLink
-        class="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
-        to="/student/subjects"
-      >
-        Buka mata pelajaran
-        <PhArrowRight :size="16" />
-      </RouterLink>
-    </section>
-
-    <section v-else class="space-y-5">
-      <section
-        v-for="group in groupedNotes"
-        :key="group.key"
-        class="border-b border-[#ebe7df] pb-6 last:border-b-0"
-      >
-        <header
-          class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
+        <div
+          class="flex items-center justify-between border-b border-[#ebe7df] px-4 py-3"
         >
-          <div>
-            <div class="flex flex-wrap items-center gap-2">
-              <h2 class="text-base font-medium text-[#171322]">
-                {{ group.subjectName || "Mata pelajaran" }}
-              </h2>
-              <span
-                v-if="group.subjectCode"
-                class="rounded-full bg-[#eef2ff] px-2.5 py-1 text-xs font-medium text-[#4f46e5]"
+          <p class="text-sm font-medium text-[#171322]">Semua catatan</p>
+          <span class="text-xs text-[#9ca3af]">{{ notes.length }}</span>
+        </div>
+
+        <div
+          class="max-h-[46vh] overflow-y-auto p-3 lg:h-[calc(100%-49px)] lg:max-h-none"
+        >
+          <section
+            v-for="group in groupedNotes"
+            :key="group.key"
+            class="mb-4 last:mb-0"
+          >
+            <p
+              class="px-2 pb-2 text-[10px] font-medium uppercase tracking-wide text-[#9ca3af]"
+              :title="groupLabel(group)"
+            >
+              {{ group.subjectName || "Mata pelajaran" }}
+              <span v-if="group.className"> · {{ group.className }}</span>
+            </p>
+
+            <div class="space-y-1">
+              <button
+                v-for="note in group.notes"
+                :key="note.noteId"
+                class="w-full rounded-xl p-3 text-left transition"
+                :class="
+                  selectedNote?.noteId === note.noteId
+                    ? 'bg-[#eef2ff]'
+                    : 'hover:bg-[#f8f7f4]'
+                "
+                type="button"
+                @click="selectNote(note.noteId)"
               >
-                {{ group.subjectCode }}
-              </span>
+                <div class="flex items-center gap-2">
+                  <span
+                    class="h-2 w-2 shrink-0 rounded-full"
+                    :style="{
+                      backgroundColor: getSubjectColor(
+                        note.subjectName || note.subjectCode,
+                      ),
+                    }"
+                  />
+                  <span class="truncate text-xs text-[#6b6475]">
+                    {{ note.subjectName || "Mata pelajaran" }}
+                  </span>
+                </div>
+                <p class="mt-2 truncate text-sm font-medium text-[#171322]">
+                  {{ note.materialTitle }}
+                </p>
+                <p
+                  class="mt-1 truncate whitespace-pre-line text-xs text-[#9ca3af]"
+                >
+                  {{ note.content }}
+                </p>
+                <p class="mt-2 text-[10px] text-[#b0aab7]">
+                  {{ formatDateTime(note.updatedAt) }}
+                </p>
+              </button>
             </div>
-            <p class="mt-1 text-sm text-[#6b6475]">
-              {{ group.className || "Kelas" }}
-              <span v-if="group.classCode">· {{ group.classCode }}</span>
+          </section>
+        </div>
+      </aside>
+
+      <article
+        v-if="selectedNote"
+        class="min-w-0 bg-[#fbfaf8] p-4 sm:p-6 lg:overflow-y-auto lg:p-8"
+      >
+        <div class="mx-auto flex min-h-full w-full max-w-4xl flex-col">
+          <header
+            class="flex flex-col gap-4 border-b border-[#ebe7df] pb-5 sm:flex-row sm:items-start sm:justify-between"
+          >
+            <div class="min-w-0">
+              <div
+                class="flex flex-wrap items-center gap-2 text-xs text-[#7a7385]"
+              >
+                <span>{{ selectedNote.subjectName || "Mata pelajaran" }}</span>
+                <span class="text-[#d1ccd5]">/</span>
+                <span>{{ selectedNote.className || "Kelas" }}</span>
+              </div>
+              <h2
+                class="mt-3 wrap-break-word text-2xl font-medium text-[#171322]"
+              >
+                {{ selectedNote.materialTitle }}
+              </h2>
+              <p class="mt-2 inline-flex items-center gap-2 text-xs text-[#9ca3af]">
+                <PhClock :size="14" />
+                Diperbarui {{ formatDateTime(selectedNote.updatedAt) }}
+              </p>
+            </div>
+
+            <RouterLink
+              class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#4f46e5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+              :to="`/student/subjects/${selectedNote.subjectClassId}/materials/${selectedNote.materialId}/note`"
+            >
+              Buka catatan
+              <PhArrowRight :size="16" />
+            </RouterLink>
+          </header>
+
+          <RouterLink
+            class="mt-5 flex items-center gap-3 rounded-xl border border-[#dfe3ff] bg-[#eef2ff] p-4 transition hover:border-[#aeb8ff]"
+            :to="`/student/subjects/${selectedNote.subjectClassId}/materials/${selectedNote.materialId}`"
+          >
+            <span
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-[#4f46e5]"
+            >
+              <PhFileText :size="20" weight="duotone" />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-xs font-medium text-[#4f46e5]">
+                Materi terkait
+              </span>
+              <span class="mt-1 block truncate text-sm text-[#3f3a4a]">
+                {{ selectedNote.materialTitle }}
+                <template v-if="selectedNote.materialType">
+                  · {{ selectedNote.materialType.toUpperCase() }}
+                </template>
+              </span>
+            </span>
+            <PhArrowRight :size="16" class="shrink-0 text-[#4f46e5]" />
+          </RouterLink>
+
+          <div
+            class="mt-5 min-h-64 flex-1 rounded-[18px] border border-[#ebe7df] bg-white p-5 sm:p-6"
+          >
+            <p
+              class="whitespace-pre-wrap wrap-break-word text-sm leading-7 text-[#3f3a4a]"
+            >
+              {{ selectedNote.content }}
             </p>
           </div>
-          <p class="text-xs text-[#9ca3af]">
-            {{ group.notes.length }} catatan
-          </p>
-        </header>
 
-        <div class="mt-4 grid gap-3 lg:grid-cols-2">
-          <article
-            v-for="note in group.notes"
-            :key="note.noteId"
-            class="flex min-w-0 flex-col rounded-xl border border-[#ebe7df] bg-white p-4"
+          <footer
+            class="mt-4 flex flex-col gap-3 text-xs text-[#9ca3af] sm:flex-row sm:items-center sm:justify-between"
           >
-            <div class="flex items-start gap-3">
-              <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-[#4f46e5]"
-              >
-                <PhBookOpen :size="20" weight="duotone" />
-              </div>
-              <div class="min-w-0">
-                <h3 class="text-sm font-medium text-[#171322]">
-                  {{ note.materialTitle }}
-                </h3>
-                <p class="mt-1 text-xs text-[#9ca3af]">
-                  Diperbarui {{ formatDateTime(note.updatedAt) }}
-                </p>
-              </div>
-            </div>
-
-            <p
-              class="mt-4 line-clamp-5 whitespace-pre-line break-words text-sm leading-6 text-[#4f4858]"
+            <span>
+              {{ selectedNote.subjectCode || selectedNote.subjectName }}
+              <template v-if="selectedNote.classCode">
+                · {{ selectedNote.classCode }}
+              </template>
+            </span>
+            <RouterLink
+              class="inline-flex items-center gap-2 font-medium text-[#4f46e5] transition hover:text-[#4338ca]"
+              :to="`/student/subjects/${selectedNote.subjectClassId}/materials/${selectedNote.materialId}`"
             >
-              {{ note.content }}
-            </p>
-
-            <div class="mt-auto flex flex-wrap gap-2 pt-5">
-              <RouterLink
-                class="rounded-lg border border-[#ddd8e4] px-3 py-2 text-xs font-medium text-[#6b6475] transition hover:bg-white"
-                :to="`/student/subjects/${note.subjectClassId}/materials/${note.materialId}`"
-              >
-                Lihat materi
-              </RouterLink>
-              <RouterLink
-                class="inline-flex items-center gap-2 rounded-lg bg-[#4f46e5] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#4338ca]"
-                :to="`/student/subjects/${note.subjectClassId}/materials/${note.materialId}/note`"
-              >
-                Buka catatan
-                <PhArrowRight :size="14" />
-              </RouterLink>
-            </div>
-          </article>
+              <PhBookOpen :size="15" />
+              Lihat materi
+            </RouterLink>
+          </footer>
         </div>
-      </section>
+      </article>
     </section>
   </main>
 </template>
