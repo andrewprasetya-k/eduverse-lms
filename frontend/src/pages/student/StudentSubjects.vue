@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import {
   PhArrowRight,
   PhBooks,
-  PhCaretDown,
   PhMegaphone,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
@@ -22,13 +21,7 @@ const subjects = ref<SubjectClassItem[]>([]);
 const isLoading = ref(true);
 const errorMessage = ref("");
 
-const activeMembership = computed(() => auth.activeMembership);
-
-const schoolName = computed(
-  () => activeMembership.value?.school.name ?? "Sekolah aktif",
-);
 const schoolUserId = computed(() => auth.activeSchoolUserId);
-const classes = computed(() => activeClassStore.classes);
 const activeClass = computed(() => activeClassStore.activeClass);
 
 async function loadSubjects() {
@@ -64,12 +57,6 @@ async function loadSubjects() {
   } finally {
     isLoading.value = false;
   }
-}
-
-async function changeActiveClass(classId: string) {
-  activeClassStore.setActiveClass(classId);
-  subjects.value = [];
-  await loadSubjects();
 }
 
 function openSubject(subject: SubjectClassItem) {
@@ -282,7 +269,9 @@ onMounted(loadSubjects);
                   ),
                 }"
               >
-                <span class="line-clamp-2 break-words text-base font-medium">
+                <span
+                  class="line-clamp-2 wrap-break-word text-base font-medium"
+                >
                   {{
                     subject.subjectName ||
                     subject.subjectCode ||
