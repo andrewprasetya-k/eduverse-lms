@@ -39,7 +39,7 @@ const filterTabs = computed(() => [
   { id: "all" as const, label: "Semua", count: inboxItems.value.length },
   {
     id: "pending" as const,
-    label: "Perlu review",
+    label: "Perlu dinilai",
     count: inboxItems.value.filter((item) => item.pendingCount > 0).length,
   },
   {
@@ -110,105 +110,140 @@ onMounted(loadInbox);
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
-    <section class="flex w-full max-w-none flex-col gap-5">
-      <header
-        class="rounded-[22px] bg-[#f0e9dd] px-5 py-5 shadow-sm ring-1 ring-black/5 md:px-6"
-      >
-        <p class="text-sm font-medium text-[#8a6d3b]">Pengumpulan siswa</p>
-        <h1 class="mt-3 text-3xl font-medium text-[#171322] md:text-4xl">
-          Inbox pengumpulan
-        </h1>
-        <p class="mt-3 max-w-2xl text-sm leading-6 text-[#6b6475]">
-          Pantau pengumpulan dari semua subject yang diajar. Proses nilai dan
-          feedback tetap dilakukan dari halaman review tugas.
+  <main class="min-h-screen min-w-0 flex-1 overflow-x-hidden bg-[#f8f7f4]">
+    <header class="border-b border-[#ebe7df] bg-white">
+      <div class="px-5 py-5 sm:px-6 lg:px-8">
+        <p class="text-xs font-medium uppercase tracking-wide text-[#7b61a8]">
+          Pengumpulan siswa
         </p>
-      </header>
+        <div
+          class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <div class="min-w-0">
+            <h1 class="text-2xl font-semibold text-[#171322] sm:text-3xl">
+              Inbox Pengumpulan
+            </h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-[#6b6475]">
+              Pantau pengumpulan dari semua mata pelajaran yang Anda ajar.
+              Penilaian dan umpan balik tetap dilakukan di halaman tinjau tugas.
+            </p>
+          </div>
+          <p class="shrink-0 text-sm text-[#8a8494]">
+            {{ inboxItems.length }} tugas
+          </p>
+        </div>
+      </div>
+    </header>
 
-      <section v-if="loading" class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5">
-        <p class="text-sm text-[#6b6475]">Memuat inbox pengumpulan...</p>
-      </section>
+    <section class="space-y-5 px-5 py-5 sm:px-6 lg:px-8">
+      <template v-if="loading">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div
+            v-for="index in 4"
+            :key="index"
+            class="h-28 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+          />
+        </section>
+        <section
+          class="h-56 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+        />
+      </template>
 
       <section
         v-else-if="errorMessage"
-        class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5"
+        class="rounded-xl border border-[#f0d8d2] bg-white px-5 py-8 text-center"
       >
-        <div
-          class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        <PhWarningCircle
+          :size="30"
+          class="mx-auto text-[#d97757]"
+          weight="duotone"
+        />
+        <h2 class="mt-3 text-lg font-semibold text-[#171322]">
+          Pengumpulan belum bisa dimuat
+        </h2>
+        <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#6b6475]">
+          {{ errorMessage }}
+        </p>
+        <button
+          type="button"
+          class="mt-5 inline-flex items-center justify-center rounded-lg bg-[#171322] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#2f2b3a]"
+          @click="loadInbox"
         >
-          <div class="flex items-start gap-3">
-            <PhWarningCircle
-              :size="24"
-              class="mt-0.5 text-[#e58f86]"
-              weight="duotone"
-            />
-            <div>
-              <h2 class="text-lg font-medium text-[#171322]">
-                Gagal memuat inbox
-              </h2>
-              <p class="mt-2 text-sm leading-6 text-[#6b6475]">
-                {{ errorMessage }}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            class="rounded-2xl bg-[#171322] px-4 py-3 text-sm font-medium text-white"
-            @click="loadInbox"
-          >
-            Coba lagi
-          </button>
-        </div>
+          Coba lagi
+        </button>
       </section>
 
       <template v-else>
-        <section class="grid gap-4 md:grid-cols-4">
-          <article class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <PhClipboardText :size="24" class="text-[#7aa7d9]" weight="duotone" />
-            <p class="mt-4 text-sm text-[#8a8494]">Total submission</p>
-            <p class="mt-1 text-2xl font-medium text-[#171322]">
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm text-[#6b6475]">Total pengumpulan</p>
+              <PhClipboardText
+                :size="21"
+                class="text-[#7aa7d9]"
+                weight="duotone"
+              />
+            </div>
+            <p class="mt-3 text-2xl font-semibold text-[#171322]">
               {{ summary.submissions }}
             </p>
           </article>
-          <article class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <PhWarningCircle :size="24" class="text-[#e58f86]" weight="duotone" />
-            <p class="mt-4 text-sm text-[#8a8494]">Perlu review</p>
-            <p class="mt-1 text-2xl font-medium text-[#171322]">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm text-[#6b6475]">Perlu dinilai</p>
+              <PhWarningCircle
+                :size="21"
+                class="text-[#e58f86]"
+                weight="duotone"
+              />
+            </div>
+            <p class="mt-3 text-2xl font-semibold text-[#171322]">
               {{ summary.pending }}
             </p>
           </article>
-          <article class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <PhCheckCircle :size="24" class="text-[#74bfa5]" weight="duotone" />
-            <p class="mt-4 text-sm text-[#8a8494]">Sudah dinilai</p>
-            <p class="mt-1 text-2xl font-medium text-[#171322]">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm text-[#6b6475]">Sudah dinilai</p>
+              <PhCheckCircle
+                :size="21"
+                class="text-[#74bfa5]"
+                weight="duotone"
+              />
+            </div>
+            <p class="mt-3 text-2xl font-semibold text-[#171322]">
               {{ summary.graded }}
             </p>
           </article>
-          <article class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5">
-            <PhClock :size="24" class="text-[#b889c9]" weight="duotone" />
-            <p class="mt-4 text-sm text-[#8a8494]">Terlambat</p>
-            <p class="mt-1 text-2xl font-medium text-[#171322]">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm text-[#6b6475]">Terlambat</p>
+              <PhClock :size="21" class="text-[#b889c9]" weight="duotone" />
+            </div>
+            <p class="mt-3 text-2xl font-semibold text-[#171322]">
               {{ summary.late }}
             </p>
           </article>
         </section>
 
-        <section class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5">
-          <div class="flex flex-col gap-4 border-b border-[#ece8df] pb-4 lg:flex-row lg:items-end lg:justify-between">
+        <section class="rounded-xl border border-[#ebe7df] bg-white">
+          <div
+            class="flex flex-col gap-4 border-b border-[#ebe7df] px-4 py-4 sm:px-5 lg:flex-row lg:items-end lg:justify-between"
+          >
             <div>
-              <p class="text-sm font-medium text-[#171322]">
-                Daftar assignment dengan pengumpulan
-              </p>
+              <h2 class="text-base font-semibold text-[#171322]">
+                Daftar tugas
+              </h2>
               <p class="mt-1 text-sm text-[#8a8494]">
-                {{ inboxItems.length }} assignment memiliki pengumpulan dalam school aktif.
+                {{ inboxItems.length }} tugas memiliki data pengumpulan di
+                sekolah aktif.
               </p>
             </div>
-            <div class="flex flex-wrap gap-2">
+            <div class="flex max-w-full gap-2 overflow-x-auto pb-1">
               <button
                 v-for="tab in filterTabs"
                 :key="tab.id"
                 type="button"
-                class="rounded-2xl px-4 py-2.5 text-sm font-medium transition"
+                class="shrink-0 rounded-lg px-3.5 py-2 text-sm font-medium transition"
                 :class="
                   activeFilter === tab.id
                     ? 'bg-[#171322] text-white'
@@ -217,73 +252,80 @@ onMounted(loadInbox);
                 @click="activeFilter = tab.id"
               >
                 {{ tab.label }}
-                <span class="ml-2 opacity-70">{{ tab.count }}</span>
+                <span class="ml-1.5 opacity-70">{{ tab.count }}</span>
               </button>
             </div>
           </div>
 
-          <div v-if="inboxItems.length === 0" class="py-10 text-center">
+          <div v-if="inboxItems.length === 0" class="px-5 py-12 text-center">
             <PhClipboardText
               :size="34"
               class="mx-auto text-[#b5afbf]"
               weight="duotone"
             />
-            <h2 class="mt-3 text-lg font-medium text-[#171322]">
+            <h2 class="mt-3 text-lg font-semibold text-[#171322]">
               Belum ada pengumpulan
             </h2>
             <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#6b6475]">
-              Pengumpulan akan tampil setelah siswa mengumpulkan tugas pada
-              subject yang kamu ajar.
+              Pengumpulan akan tampil setelah siswa mengumpulkan tugas pada mata
+              pelajaran yang Anda ajar.
             </p>
           </div>
 
-          <div v-else-if="filteredItems.length === 0" class="py-10 text-center">
+          <div
+            v-else-if="filteredItems.length === 0"
+            class="px-5 py-12 text-center"
+          >
             <PhCheckCircle
               :size="34"
               class="mx-auto text-[#b5afbf]"
               weight="duotone"
             />
-            <h2 class="mt-3 text-lg font-medium text-[#171322]">
-              Belum ada pengumpulan
+            <h2 class="mt-3 text-lg font-semibold text-[#171322]">
+              Tidak ada hasil
             </h2>
             <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#6b6475]">
-              Tidak ada assignment yang sesuai dengan filter saat ini.
+              Tidak ada tugas yang sesuai dengan filter saat ini.
             </p>
           </div>
 
-          <div v-else class="space-y-3 pt-5">
+          <div v-else class="divide-y divide-[#ebe7df]">
             <article
               v-for="item in filteredItems"
               :key="`${item.subjectClassId}-${item.assignmentId}`"
-              class="rounded-[18px] bg-[#faf8f4] p-5 ring-1 ring-black/5"
+              class="px-4 py-5 sm:px-5"
             >
-              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div
+                class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+              >
                 <div class="min-w-0">
                   <div class="flex flex-wrap gap-2 text-xs font-medium">
-                    <span class="rounded-2xl bg-white px-3 py-1.5 text-[#4f46e5]">
+                    <span
+                      class="rounded-lg bg-[#eef0ff] px-2.5 py-1 text-[#4f46e5]"
+                    >
                       {{ item.subjectName }}
+                      <template v-if="item.subjectCode">
+                        · {{ item.subjectCode }}
+                      </template>
                     </span>
                     <span
-                      v-if="item.subjectCode"
-                      class="rounded-2xl bg-white px-3 py-1.5 text-[#6b6475]"
+                      class="rounded-lg bg-[#faf8f4] px-2.5 py-1 text-[#6b6475]"
                     >
-                      {{ item.subjectCode }}
-                    </span>
-                    <span class="rounded-2xl bg-white px-3 py-1.5 text-[#6b6475]">
                       {{ item.className || item.classCode || "Kelas" }}
                     </span>
                   </div>
 
-                  <h2 class="mt-4 text-lg font-medium text-[#171322]">
+                  <h3
+                    class="mt-3 break-words text-base font-semibold text-[#171322] sm:text-lg"
+                  >
                     {{ item.assignmentTitle }}
-                  </h2>
+                  </h3>
                   <p
                     v-if="item.deadline"
-                    class="mt-2 text-sm text-[#6b6475]"
+                    class="mt-1.5 inline-flex items-center gap-1.5 text-sm text-[#6b6475]"
                   >
-                    <span>
-                      Deadline {{ formatDate(item.deadline) }}
-                    </span>
+                    <PhClock :size="15" weight="duotone" />
+                    Tenggat {{ formatDate(item.deadline) }}
                   </p>
                 </div>
 
@@ -292,35 +334,35 @@ onMounted(loadInbox);
                     name: 'teacher-assignment-review',
                     params: { assignmentId: item.assignmentId },
                   }"
-                  class="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#171322] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#2f2b3a]"
+                  class="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#171322] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#2f2b3a]"
                 >
-                  Review pengumpulan
+                  Tinjau pengumpulan
                   <PhArrowRight :size="16" />
                 </RouterLink>
               </div>
 
-              <div class="mt-5 grid gap-3 sm:grid-cols-4">
-                <div class="rounded-2xl bg-white p-4">
-                  <p class="text-xs text-[#8a8494]">Submission</p>
-                  <p class="mt-1 text-xl font-medium text-[#171322]">
+              <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div class="rounded-lg bg-[#faf8f4] px-3 py-2.5">
+                  <p class="text-xs text-[#8a8494]">Pengumpulan</p>
+                  <p class="mt-1 text-lg font-semibold text-[#171322]">
                     {{ item.submissionCount }}
                   </p>
                 </div>
-                <div class="rounded-2xl bg-white p-4">
-                  <p class="text-xs text-[#8a8494]">Perlu review</p>
-                  <p class="mt-1 text-xl font-medium text-[#171322]">
+                <div class="rounded-lg bg-[#fff7e8] px-3 py-2.5">
+                  <p class="text-xs text-[#9f6b1d]">Perlu dinilai</p>
+                  <p class="mt-1 text-lg font-semibold text-[#171322]">
                     {{ item.pendingCount }}
                   </p>
                 </div>
-                <div class="rounded-2xl bg-white p-4">
-                  <p class="text-xs text-[#8a8494]">Sudah dinilai</p>
-                  <p class="mt-1 text-xl font-medium text-[#171322]">
+                <div class="rounded-lg bg-[#eef7f2] px-3 py-2.5">
+                  <p class="text-xs text-[#2f7d5c]">Sudah dinilai</p>
+                  <p class="mt-1 text-lg font-semibold text-[#171322]">
                     {{ item.gradedCount }}
                   </p>
                 </div>
-                <div class="rounded-2xl bg-white p-4">
-                  <p class="text-xs text-[#8a8494]">Terlambat</p>
-                  <p class="mt-1 text-xl font-medium text-[#171322]">
+                <div class="rounded-lg bg-[#fff1ed] px-3 py-2.5">
+                  <p class="text-xs text-[#b86845]">Terlambat</p>
+                  <p class="mt-1 text-lg font-semibold text-[#171322]">
                     {{ item.lateCount }}
                   </p>
                 </div>

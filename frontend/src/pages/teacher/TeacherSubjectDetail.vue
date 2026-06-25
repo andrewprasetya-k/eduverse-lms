@@ -68,16 +68,14 @@ const visibleSubmissionGroups = computed(() =>
 );
 
 const tabs = computed(() => [
-  { id: "materials" as const, label: "Materi", count: materials.value.length },
+  { id: "materials" as const, label: "Materi" },
   {
     id: "assignments" as const,
     label: "Tugas",
-    count: assignments.value.length,
   },
   {
     id: "submissions" as const,
     label: "Pengumpulan",
-    count: submissionCount.value,
   },
 ]);
 
@@ -110,7 +108,7 @@ async function loadWorkspace() {
     await loadSubmissions();
   } catch {
     errorMessage.value =
-      "Workspace subject belum bisa dimuat. Coba lagi beberapa saat.";
+      "Ruang kerja mata pelajaran belum bisa dimuat. Coba lagi beberapa saat.";
   } finally {
     loading.value = false;
   }
@@ -133,8 +131,8 @@ async function loadSubmissions() {
 
 function materialAttachmentLabel(material: MaterialItem) {
   const count = material.attachments?.length ?? 0;
-  if (count === 0) return "Tidak ada attachment";
-  return `${count} attachment`;
+  if (count === 0) return "Tidak ada lampiran";
+  return `${count} lampiran`;
 }
 
 function materialTypeLabel(type?: string) {
@@ -174,152 +172,171 @@ onMounted(loadWorkspace);
 </script>
 
 <template>
-  <main class="flex-1 px-5 py-5 sm:px-6 lg:px-8">
-    <section class="flex w-full max-w-none flex-col gap-5">
-      <RouterLink
-        to="/teacher/subjects"
-        class="inline-flex items-center gap-2 self-start text-sm font-medium text-[#6b6475] transition hover:text-[#171322]"
+  <main class="min-h-screen min-w-0 flex-1 overflow-x-hidden bg-[#f8f7f4]">
+    <header class="border-b border-[#ebe7df] bg-white">
+      <div
+        class="flex min-w-0 items-center gap-2 px-5 py-3 text-xs text-[#6b7280] sm:px-6 lg:px-8"
       >
-        <PhArrowLeft :size="18" />
-        Kembali ke subjects
-      </RouterLink>
+        <RouterLink
+          to="/teacher/subjects"
+          class="inline-flex shrink-0 items-center gap-1.5 transition hover:text-[#4f46e5]"
+        >
+          <PhArrowLeft :size="15" />
+          Mata pelajaran
+        </RouterLink>
+        <span class="text-[#d1d5db]">/</span>
+        <span class="min-w-0 truncate font-medium text-[#171322]">
+          {{
+            subject?.subjectName ??
+            (loading ? "Memuat..." : "Ruang kerja mata pelajaran")
+          }}
+        </span>
+      </div>
 
-      <header
-        class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5 md:p-6"
+      <div
+        class="flex min-w-0 flex-col gap-4 border-t border-[#f3f1ec] px-5 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8"
       >
-        <div
-          class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl text-white"
-          :style="{ backgroundColor: getSubjectColor(subjectClassId) }"
-        >
-          <PhBookOpen :size="28" weight="duotone" />
-        </div>
-        <div
-          class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
-        >
-          <div>
-            <p class="text-sm font-medium text-[#7b61a8]">Subject workspace</p>
-            <h1 class="mt-3 text-3xl font-medium text-[#171322]">
+        <div class="flex min-w-0 items-start gap-3">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white"
+            :style="{ backgroundColor: getSubjectColor(subjectClassId) }"
+          >
+            <PhBookOpen :size="21" weight="duotone" />
+          </div>
+          <div class="min-w-0">
+            <h1 class="truncate text-xl font-medium text-[#171322] sm:text-2xl">
               {{
                 subject?.subjectName ??
-                (loading ? "Memuat subject..." : "Workspace subject")
+                (loading ? "Memuat mata pelajaran..." : "Mata pelajaran")
               }}
             </h1>
-            <p class="mt-3 max-w-2xl text-sm leading-6 text-[#6b6475]">
-              <span v-if="subject">
-                {{ subject.className }} menjadi konteks class untuk subject ini.
-                Material dan tugas berada di level subject class.
-              </span>
-              <span v-else>
-                Detail subject class hanya tersedia untuk subject yang terhubung
-                dengan akun guru ini.
-              </span>
+            <p class="mt-1 truncate text-xs text-[#6b7280] sm:text-sm">
+              {{
+                subject
+                  ? [subject.className, subject.subjectCode]
+                      .filter(Boolean)
+                      .join(" · ")
+                  : "Kelola materi, tugas, dan pengumpulan siswa."
+              }}
             </p>
           </div>
-
-          <RouterLink
-            v-if="subject"
-            :to="`/teacher/subjects/${subjectClassId}/create`"
-            class="inline-flex items-center gap-2 self-start rounded-2xl bg-[#171322] px-4 py-3 text-sm font-medium text-white transition hover:bg-[#2f2b3a] lg:self-auto"
-          >
-            <PhPlusCircle :size="18" weight="duotone" />
-            Buat Konten
-          </RouterLink>
         </div>
-      </header>
 
-      <section
-        v-if="loading"
-        class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5"
-      >
-        <p class="text-sm text-[#6b6475]">Memuat workspace subject...</p>
+        <RouterLink
+          v-if="subject"
+          :to="`/teacher/subjects/${subjectClassId}/create`"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#4f46e5] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#4338ca] sm:w-auto"
+        >
+          <PhPlusCircle :size="17" weight="duotone" />
+          Post di kelas ini
+        </RouterLink>
+      </div>
+    </header>
+
+    <section
+      class="mx-auto max-w-screen min-w-0 px-5 py-5 sm:px-6 lg:px-8 lg:py-6"
+    >
+      <section v-if="loading" class="space-y-4">
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            v-for="item in 4"
+            :key="item"
+            class="h-24 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+          />
+        </div>
+        <div
+          class="h-72 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+        />
       </section>
 
       <section
         v-else-if="errorMessage"
-        class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5"
+        class="flex min-h-[55vh] items-center justify-center"
       >
-        <div
-          class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        <article
+          class="w-full max-w-xl rounded-xl border border-[#f1d6d3] bg-white p-6"
         >
           <div class="flex items-start gap-3">
-            <PhWarningCircle
-              :size="24"
-              class="mt-0.5 text-[#e58f86]"
-              weight="duotone"
-            />
-            <div>
-              <h2 class="text-lg font-medium text-[#171322]">
-                Gagal memuat workspace
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1f0] text-[#dc2626]"
+            >
+              <PhWarningCircle :size="22" weight="duotone" />
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-base font-medium text-[#171322]">
+                Ruang kerja tidak dapat dimuat
               </h2>
-              <p class="mt-2 text-sm leading-6 text-[#6b6475]">
+              <p class="mt-1 text-sm leading-6 text-[#7a7385]">
                 {{ errorMessage }}
               </p>
+              <button
+                type="button"
+                class="mt-4 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+                @click="loadWorkspace"
+              >
+                Coba lagi
+              </button>
             </div>
           </div>
-          <button
-            type="button"
-            class="rounded-2xl bg-[#171322] px-4 py-3 text-sm font-medium text-white"
-            @click="loadWorkspace"
-          >
-            Coba lagi
-          </button>
-        </div>
+        </article>
       </section>
 
       <section
         v-else-if="!subject"
-        class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5"
+        class="flex min-h-[55vh] items-center justify-center"
       >
-        <h2 class="text-lg font-medium text-[#171322]">
-          Subject tidak ditemukan
-        </h2>
-        <p class="mt-2 text-sm leading-6 text-[#6b6475]">
-          Subject class ini tidak tersedia untuk akun guru pada school aktif.
-        </p>
+        <article
+          class="w-full max-w-xl rounded-xl border border-[#ebe7df] bg-white p-8 text-center"
+        >
+          <div
+            class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
+          >
+            <PhBookOpen :size="25" weight="duotone" />
+          </div>
+          <h2 class="mt-3 text-lg font-medium text-[#171322]">
+            Mata pelajaran tidak ditemukan
+          </h2>
+          <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-[#7a7385]">
+            Mata pelajaran ini tidak tersedia untuk akun guru pada sekolah
+            aktif.
+          </p>
+        </article>
       </section>
 
       <template v-else>
-        <section class="grid gap-4 md:grid-cols-4">
-          <article
-            class="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5"
-          >
-            <PhUsersThree :size="24" class="text-[#74bfa5]" weight="duotone" />
-            <p class="mt-4 text-sm text-[#8a8494]">Siswa</p>
+        <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
+            <PhUsersThree :size="21" class="text-[#059669]" weight="duotone" />
+            <p class="mt-3 text-xs text-[#7a7385]">Siswa</p>
             <p class="mt-1 text-2xl font-medium text-[#171322]">
               {{ subject.studentCount }}
             </p>
           </article>
-          <article
-            class="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5"
-          >
-            <PhFileText :size="24" class="text-[#7aa7d9]" weight="duotone" />
-            <p class="mt-4 text-sm text-[#8a8494]">Materi</p>
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
+            <PhFileText :size="21" class="text-[#4f8ef7]" weight="duotone" />
+            <p class="mt-3 text-xs text-[#7a7385]">Materi</p>
             <p class="mt-1 text-2xl font-medium text-[#171322]">
               {{ subject.materialCount }}
             </p>
           </article>
-          <article
-            class="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5"
-          >
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
             <PhClipboardText
-              :size="24"
-              class="text-[#e58f86]"
+              :size="21"
+              class="text-[#4f46e5]"
               weight="duotone"
             />
-            <p class="mt-4 text-sm text-[#8a8494]">Tugas</p>
+            <p class="mt-3 text-xs text-[#7a7385]">Tugas</p>
             <p class="mt-1 text-2xl font-medium text-[#171322]">
               {{ subject.assignmentCount }}
             </p>
           </article>
-          <article
-            class="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-black/5"
-          >
+          <article class="rounded-xl border border-[#ebe7df] bg-white p-4">
             <PhWarningCircle
-              :size="24"
-              class="text-[#b889c9]"
+              :size="21"
+              class="text-[#ea580c]"
               weight="duotone"
             />
-            <p class="mt-4 text-sm text-[#8a8494]">Perlu review</p>
+            <p class="mt-3 text-xs text-[#7a7385]">Perlu dinilai</p>
             <p class="mt-1 text-2xl font-medium text-[#171322]">
               {{ subject.pendingSubmissions }}
             </p>
@@ -327,42 +344,43 @@ onMounted(loadWorkspace);
         </section>
 
         <section
-          class="rounded-[22px] bg-white p-5 shadow-sm ring-1 ring-black/5"
+          class="mt-5 min-w-0 rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
         >
-          <div class="flex flex-wrap gap-2 border-b border-[#ece8df] pb-4">
+          <div
+            class="flex min-w-0 gap-1 overflow-x-auto border-b border-[#ebe7df]"
+          >
             <button
               v-for="tab in tabs"
               :key="tab.id"
               type="button"
-              class="rounded-2xl px-4 py-2.5 text-sm font-medium transition"
+              class="inline-flex h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-sm transition sm:px-4"
               :class="
                 activeTab === tab.id
-                  ? 'bg-[#171322] text-white'
-                  : 'bg-[#faf8f4] text-[#6b6475] hover:bg-[#f0e9dd] hover:text-[#171322]'
+                  ? 'border-[#4f46e5] font-medium text-[#4f46e5]'
+                  : 'border-transparent text-[#6b7280] hover:text-[#374151]'
               "
               @click="activeTab = tab.id"
             >
               {{ tab.label }}
-              <span class="ml-2 opacity-70">{{ tab.count }}</span>
             </button>
           </div>
 
-          <div class="pt-5">
+          <div class="pt-4">
             <div v-if="activeTab === 'materials'" class="space-y-3">
               <div
                 v-if="materials.length === 0"
-                class="rounded-[18px] bg-[#faf8f4] p-5 text-center"
+                class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-8 text-center"
               >
-                <PhFileText
-                  :size="30"
-                  class="mx-auto text-[#b5afbf]"
-                  weight="duotone"
-                />
+                <div
+                  class="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
+                >
+                  <PhFileText :size="22" weight="duotone" />
+                </div>
                 <h2 class="mt-3 text-lg font-medium text-[#171322]">
                   Belum ada materi
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-[#6b6475]">
-                  Materi yang dibuat untuk subject class ini akan tampil di
+                <p class="mt-2 text-sm leading-6 text-[#7a7385]">
+                  Materi yang dibuat untuk mata pelajaran ini akan tampil di
                   sini.
                 </p>
               </div>
@@ -378,43 +396,45 @@ onMounted(loadWorkspace);
                     matId: material.materialId,
                   },
                 }"
-                class="block rounded-[18px] bg-[#faf8f4] p-5 ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(66,55,40,0.08)]"
+                class="group block min-w-0 rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 transition hover:bg-white hover:shadow-[0_8px_24px_rgba(66,55,40,0.08)]"
               >
                 <div
                   class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
                 >
-                  <div>
+                  <div class="min-w-0">
                     <p
-                      class="text-xs font-medium uppercase tracking-wide text-[#7aa7d9]"
+                      class="text-[11px] font-medium uppercase tracking-wide text-[#4f46e5]"
                     >
                       {{ materialTypeLabel(material.materialType) }}
                     </p>
-                    <h2 class="mt-2 text-lg font-medium text-[#171322]">
+                    <h2
+                      class="mt-1 line-clamp-2 wrap-break-word text-base font-medium text-[#171322] group-hover:text-[#4f46e5]"
+                    >
                       {{ material.materialTitle }}
                     </h2>
                     <p
                       v-if="material.materialDesc"
-                      class="mt-2 line-clamp-2 text-sm leading-6 text-[#6b6475]"
+                      class="mt-2 line-clamp-2 text-sm leading-6 text-[#7a7385]"
                     >
                       {{ material.materialDesc }}
                     </p>
                   </div>
-                  <p class="shrink-0 text-sm text-[#8a8494]">
+                  <p class="shrink-0 text-xs text-[#8a8494]">
                     {{ formatDateTime(material.createdAt) }}
                   </p>
                 </div>
                 <div
-                  class="mt-4 flex flex-wrap items-center gap-3 text-sm text-[#6b6475]"
+                  class="mt-3 flex flex-wrap items-center gap-2 text-xs text-[#6b7280]"
                 >
                   <span
-                    class="inline-flex items-center gap-2 rounded-2xl bg-white px-3 py-2"
+                    class="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2"
                   >
-                    <PhPaperclip :size="16" weight="duotone" />
+                    <PhPaperclip :size="14" weight="duotone" />
                     {{ materialAttachmentLabel(material) }}
                   </span>
                   <span
                     v-if="material.creatorName"
-                    class="rounded-2xl bg-white px-3 py-2"
+                    class="rounded-lg bg-white px-3 py-2"
                   >
                     Oleh {{ material.creatorName }}
                   </span>
@@ -425,18 +445,19 @@ onMounted(loadWorkspace);
             <div v-else-if="activeTab === 'assignments'" class="space-y-3">
               <div
                 v-if="assignments.length === 0"
-                class="rounded-[18px] bg-[#faf8f4] p-5 text-center"
+                class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-8 text-center"
               >
-                <PhClipboardText
-                  :size="30"
-                  class="mx-auto text-[#b5afbf]"
-                  weight="duotone"
-                />
+                <div
+                  class="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
+                >
+                  <PhClipboardText :size="22" weight="duotone" />
+                </div>
                 <h2 class="mt-3 text-lg font-medium text-[#171322]">
                   Belum ada tugas
                 </h2>
-                <p class="mt-2 text-sm leading-6 text-[#6b6475]">
-                  Tugas yang dibuat untuk subject class ini akan tampil di sini.
+                <p class="mt-2 text-sm leading-6 text-[#7a7385]">
+                  Tugas yang dibuat untuk mata pelajaran ini akan tampil di
+                  sini.
                 </p>
               </div>
 
@@ -444,29 +465,31 @@ onMounted(loadWorkspace);
                 v-for="assignment in assignments"
                 v-else
                 :key="assignment.assignmentId"
-                class="rounded-[18px] bg-[#faf8f4] p-5 ring-1 ring-black/5"
+                class="min-w-0 rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4"
               >
                 <div
                   class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
                 >
-                  <div>
+                  <div class="min-w-0">
                     <p
-                      class="text-xs font-medium uppercase tracking-wide text-[#e58f86]"
+                      class="text-[11px] font-medium uppercase tracking-wide text-[#ea580c]"
                     >
                       {{ assignment.categoryName || "Tanpa kategori" }}
                     </p>
-                    <h2 class="mt-2 text-lg font-medium text-[#171322]">
+                    <h2
+                      class="mt-1 line-clamp-2 wrap-break-word text-base font-medium text-[#171322]"
+                    >
                       {{ assignment.assignmentTitle }}
                     </h2>
                     <p
                       v-if="assignment.assignmentDescription"
-                      class="mt-2 line-clamp-2 text-sm leading-6 text-[#6b6475]"
+                      class="mt-2 line-clamp-2 text-sm leading-6 text-[#7a7385]"
                     >
                       {{ assignment.assignmentDescription }}
                     </p>
                   </div>
                   <span
-                    class="shrink-0 rounded-2xl px-3 py-2 text-xs font-medium"
+                    class="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium"
                     :class="
                       assignment.allowLateSubmission
                         ? 'bg-[#eef7f2] text-[#2f7d5c]'
@@ -481,21 +504,21 @@ onMounted(loadWorkspace);
                   </span>
                 </div>
                 <div
-                  class="mt-4 flex flex-wrap items-center gap-3 text-sm text-[#6b6475]"
+                  class="mt-4 flex flex-col gap-3 border-t border-[#ebe7df] pt-4 sm:flex-row sm:flex-wrap sm:items-center"
                 >
                   <span
-                    class="inline-flex items-center gap-2 rounded-2xl bg-white px-3 py-2"
+                    class="inline-flex items-center gap-1.5 text-xs text-[#6b7280]"
                   >
-                    <PhCalendarBlank :size="16" weight="duotone" />
-                    Deadline {{ formatDate(assignment.deadline) }}
+                    <PhCalendarBlank :size="14" weight="duotone" />
+                    Tenggat {{ formatDate(assignment.deadline) }}
                   </span>
                   <span
-                    class="inline-flex items-center gap-2 rounded-2xl bg-white px-3 py-2"
+                    class="inline-flex items-center gap-1.5 text-xs text-[#6b7280]"
                   >
-                    <PhPaperclip :size="16" weight="duotone" />
-                    {{ assignment.attachments?.length ?? 0 }} attachment
+                    <PhPaperclip :size="14" weight="duotone" />
+                    {{ assignment.attachments?.length ?? 0 }} lampiran
                   </span>
-                  <div class="ml-auto flex items-center gap-2">
+                  <div class="flex flex-wrap items-center gap-2 sm:ml-auto">
                     <RouterLink
                       :to="{
                         name: 'teacher-assignment-edit',
@@ -504,7 +527,7 @@ onMounted(loadWorkspace);
                           asgId: assignment.assignmentId,
                         },
                       }"
-                      class="inline-flex items-center justify-center rounded-xl bg-white p-2 text-[#6b6475] transition border border-[#ebe7df] hover:border-[#4f46e5] hover:text-[#4f46e5]"
+                      class="inline-flex items-center justify-center rounded-lg border border-[#ebe7df] bg-white p-2 text-[#6b7280] transition hover:border-[#4f46e5] hover:text-[#4f46e5]"
                       title="Edit Tugas"
                     >
                       <PhPencilSimple :size="16" weight="bold" />
@@ -514,7 +537,7 @@ onMounted(loadWorkspace);
                       :disabled="
                         deletingAssignmentId === assignment.assignmentId
                       "
-                      class="inline-flex items-center justify-center rounded-xl bg-white p-2 text-[#6b6475] transition border border-[#ebe7df] hover:border-[#dc2626] hover:text-[#dc2626] disabled:opacity-50"
+                      class="inline-flex items-center justify-center rounded-lg border border-[#ebe7df] bg-white p-2 text-[#6b7280] transition hover:border-[#dc2626] hover:text-[#dc2626] disabled:opacity-50"
                       title="Hapus Tugas"
                     >
                       <PhTrash :size="16" weight="bold" />
@@ -524,9 +547,9 @@ onMounted(loadWorkspace);
                         name: 'teacher-assignment-review',
                         params: { assignmentId: assignment.assignmentId },
                       }"
-                      class="ml-1 inline-flex items-center gap-1.5 rounded-xl bg-[#171322] px-4 py-2 text-xs font-medium text-white transition hover:bg-[#2f2b3a]"
+                      class="inline-flex items-center gap-1.5 rounded-lg bg-[#4f46e5] px-4 py-2 text-xs font-medium text-white transition hover:bg-[#4338ca]"
                     >
-                      Review pengumpulan
+                      Nilai pengumpulan
                     </RouterLink>
                   </div>
                 </div>
@@ -541,42 +564,33 @@ onMounted(loadWorkspace);
 
             <div v-else class="space-y-3">
               <div
-                class="rounded-[18px] bg-[#faf8f4] p-5 text-sm leading-6 text-[#6b6475]"
-              >
-                Pengumpulan siswa dikelompokkan berdasarkan tugas pada subject
-                ini. Halaman ini masih read-only untuk daftar pengumpulan, dan
-                review tersedia dari tombol di setiap tugas yang sudah memiliki
-                pengumpulan.
-              </div>
-
-              <div
                 v-if="submissionSummary"
                 class="flex flex-wrap gap-2 text-sm"
               >
-                <span class="rounded-2xl bg-[#faf8f4] px-3 py-2 text-[#6b6475]">
+                <span class="rounded-lg bg-[#faf8f4] px-3 py-2 text-[#6b6475]">
                   {{ submissionSummary.submissionCount }} pengumpulan
                 </span>
-                <span class="rounded-2xl bg-[#eef7f2] px-3 py-2 text-[#2f7d5c]">
+                <span class="rounded-lg bg-[#eef7f2] px-3 py-2 text-[#2f7d5c]">
                   {{ submissionSummary.gradedCount }} sudah dinilai
                 </span>
-                <span class="rounded-2xl bg-[#fff7e8] px-3 py-2 text-[#9f6b1d]">
-                  {{ submissionSummary.pendingCount }} menunggu review
+                <span class="rounded-lg bg-[#fff7e8] px-3 py-2 text-[#9f6b1d]">
+                  {{ submissionSummary.pendingCount }} perlu dinilai
                 </span>
-                <span class="rounded-2xl bg-[#fff1ed] px-3 py-2 text-[#b86845]">
+                <span class="rounded-lg bg-[#fff1ed] px-3 py-2 text-[#b86845]">
                   {{ submissionSummary.lateCount }} terlambat
                 </span>
               </div>
 
               <div
                 v-if="submissionsLoading"
-                class="rounded-[18px] bg-white p-5 text-sm text-[#6b6475] ring-1 ring-black/5"
+                class="rounded-lg border border-[#ebe7df] bg-white p-5 text-sm text-[#6b6475]"
               >
                 Memuat pengumpulan...
               </div>
 
               <div
                 v-else-if="submissionsError"
-                class="rounded-[18px] bg-white p-5 ring-1 ring-black/5"
+                class="rounded-lg border border-[#ebe7df] bg-white p-5"
               >
                 <h2 class="text-lg font-medium text-[#171322]">
                   Pengumpulan gagal dimuat
@@ -588,7 +602,7 @@ onMounted(loadWorkspace);
 
               <div
                 v-else-if="submissionCount === 0"
-                class="rounded-[18px] bg-white p-5 text-center ring-1 ring-black/5"
+                class="rounded-lg border border-[#ebe7df] bg-white p-8 text-center"
               >
                 <PhCheckCircle
                   :size="30"
@@ -600,7 +614,7 @@ onMounted(loadWorkspace);
                 </h2>
                 <p class="mt-2 text-sm leading-6 text-[#6b6475]">
                   Pengumpulan siswa akan tampil setelah ada tugas yang
-                  dikumpulkan pada subject ini.
+                  dikumpulkan pada mata pelajaran ini.
                 </p>
               </div>
 
@@ -608,7 +622,7 @@ onMounted(loadWorkspace);
                 v-for="group in visibleSubmissionGroups"
                 v-else
                 :key="group.assignment.assignmentId"
-                class="rounded-[18px] bg-white p-5 ring-1 ring-black/5"
+                class="rounded-lg border border-[#ebe7df] bg-white p-5"
               >
                 <div
                   class="flex flex-col gap-3 border-b border-[#ece8df] pb-4 sm:flex-row sm:items-start sm:justify-between"
@@ -617,7 +631,7 @@ onMounted(loadWorkspace);
                     <p
                       class="text-xs font-medium uppercase tracking-wide text-[#7b61a8]"
                     >
-                      {{ group.assignment.categoryName || "Assignment" }}
+                      {{ group.assignment.categoryName || "Tugas" }}
                     </p>
                     <h2 class="mt-2 text-lg font-medium text-[#171322]">
                       {{ group.assignment.assignmentTitle }}
@@ -626,25 +640,25 @@ onMounted(loadWorkspace);
                       v-if="group.assignment.deadline"
                       class="mt-2 text-sm text-[#6b6475]"
                     >
-                      Deadline {{ formatDate(group.assignment.deadline) }}
+                      Tenggat {{ formatDate(group.assignment.deadline) }}
                     </p>
                   </div>
                   <div class="flex flex-col items-start gap-2 sm:items-end">
                     <div class="flex flex-wrap gap-2 text-xs font-medium">
                       <span
-                        class="rounded-2xl bg-[#faf8f4] px-3 py-2 text-[#6b6475]"
+                        class="rounded-lg bg-[#faf8f4] px-3 py-2 text-[#6b6475]"
                       >
-                        {{ group.submissionCount }} submission
+                        {{ group.submissionCount }} pengumpulan
                       </span>
                       <span
-                        class="rounded-2xl bg-[#eef7f2] px-3 py-2 text-[#2f7d5c]"
+                        class="rounded-lg bg-[#eef7f2] px-3 py-2 text-[#2f7d5c]"
                       >
                         {{ group.gradedCount }} dinilai
                       </span>
                       <span
-                        class="rounded-2xl bg-[#fff7e8] px-3 py-2 text-[#9f6b1d]"
+                        class="rounded-lg bg-[#fff7e8] px-3 py-2 text-[#9f6b1d]"
                       >
-                        {{ group.pendingCount }} pending
+                        {{ group.pendingCount }} perlu dinilai
                       </span>
                     </div>
                     <RouterLink
@@ -656,9 +670,9 @@ onMounted(loadWorkspace);
                         name: 'teacher-assignment-review',
                         params: { assignmentId: group.assignment.assignmentId },
                       }"
-                      class="inline-flex items-center gap-2 rounded-2xl bg-[#171322] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#2f2b3a]"
+                      class="inline-flex items-center gap-2 rounded-lg bg-[#171322] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#2f2b3a]"
                     >
-                      Review pengumpulan
+                      Nilai pengumpulan
                     </RouterLink>
                   </div>
                 </div>
@@ -667,7 +681,7 @@ onMounted(loadWorkspace);
                   <div
                     v-for="submission in group.submissions"
                     :key="submission.submissionId"
-                    class="flex flex-col gap-3 rounded-[18px] bg-[#faf8f4] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    class="flex flex-col gap-3 rounded-lg border border-[#ebe7df] bg-[#faf8f4] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div class="min-w-0">
                       <h3 class="truncate text-sm font-medium text-[#171322]">
@@ -680,23 +694,23 @@ onMounted(loadWorkspace);
                     <div
                       class="flex flex-wrap items-center gap-2 text-xs font-medium text-[#6b6475]"
                     >
-                      <span class="rounded-2xl bg-white px-3 py-2">
-                        {{ submission.attachments?.length ?? 0 }} file
+                      <span class="rounded-lg bg-white px-3 py-2">
+                        {{ submission.attachments?.length ?? 0 }} lampiran
                       </span>
                       <span
                         v-if="submission.isLate"
-                        class="rounded-2xl bg-[#fff1ed] px-3 py-2 text-[#b86845]"
+                        class="rounded-lg bg-[#fff1ed] px-3 py-2 text-[#b86845]"
                       >
                         Terlambat
                       </span>
                       <span
                         v-if="submission.assessment"
-                        class="rounded-2xl bg-white px-3 py-2"
+                        class="rounded-lg bg-white px-3 py-2"
                       >
                         Nilai {{ submission.assessment.score }}
                       </span>
                       <span
-                        class="shrink-0 rounded-2xl px-3 py-2 text-xs font-medium"
+                        class="shrink-0 rounded-lg px-3 py-2 text-xs font-medium"
                         :class="
                           submission.assessment
                             ? 'bg-[#eef7f2] text-[#2f7d5c]'
