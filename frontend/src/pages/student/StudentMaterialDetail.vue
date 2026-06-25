@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { RouterLink, useRoute } from "vue-router";
-import { PhArrowLeft, PhBookOpen, PhWarningCircle } from "@phosphor-icons/vue";
+import {
+  PhArrowLeft,
+  PhBookOpen,
+  PhPaperclip,
+  PhUserCircle,
+  PhWarningCircle,
+} from "@phosphor-icons/vue";
 import AttachmentPreviewList from "../../components/common/AttachmentPreviewList.vue";
 import StudentNoteCard from "../../components/student/StudentNoteCard.vue";
 import { getMaterialById } from "../../services/classWorkspace";
@@ -42,113 +48,153 @@ onMounted(loadMaterial);
 </script>
 
 <template>
-  <main class="min-h-screen flex-1 px-5 py-5 sm:px-6 lg:px-8">
-    <RouterLink
-      class="mb-5 inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-medium text-[#4f46e5] transition hover:bg-[#eef2ff]"
-      :to="`/student/subjects/${subjectClassId}`"
-    >
-      <PhArrowLeft :size="18" />
-      Kembali ke subject
-    </RouterLink>
+  <main class="min-h-screen min-w-0 flex-1 bg-[#f8f7f4]">
+    <header class="border-b border-[#ebe7df] bg-white">
+      <div
+        class="flex min-w-0 items-center gap-2 px-5 py-5 text-xs text-[#6b7280] sm:px-6 lg:px-8"
+      >
+        <RouterLink
+          class="inline-flex shrink-0 items-center gap-1.5 transition hover:text-[#4f46e5]"
+          :to="`/student/subjects/${subjectClassId}`"
+        >
+          <PhArrowLeft :size="15" />
+          Mata pelajaran
+        </RouterLink>
+        <span class="text-[#d1d5db]">/</span>
+        <span class="shrink-0">Materi</span>
+        <span class="text-[#d1d5db]">/</span>
+        <span class="min-w-0 truncate font-medium text-[#171322]">
+          {{ material?.materialTitle || "Detail materi" }}
+        </span>
+      </div>
+    </header>
 
-    <section v-if="isLoading" class="max-w-4xl space-y-3">
+    <section
+      v-if="isLoading"
+      class="mx-auto grid max-w-screen gap-5 px-5 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8 lg:py-6"
+    >
+      <div class="space-y-4">
+        <div
+          class="h-52 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+        />
+        <div
+          class="h-80 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
+        />
+      </div>
       <div
-        class="h-40 animate-pulse rounded-3xl border border-[#ebe7df] bg-white"
-      />
-      <div
-        class="h-28 animate-pulse rounded-3xl border border-[#ebe7df] bg-white"
-      />
-      <div
-        class="h-24 animate-pulse rounded-3xl border border-[#ebe7df] bg-white"
+        class="h-112 animate-pulse rounded-xl border border-[#ebe7df] bg-white"
       />
     </section>
 
     <section
       v-else-if="errorMessage"
-      class="soft-card max-w-4xl rounded-[22px] p-5"
+      class="flex min-h-[calc(100vh-49px)] items-center justify-center px-5 py-10"
     >
-      <div
-        class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fff1f0] text-[#f2756a]"
+      <article
+        class="w-full max-w-xl rounded-xl border border-[#f1d6d3] bg-white p-6"
       >
-        <PhWarningCircle :size="24" weight="duotone" />
-      </div>
-      <p class="text-sm font-medium text-[#171322]">Tidak bisa memuat materi</p>
-      <p class="mt-2 text-sm leading-6 text-[#7a7385]">{{ errorMessage }}</p>
-      <button
-        class="mt-5 rounded-2xl bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white"
-        type="button"
-        @click="loadMaterial"
-      >
-        Coba lagi
-      </button>
+        <div class="flex items-start gap-3">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#fff1f0] text-[#dc2626]"
+          >
+            <PhWarningCircle :size="22" weight="duotone" />
+          </div>
+          <div>
+            <h1 class="text-base font-medium text-[#171322]">
+              Tidak bisa memuat materi
+            </h1>
+            <p class="mt-1 text-sm leading-6 text-[#7a7385]">
+              {{ errorMessage }}
+            </p>
+            <button
+              class="mt-4 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+              type="button"
+              @click="loadMaterial"
+            >
+              Coba lagi
+            </button>
+          </div>
+        </div>
+      </article>
     </section>
 
     <section
       v-else-if="didLoad && !material"
-      class="soft-card max-w-4xl rounded-[22px] p-5"
+      class="flex min-h-[calc(100vh-49px)] items-center justify-center px-5 py-10"
     >
-      <div
-        class="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
+      <article
+        class="w-full max-w-xl rounded-xl border border-[#ebe7df] bg-white p-8 text-center"
       >
-        <PhBookOpen :size="24" weight="duotone" />
-      </div>
-      <p class="text-sm font-medium text-[#171322]">Materi tidak ditemukan</p>
-      <p class="mt-2 text-sm leading-6 text-[#7a7385]">
-        Material ID ini tidak ditemukan atau belum tersedia untuk subject yang
-        sedang dibuka.
-      </p>
+        <div
+          class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
+        >
+          <PhBookOpen :size="24" weight="duotone" />
+        </div>
+        <h1 class="mt-4 text-base font-medium text-[#171322]">
+          Materi tidak ditemukan
+        </h1>
+        <p class="mx-auto mt-1 max-w-md text-sm leading-6 text-[#7a7385]">
+          Materi ini tidak tersedia atau sudah tidak dapat diakses.
+        </p>
+        <RouterLink
+          class="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
+          :to="`/student/subjects/${subjectClassId}`"
+        >
+          <PhArrowLeft :size="16" />
+          Kembali ke mata pelajaran
+        </RouterLink>
+      </article>
     </section>
 
     <section
       v-else-if="material"
-      class="grid w-full max-w-7xl items-start gap-5 lg:grid-cols-[minmax(0,1fr)_360px]"
+      class="mx-auto grid w-full max-w-screen min-w-0 items-start gap-5 px-5 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8 lg:py-6"
     >
       <div class="min-w-0 space-y-4">
-        <article class="soft-card rounded-[22px] p-5">
-          <div class="mb-5 flex items-start gap-4">
+        <article class="rounded-xl border border-[#ebe7df] bg-white p-5 sm:p-6">
+          <div class="flex min-w-0 items-start gap-4">
             <div
-              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eef2ff] text-[#4f46e5]"
             >
-              <PhBookOpen :size="24" weight="duotone" />
+              <PhBookOpen :size="22" weight="duotone" />
             </div>
-            <div class="min-w-0">
-              <p class="text-sm text-[#7a7385]">
-                {{ material.subjectName || "Subject material" }}
-              </p>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span
+                  v-if="material.materialType"
+                  class="rounded-full bg-[#eef2ff] px-2.5 py-1 text-[11px] font-medium uppercase text-[#4f46e5]"
+                >
+                  {{ material.materialType }}
+                </span>
+                <span
+                  v-if="material.subjectName"
+                  class="rounded-full bg-[#f8f7f4] px-2.5 py-1 text-[11px] text-[#6b7280]"
+                >
+                  {{ material.subjectName }}
+                </span>
+              </div>
               <h1
-                class="mt-2 text-3xl font-medium tracking-normal text-[#171322]"
+                class="mt-3 wrap-break-word text-xl font-medium leading-7 text-[#171322] sm:text-2xl"
               >
                 {{ material.materialTitle }}
               </h1>
-              <p
-                v-if="material.materialType"
-                class="mt-2 text-sm uppercase text-[#4f46e5]"
+              <div
+                class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#6b7280]"
               >
-                {{ material.materialType }}
-              </p>
+                <span class="inline-flex items-center gap-1.5">
+                  <PhUserCircle :size="15" />
+                  {{ material.creatorName || "Guru belum tersedia" }}
+                </span>
+                <span>{{ formatDateTime(material.createdAt) }}</span>
+              </div>
             </div>
           </div>
 
-          <div class="grid gap-3 sm:grid-cols-2">
-            <div class="rounded-2xl bg-[#fbfaf8] p-4">
-              <p class="text-xs font-medium text-[#7a7385]">Dibuat oleh</p>
-              <p class="mt-2 text-sm text-[#3f3a4a]">
-                {{ material.creatorName || "Creator tidak tersedia" }}
-              </p>
-            </div>
-            <div class="rounded-2xl bg-[#fbfaf8] p-4">
-              <p class="text-xs font-medium text-[#7a7385]">Dibuat</p>
-              <p class="mt-2 text-sm text-[#3f3a4a]">
-                {{ formatDateTime(material.createdAt) }}
-              </p>
-            </div>
-          </div>
-
-          <div class="mt-5 rounded-2xl bg-white p-4">
-            <p class="text-sm font-medium text-[#171322]">Deskripsi</p>
+          <div class="mt-6 border-t border-[#f0ede8] pt-5">
+            <h2 class="text-sm font-medium text-[#171322]">Deskripsi materi</h2>
             <p
               v-if="material.materialDesc"
-              class="mt-3 whitespace-pre-line text-sm leading-6 text-[#6b6475]"
+              class="mt-3 whitespace-pre-line wrap-break-word text-sm leading-7 text-[#4a4356]"
             >
               {{ material.materialDesc }}
             </p>
@@ -158,18 +204,34 @@ onMounted(loadMaterial);
           </div>
         </article>
 
-        <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
-          <p class="text-sm font-medium text-[#171322]">Lampiran</p>
+        <article class="rounded-xl border border-[#ebe7df] bg-white p-5 sm:p-6">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <PhPaperclip :size="18" class="text-[#4f46e5]" />
+              <h2 class="text-sm font-medium text-[#171322]">
+                Lampiran materi
+              </h2>
+            </div>
+            <span
+              v-if="material.attachments?.length"
+              class="shrink-0 rounded-full bg-[#f8f7f4] px-2.5 py-1 text-[11px] text-[#6b7280]"
+            >
+              {{ material.attachments.length }} file
+            </span>
+          </div>
+          <p class="mt-1 text-xs leading-5 text-[#7a7385]">
+            Buka atau pratinjau file pembelajaran yang dibagikan guru.
+          </p>
           <AttachmentPreviewList
-            class="mt-3"
+            class="mt-4"
             :attachments="material.attachments"
             empty-text="Materi ini tidak memiliki lampiran."
           />
         </article>
 
-        <article class="rounded-[22px] border border-[#ebe7df] bg-white p-5">
-          <p class="text-sm font-medium text-[#171322]">Progress materi</p>
-          <p class="mt-2 text-sm leading-6 text-[#7a7385]">
+        <article class="rounded-xl border border-[#ebe7df] bg-white p-5">
+          <h2 class="text-sm font-medium text-[#171322]">Progress materi</h2>
+          <p class="mt-1 text-sm leading-6 text-[#7a7385]">
             Progress materi direncanakan setelah MVP sekolah. Membuka materi
             belum menandai progres selesai.
           </p>
