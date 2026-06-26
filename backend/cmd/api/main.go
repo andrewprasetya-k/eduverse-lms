@@ -113,6 +113,10 @@ func main() {
 	feedHandler := handler.NewFeedHandler(feedService, commentService, classService)
 	commentHandler := handler.NewCommentHandler(commentService)
 
+	chatRepo := repository.NewChatRepository(db)
+	chatService := service.NewChatService(chatRepo, subjectClassRepo)
+	chatHandler := handler.NewChatHandler(chatService)
+
 	assignmentRepo := repository.NewAssignmentRepository(db)
 	assignmentService := service.NewAssignmentService(assignmentRepo, attachmentService, mediaRepo, notificationService, enrollmentRepo)
 	assignmentHandler := handler.NewAssignmentHandler(assignmentService, schoolService, subjectClassService)
@@ -334,6 +338,15 @@ func main() {
 			commentAPI.GET("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), commentHandler.GetByID)
 			commentAPI.PATCH("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), commentHandler.Update)
 			commentAPI.DELETE("/:id", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin", "teacher", "student"), commentHandler.Delete)
+		}
+
+		chatAPI := api.Group("/chat")
+		{
+			chatAPI.GET("/rooms", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "student", "teacher"), chatHandler.ListRooms)
+			chatAPI.POST("/subject-classes/:subjectClassId/open", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "student", "teacher"), chatHandler.OpenSubjectClassRoom)
+			chatAPI.GET("/rooms/:roomId/messages", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "student", "teacher"), chatHandler.ListMessages)
+			chatAPI.POST("/rooms/:roomId/messages", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "student", "teacher"), chatHandler.CreateMessage)
+			chatAPI.PATCH("/rooms/:roomId/read", middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "student", "teacher"), chatHandler.MarkRead)
 		}
 
 		assignmentAPI := api.Group("/assignments")

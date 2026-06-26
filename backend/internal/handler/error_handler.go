@@ -58,6 +58,16 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
+	if strings.Contains(errStr, "chat message content is required") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Isi pesan wajib diisi"})
+		return
+	}
+
+	if strings.Contains(errStr, "chat message content exceeds") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Pesan maksimal 5.000 karakter"})
+		return
+	}
+
 	if strings.Contains(errStr, "student note content is required") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Isi catatan wajib diisi"})
 		return

@@ -22,6 +22,8 @@ Role-Based Access Control (RBAC) mengamankan API endpoints berdasarkan role user
 - `super_admin` bisa VIEW data semua sekolah (monitoring/troubleshooting)
 - `super_admin` TIDAK bisa CREATE/UPDATE/DELETE konten akademik tanpa role sekolah
 - Untuk operasi akademik, super_admin harus di-enroll sebagai `admin` atau `teacher` di sekolah tersebut
+- Chat akademik MVP hanya mengizinkan `student` dan `teacher` aktif. Admin dan
+  super admin tidak otomatis ikut room chat subject-class.
 
 ---
 
