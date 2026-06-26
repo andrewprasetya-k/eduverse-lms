@@ -4,7 +4,9 @@ import {
   PhDownloadSimple,
   PhFileCsv,
   PhMagnifyingGlass,
+  PhPlusCircle,
   PhShieldCheck,
+  PhTrash,
   PhUploadSimple,
   PhUsers,
   PhWarningCircle,
@@ -13,17 +15,24 @@ import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
 import {
   getRoles,
-  getSchoolMembers,
   syncUserRoles,
 } from "../../services/adminUser";
+import {
+  createAdminSchoolMember,
+  getAdminSchoolMembers,
+  removeAdminSchoolMember,
+} from "../../services/adminSchoolMember";
 import {
   commitSchoolMemberImport,
   previewSchoolMemberImport,
 } from "../../services/adminSchoolMemberImport";
 import type {
   RoleItem,
-  SchoolMemberItem,
 } from "../../types/adminUser";
+import type {
+  AdminSchoolMemberCreatePayload,
+  AdminSchoolMemberItem,
+} from "../../types/adminSchoolMember";
 import type {
   AdminSchoolMemberImportCommitResponse,
   AdminSchoolMemberImportPreviewResponse,
@@ -50,7 +59,7 @@ const currentSchool = computed(() => {
   };
 });
 
-const members = ref<SchoolMemberItem[]>([]);
+const members = ref<AdminSchoolMemberItem[]>([]);
 const roles = ref<RoleItem[]>([]);
 const memberRoleDrafts = ref<Record<string, string>>({});
 
@@ -59,6 +68,8 @@ const rolesLoading = ref(false);
 const savingRolesSchoolUserId = ref("");
 const importPreviewLoading = ref(false);
 const importCommitLoading = ref(false);
+const isCreatingMember = ref(false);
+const removingSchoolUserId = ref("");
 
 const membersError = ref("");
 const rolesError = ref("");
@@ -69,6 +80,13 @@ const importFile = ref<File | null>(null);
 const importDefaultPassword = ref("");
 const importPreview = ref<AdminSchoolMemberImportPreviewResponse | null>(null);
 const importResult = ref<AdminSchoolMemberImportCommitResponse | null>(null);
+const manualForm = ref<AdminSchoolMemberCreatePayload>({
+  fullName: "",
+  email: "",
+  password: "",
+  role: "student",
+  classCode: "",
+});
 
 const allowedRoles = computed(() =>
   roles.value.filter((role) =>
@@ -118,7 +136,7 @@ function initializeRoleDrafts() {
   memberRoleDrafts.value = nextDrafts;
 }
 
-function primaryRoleName(member: SchoolMemberItem) {
+function primaryRoleName(member: AdminSchoolMemberItem) {
   return (
     member.roles
       ?.filter((roleName) =>
@@ -128,7 +146,7 @@ function primaryRoleName(member: SchoolMemberItem) {
   );
 }
 
-function hasMultipleAllowedRoles(member: SchoolMemberItem) {
+function hasMultipleAllowedRoles(member: AdminSchoolMemberItem) {
   const uniqueRoles = new Set(
     member.roles
       ?.map((roleName) => normalizeRoleName(roleName))
@@ -156,12 +174,12 @@ async function loadMembers() {
   membersLoading.value = true;
   membersError.value = "";
   try {
-    const data = await getSchoolMembers(currentSchool.value.schoolCode, {
+    const data = await getAdminSchoolMembers({
       page: 1,
       limit: 50,
       search: memberSearch.value.trim(),
     });
-    members.value = data.members?.data ?? [];
+    members.value = data.data ?? [];
     initializeRoleDrafts();
   } catch {
     membersError.value = "Warga sekolah belum bisa dimuat.";
@@ -293,6 +311,74 @@ async function submitImportCommit() {
     );
   } finally {
     importCommitLoading.value = false;
+  }
+}
+
+function resetManualForm() {
+  manualForm.value = {
+    fullName: "",
+    email: "",
+    password: "",
+    role: "student",
+    classCode: "",
+  };
+}
+
+async function submitManualMember() {
+  const payload: AdminSchoolMemberCreatePayload = {
+    fullName: manualForm.value.fullName.trim(),
+    email: manualForm.value.email.trim(),
+    password: manualForm.value.password,
+    role: manualForm.value.role,
+    classCode:
+      manualForm.value.role === "student"
+        ? manualForm.value.classCode?.trim() || undefined
+        : undefined,
+  };
+  if (!payload.fullName || !payload.email || !payload.password || !payload.role) {
+    toast.error("Nama, email, password awal, dan peran wajib diisi.");
+    return;
+  }
+
+  isCreatingMember.value = true;
+  try {
+    await createAdminSchoolMember(payload);
+    toast.success("Warga sekolah berhasil ditambahkan.");
+    resetManualForm();
+    memberSearch.value = "";
+    await loadMembers();
+  } catch (error) {
+    toast.error(
+      getApiErrorMessage(
+        error,
+        "Warga sekolah belum bisa ditambahkan. Pastikan data valid.",
+      ),
+    );
+  } finally {
+    isCreatingMember.value = false;
+  }
+}
+
+async function removeMember(member: AdminSchoolMemberItem) {
+  const confirmed = window.confirm(
+    "Akun global tidak akan dihapus. Warga ini hanya dikeluarkan dari sekolah aktif. Lanjutkan?",
+  );
+  if (!confirmed) return;
+
+  removingSchoolUserId.value = member.schoolUserId;
+  try {
+    await removeAdminSchoolMember(member.schoolUserId);
+    toast.success("Warga sekolah berhasil dihapus dari sekolah aktif.");
+    await loadMembers();
+  } catch (error) {
+    toast.error(
+      getApiErrorMessage(
+        error,
+        "Warga sekolah belum bisa dihapus dari sekolah aktif.",
+      ),
+    );
+  } finally {
+    removingSchoolUserId.value = "";
   }
 }
 
@@ -483,6 +569,12 @@ onMounted(async () => {
                         Bergabung {{ formatDateTime(member.createdAt) }}
                       </p>
                       <p
+                        v-if="member.classCodes?.length"
+                        class="mt-2 text-[11px] font-medium text-[#6b7280]"
+                      >
+                        Kelas: {{ member.classCodes.join(", ") }}
+                      </p>
+                      <p
                         v-if="hasMultipleAllowedRoles(member)"
                         class="mt-2 rounded-lg border border-[#fde68a] bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#92400e]"
                       >
@@ -537,6 +629,19 @@ onMounted(async () => {
                           : "Simpan peran"
                       }}
                     </button>
+                    <button
+                      type="button"
+                      class="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#fecaca] bg-white px-3 py-2.5 text-sm font-medium text-[#dc2626] transition hover:bg-[#fef2f2] disabled:opacity-60"
+                      :disabled="removingSchoolUserId === member.schoolUserId"
+                      @click="removeMember(member)"
+                    >
+                      <PhTrash :size="17" weight="duotone" />
+                      {{
+                        removingSchoolUserId === member.schoolUserId
+                          ? "Menghapus..."
+                          : "Hapus dari sekolah"
+                      }}
+                    </button>
                   </div>
                 </div>
               </article>
@@ -553,25 +658,105 @@ onMounted(async () => {
                 <p
                   class="text-[10px] font-medium uppercase tracking-[0.08em] text-[#9ca3af]"
                 >
-                  Import warga sekolah
+                  Tambah warga sekolah
                 </p>
                 <h2 class="mt-1 text-base font-semibold text-[#171322]">
-                  Upload template CSV
+                  Manual atau import CSV
                 </h2>
                 <p class="mt-1 text-xs leading-5 text-[#6b7280]">
-                  Import ini hanya menambahkan warga ke sekolah aktif. Akun
-                  global yang sudah ada akan dipakai ulang tanpa membuka daftar
-                  pengguna platform.
+                  Tambahkan warga ke sekolah aktif. Akun global yang sudah ada
+                  dipakai ulang berdasarkan email tanpa membuka daftar pengguna
+                  platform.
                 </p>
               </div>
-              <PhFileCsv
+              <PhPlusCircle
                 :size="21"
                 class="text-[#ea580c]"
                 weight="duotone"
               />
             </div>
 
-            <div class="mt-5 space-y-4">
+            <form class="mt-5 space-y-3" @submit.prevent="submitManualMember">
+              <label class="block text-xs font-medium text-[#6b7280]">
+                Nama lengkap
+                <input
+                  v-model="manualForm.fullName"
+                  type="text"
+                  placeholder="Nama warga sekolah"
+                  class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#4f46e5] focus:bg-white"
+                />
+              </label>
+              <label class="block text-xs font-medium text-[#6b7280]">
+                Email
+                <input
+                  v-model="manualForm.email"
+                  type="email"
+                  placeholder="email@sekolah.sch.id"
+                  class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#4f46e5] focus:bg-white"
+                />
+              </label>
+              <label class="block text-xs font-medium text-[#6b7280]">
+                Password awal
+                <input
+                  v-model="manualForm.password"
+                  type="password"
+                  placeholder="Minimal 6 karakter"
+                  class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#4f46e5] focus:bg-white"
+                />
+              </label>
+              <label class="block text-xs font-medium text-[#6b7280]">
+                Peran
+                <select
+                  v-model="manualForm.role"
+                  class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition focus:border-[#4f46e5] focus:bg-white"
+                >
+                  <option value="student">Siswa</option>
+                  <option value="teacher">Guru</option>
+                  <option value="admin">Admin sekolah</option>
+                </select>
+              </label>
+              <label class="block text-xs font-medium text-[#6b7280]">
+                Kode kelas
+                <input
+                  v-model="manualForm.classCode"
+                  type="text"
+                  placeholder="Opsional untuk siswa"
+                  class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#4f46e5] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="manualForm.role !== 'student'"
+                />
+              </label>
+              <p class="rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#92400e]">
+                Password awal digunakan untuk akun baru. Pengguna dapat
+                mengganti password setelah login.
+              </p>
+              <button
+                type="submit"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#171322] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#374151] disabled:opacity-60"
+                :disabled="isCreatingMember"
+              >
+                <PhPlusCircle :size="17" weight="duotone" />
+                {{ isCreatingMember ? "Menambahkan..." : "Tambah warga" }}
+              </button>
+            </form>
+
+            <div class="mt-6 border-t border-[#ebe7df] pt-5">
+              <div class="flex items-start gap-3">
+                <PhFileCsv
+                  :size="21"
+                  class="mt-0.5 text-[#ea580c]"
+                  weight="duotone"
+                />
+                <div>
+                  <h3 class="text-sm font-semibold text-[#171322]">
+                    Import warga sekolah
+                  </h3>
+                  <p class="mt-1 text-xs leading-5 text-[#6b7280]">
+                    Upload template CSV untuk menambahkan banyak warga sekaligus.
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-4 space-y-4">
               <button
                 type="button"
                 class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#ebe7df] bg-white px-4 py-2.5 text-sm font-medium text-[#171322] transition hover:border-[#ea580c] hover:text-[#ea580c]"
@@ -630,6 +815,7 @@ onMounted(async () => {
               >
                 Reset import
               </button>
+            </div>
             </div>
 
             <div class="mt-4 space-y-3">
