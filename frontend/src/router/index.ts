@@ -77,14 +77,6 @@ const router = createRouter({
       ],
     },
     {
-      path: "/auth/login",
-      redirect: "/login",
-    },
-    {
-      path: "/auth/unauthorized",
-      redirect: "/unauthorized",
-    },
-    {
       path: "/student",
       component: StudentLayout,
       meta: { requiresAuth: true, roles: ["student"] },

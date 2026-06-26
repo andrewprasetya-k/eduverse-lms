@@ -1,3 +1,13 @@
+<script setup lang="ts">
+import router from "../../router";
+import { useAuthStore } from "../../stores/auth";
+
+function logout() {
+  const auth = useAuthStore();
+  auth.logout();
+  router.push("/login");
+}
+</script>
 <template>
   <section class="soft-card w-full max-w-lg rounded-[28px] p-8 text-center">
     <p class="text-sm font-medium text-[#f2756a]">Akses ditolak</p>
@@ -11,6 +21,7 @@
     <RouterLink
       class="mt-7 inline-flex h-11 items-center justify-center rounded-2xl bg-[#4f46e5] px-5 text-sm font-medium text-white"
       to="/login"
+      @click.prevent="logout"
     >
       Kembali ke login
     </RouterLink>
