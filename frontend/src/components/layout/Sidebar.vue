@@ -16,7 +16,7 @@ const router = useRouter();
 
 function logout() {
   auth.logout();
-  router.push("/auth/login");
+  router.push("/login");
 }
 
 function isActive(to: string) {

@@ -56,17 +56,12 @@ const router = createRouter({
       redirect: "/home",
     },
     {
-      path: "/",
-      children: [
-        {
-          path: "home",
-          name: "home",
-          component: HomePage,
-        },
-      ],
+      path: "/home",
+      name: "home",
+      component: HomePage,
     },
     {
-      path: "/auth",
+      path: "/",
       component: AuthLayout,
       children: [
         {
@@ -80,6 +75,14 @@ const router = createRouter({
           component: UnauthorizedPage,
         },
       ],
+    },
+    {
+      path: "/auth/login",
+      redirect: "/login",
+    },
+    {
+      path: "/auth/unauthorized",
+      redirect: "/unauthorized",
     },
     {
       path: "/student",
@@ -351,7 +354,7 @@ router.beforeEach((to) => {
 
   if (to.name === "login" && auth.isAuthenticated) {
     const role = auth.primaryRole();
-    return role ? dashboardByRole[role] : "/auth/unauthorized";
+    return role ? dashboardByRole[role] : "/unauthorized";
   }
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
