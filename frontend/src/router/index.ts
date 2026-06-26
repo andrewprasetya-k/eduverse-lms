@@ -28,6 +28,7 @@ import AdminEnrollments from "../pages/admin/AdminEnrollments.vue";
 import AdminSubjectClasses from "../pages/admin/AdminSubjectClasses.vue";
 import AdminUsers from "../pages/admin/AdminUsers.vue";
 import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard.vue";
+import SuperAdminSchools from "../pages/superadmin/SuperAdminSchools.vue";
 import FeaturePlaceholder from "../components/common/FeaturePlaceholder.vue";
 import ReadProfile from "../pages/profile/ReadProfile.vue";
 import TeacherCreate from "../pages/teacher/TeacherCreate.vue";
@@ -320,13 +321,7 @@ const router = createRouter({
         {
           path: "schools",
           name: "superadmin-schools",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Platform schools",
-            title: "Manajemen sekolah",
-            description:
-              "Manajemen sekolah level platform direncanakan setelah flow admin sekolah stabil. Halaman ini belum aktif sebagai fitur operasional MVP.",
-          },
+          component: SuperAdminSchools,
         },
         {
           path: "users",
