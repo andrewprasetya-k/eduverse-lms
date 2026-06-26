@@ -16,7 +16,7 @@ const router = useRouter();
 
 function logout() {
   auth.logout();
-  router.push("/login");
+  router.push("/auth/login");
 }
 
 function isActive(to: string) {
@@ -67,7 +67,11 @@ function isActive(to: string) {
       title="Buka profil"
       aria-label="Buka profil"
       class="flex h-8 w-8 items-center justify-center rounded-full bg-[#4f46e5] text-[11px] font-medium text-white transition hover:bg-[#4338ca]"
-      :class="isActive(profileTo) ? 'ring-2 ring-[#c7d2fe] ring-offset-2 ring-offset-white' : ''"
+      :class="
+        isActive(profileTo)
+          ? 'ring-2 ring-[#c7d2fe] ring-offset-2 ring-offset-white'
+          : ''
+      "
     >
       {{ auth.user?.fullName?.slice(0, 2).toUpperCase() || "EV" }}
     </RouterLink>
