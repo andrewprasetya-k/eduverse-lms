@@ -3,8 +3,10 @@ import { computed, onMounted, ref } from "vue";
 import {
   PhArrowClockwise,
   PhBuildings,
+  PhCheckCircle,
   PhEnvelopeSimple,
   PhGlobe,
+  PhIdentificationBadge,
   PhMagnifyingGlass,
   PhMapPin,
   PhPhone,
@@ -12,12 +14,13 @@ import {
 } from "@phosphor-icons/vue";
 import { useToastStore } from "../../stores/toast";
 import {
-  createSuperAdminSchool,
+  bootstrapSuperAdminSchool,
   getSuperAdminSchools,
   getSuperAdminSchoolSummary,
 } from "../../services/superAdminSchool";
 import type {
-  CreateSuperAdminSchoolPayload,
+  SuperAdminSchoolBootstrapPayload,
+  SuperAdminSchoolBootstrapResponse,
   SuperAdminSchoolItem,
   SuperAdminSchoolSummary,
 } from "../../types/superAdminSchool";
@@ -27,10 +30,11 @@ const toast = useToastStore();
 const schools = ref<SuperAdminSchoolItem[]>([]);
 const summary = ref<SuperAdminSchoolSummary | null>(null);
 const isLoading = ref(false);
-const isCreating = ref(false);
+const isBootstrapping = ref(false);
 const errorMessage = ref("");
 const summaryError = ref("");
 const searchQuery = ref("");
+const bootstrapResult = ref<SuperAdminSchoolBootstrapResponse | null>(null);
 
 const schoolForm = ref({
   schoolName: "",
@@ -39,6 +43,16 @@ const schoolForm = ref({
   schoolEmail: "",
   schoolPhone: "",
   schoolWebsite: "",
+});
+
+const adminMode = ref<"new" | "existing">("new");
+const newAdminForm = ref({
+  fullName: "",
+  email: "",
+  password: "",
+});
+const existingAdminForm = ref({
+  userId: "",
 });
 
 const filteredSchools = computed(() => {
@@ -65,6 +79,15 @@ function resetForm() {
     schoolEmail: "",
     schoolPhone: "",
     schoolWebsite: "",
+  };
+  adminMode.value = "new";
+  newAdminForm.value = {
+    fullName: "",
+    email: "",
+    password: "",
+  };
+  existingAdminForm.value = {
+    userId: "",
   };
 }
 
@@ -124,8 +147,8 @@ async function refreshPage() {
   await Promise.all([loadSchools(), loadSummary()]);
 }
 
-function buildCreatePayload(): CreateSuperAdminSchoolPayload {
-  const payload: CreateSuperAdminSchoolPayload = {
+function buildSchoolPayload(): SuperAdminSchoolBootstrapPayload["school"] {
+  const payload: SuperAdminSchoolBootstrapPayload["school"] = {
     schoolName: schoolForm.value.schoolName.trim(),
     schoolAddress: schoolForm.value.schoolAddress.trim(),
     schoolEmail: schoolForm.value.schoolEmail.trim(),
@@ -141,35 +164,85 @@ function buildCreatePayload(): CreateSuperAdminSchoolPayload {
   return payload;
 }
 
-async function submitSchool() {
-  const payload = buildCreatePayload();
+function buildBootstrapPayload(): SuperAdminSchoolBootstrapPayload {
+  const school = buildSchoolPayload();
 
+  if (adminMode.value === "existing") {
+    return {
+      school,
+      adminUser: {
+        mode: "existing",
+        userId: existingAdminForm.value.userId.trim(),
+      },
+    };
+  }
+
+  return {
+    school,
+    adminUser: {
+      mode: "new",
+      fullName: newAdminForm.value.fullName.trim(),
+      email: newAdminForm.value.email.trim(),
+      password: newAdminForm.value.password,
+    },
+  };
+}
+
+function validateBootstrapPayload(payload: SuperAdminSchoolBootstrapPayload) {
   if (
-    !payload.schoolName ||
-    !payload.schoolAddress ||
-    !payload.schoolEmail ||
-    !payload.schoolPhone
+    !payload.school.schoolName ||
+    !payload.school.schoolAddress ||
+    !payload.school.schoolEmail ||
+    !payload.school.schoolPhone
   ) {
-    toast.error("Nama, alamat, email, dan telepon sekolah wajib diisi.");
+    return "Nama, alamat, email, dan telepon sekolah wajib diisi.";
+  }
+
+  if (payload.adminUser.mode === "new") {
+    if (
+      !payload.adminUser.fullName ||
+      !payload.adminUser.email ||
+      !payload.adminUser.password
+    ) {
+      return "Nama, email, dan password admin awal wajib diisi.";
+    }
+    return "";
+  }
+
+  if (!payload.adminUser.userId) {
+    return "User ID akun global wajib diisi.";
+  }
+
+  return "";
+}
+
+async function submitBootstrap() {
+  const payload = buildBootstrapPayload();
+  const validationMessage = validateBootstrapPayload(payload);
+
+  if (validationMessage) {
+    toast.error(validationMessage);
     return;
   }
 
-  isCreating.value = true;
+  isBootstrapping.value = true;
+  bootstrapResult.value = null;
 
   try {
-    await createSuperAdminSchool(payload);
-    toast.success("Sekolah berhasil dibuat.");
+    const response = await bootstrapSuperAdminSchool(payload);
+    bootstrapResult.value = response;
+    toast.success("Sekolah dan Admin Sekolah awal berhasil disiapkan.");
     resetForm();
     await refreshPage();
   } catch (error) {
     toast.error(
       getApiErrorMessage(
         error,
-        "Sekolah belum bisa dibuat. Pastikan data sekolah valid.",
+        "Setup sekolah belum bisa disimpan. Pastikan data sekolah dan admin awal valid.",
       ),
     );
   } finally {
-    isCreating.value = false;
+    isBootstrapping.value = false;
   }
 }
 
@@ -201,7 +274,7 @@ onMounted(() => {
         <button
           type="button"
           class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-semibold text-[#171322] transition hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-          :disabled="isLoading || isCreating"
+          :disabled="isLoading || isBootstrapping"
           @click="refreshPage"
         >
           <PhArrowClockwise :size="16" weight="bold" />
@@ -215,19 +288,25 @@ onMounted(() => {
     >
       <div class="flex min-w-0 flex-col gap-6">
         <section class="grid gap-3 sm:grid-cols-3">
-          <article class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm">
+          <article
+            class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm"
+          >
             <p class="text-xs font-medium text-[#6b7280]">Total sekolah</p>
             <p class="mt-2 text-2xl font-semibold text-[#171322]">
               {{ summary ? summary.totalSchools : "-" }}
             </p>
           </article>
-          <article class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm">
+          <article
+            class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm"
+          >
             <p class="text-xs font-medium text-[#6b7280]">Aktif</p>
             <p class="mt-2 text-2xl font-semibold text-[#027a48]">
               {{ summary ? summary.totalActive : "-" }}
             </p>
           </article>
-          <article class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm">
+          <article
+            class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm"
+          >
             <p class="text-xs font-medium text-[#6b7280]">Diarsipkan</p>
             <p class="mt-2 text-2xl font-semibold text-[#b45309]">
               {{ summary ? summary.totalDeleted : "-" }}
@@ -258,8 +337,8 @@ onMounted(() => {
                 Sekolah platform
               </h2>
               <p class="mt-2 text-sm leading-6 text-[#6b7280]">
-                Daftar ini hanya mengelola identitas tenant sekolah.
-                Operasional akademik tetap dikelola oleh Admin Sekolah.
+                Daftar ini hanya mengelola identitas tenant sekolah. Operasional
+                akademik tetap dikelola oleh Admin Sekolah.
               </p>
             </div>
             <label class="relative block w-full lg:max-w-xs">
@@ -323,7 +402,9 @@ onMounted(() => {
                 >
                   <div class="min-w-0">
                     <div class="flex min-w-0 flex-wrap items-center gap-2">
-                      <h3 class="truncate text-base font-semibold text-[#171322]">
+                      <h3
+                        class="truncate text-base font-semibold text-[#171322]"
+                      >
                         {{ school.schoolName }}
                       </h3>
                       <span
@@ -393,14 +474,14 @@ onMounted(() => {
               <p
                 class="text-xs font-semibold uppercase tracking-[0.16em] text-[#ea580c]"
               >
-                Tambah sekolah
+                Setup sekolah
               </p>
               <h2 class="mt-2 text-xl font-semibold text-[#171322]">
-                Tenant sekolah baru
+                Sekolah + admin awal
               </h2>
               <p class="mt-2 text-sm leading-6 text-[#6b7280]">
-                Buat identitas sekolah platform. Admin Sekolah akan melanjutkan
-                pengaturan akademik dari area admin sekolah.
+                Buat tenant sekolah dan beri akses Admin Sekolah dalam satu
+                proses atomik.
               </p>
             </div>
             <span
@@ -410,75 +491,235 @@ onMounted(() => {
             </span>
           </div>
 
-          <form class="mt-5 space-y-4" @submit.prevent="submitSchool">
-            <label class="block text-sm font-medium text-[#374151]">
-              Nama sekolah
-              <input
-                v-model="schoolForm.schoolName"
-                type="text"
-                class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
-                placeholder="Contoh: EduVerse Academy"
+          <div
+            v-if="bootstrapResult"
+            class="mt-5 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-4"
+          >
+            <div class="flex items-start gap-3">
+              <PhCheckCircle
+                :size="22"
+                class="mt-0.5 shrink-0 text-[#027a48]"
+                weight="duotone"
               />
-            </label>
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-[#166534]">
+                  Setup berhasil
+                </p>
+                <p class="mt-1 text-xs leading-5 text-[#166534]">
+                  {{ bootstrapResult.school.schoolName }} sudah dibuat dan
+                  {{ bootstrapResult.adminUser.fullName }} mendapat role admin
+                  sekolah.
+                </p>
+              </div>
+            </div>
+          </div>
 
-            <label class="block text-sm font-medium text-[#374151]">
-              Kode sekolah
-              <input
-                v-model="schoolForm.schoolCode"
-                type="text"
-                class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
-                placeholder="Kosongkan untuk kode otomatis"
-              />
-            </label>
+          <form class="mt-5 space-y-5" @submit.prevent="submitBootstrap">
+            <section class="space-y-4">
+              <div>
+                <p class="text-sm font-semibold text-[#171322]">
+                  Identitas sekolah
+                </p>
+                <p class="mt-1 text-xs leading-5 text-[#6b7280]">
+                  Data ini membuat tenant sekolah platform, bukan pengaturan
+                  akademik.
+                </p>
+              </div>
 
-            <label class="block text-sm font-medium text-[#374151]">
-              Email sekolah
-              <input
-                v-model="schoolForm.schoolEmail"
-                type="email"
-                class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
-                placeholder="admin@sekolah.sch.id"
-              />
-            </label>
+              <label class="block text-sm font-medium text-[#374151]">
+                Nama sekolah
+                <input
+                  v-model="schoolForm.schoolName"
+                  type="text"
+                  class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                  placeholder="Contoh: SMA EduVerse"
+                />
+              </label>
 
-            <label class="block text-sm font-medium text-[#374151]">
-              Telepon sekolah
-              <input
-                v-model="schoolForm.schoolPhone"
-                type="tel"
-                class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
-                placeholder="081234567890"
-              />
-            </label>
+              <label class="block text-sm font-medium text-[#374151]">
+                Kode sekolah
+                <input
+                  v-model="schoolForm.schoolCode"
+                  type="text"
+                  class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                  placeholder="Kosongkan untuk kode otomatis"
+                />
+              </label>
 
-            <label class="block text-sm font-medium text-[#374151]">
-              Website
-              <input
-                v-model="schoolForm.schoolWebsite"
-                type="url"
-                class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
-                placeholder="https://sekolah.sch.id"
-              />
-            </label>
+              <label class="block text-sm font-medium text-[#374151]">
+                Email sekolah
+                <input
+                  v-model="schoolForm.schoolEmail"
+                  type="email"
+                  class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                  placeholder="admin@sekolah.sch.id"
+                />
+              </label>
 
-            <label class="block text-sm font-medium text-[#374151]">
-              Alamat sekolah
-              <textarea
-                v-model="schoolForm.schoolAddress"
-                rows="4"
-                class="mt-2 w-full resize-none rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
-                placeholder="Alamat lengkap sekolah"
-              />
-            </label>
+              <label class="block text-sm font-medium text-[#374151]">
+                Telepon sekolah
+                <input
+                  v-model="schoolForm.schoolPhone"
+                  type="tel"
+                  class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                  placeholder="081234567890"
+                />
+              </label>
+
+              <label class="block text-sm font-medium text-[#374151]">
+                Website
+                <input
+                  v-model="schoolForm.schoolWebsite"
+                  type="url"
+                  class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                  placeholder="https://sekolah.sch.id"
+                />
+              </label>
+
+              <label class="block text-sm font-medium text-[#374151]">
+                Alamat sekolah
+                <textarea
+                  v-model="schoolForm.schoolAddress"
+                  rows="4"
+                  class="mt-2 w-full resize-none rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                  placeholder="Alamat lengkap sekolah"
+                />
+              </label>
+            </section>
+
+            <section class="space-y-4 border-t border-[#ebe7df] pt-5">
+              <div>
+                <p class="text-sm font-semibold text-[#171322]">Admin awal</p>
+                <p class="mt-1 text-xs leading-5 text-[#6b7280]">
+                  Akun ini akan menjadi Admin Sekolah untuk tenant baru.
+                </p>
+              </div>
+
+              <div class="grid gap-2 sm:grid-cols-2">
+                <label
+                  class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm transition"
+                  :class="
+                    adminMode === 'new'
+                      ? 'border-[#ea580c] bg-[#fff7ed]'
+                      : 'border-[#e5e7eb] bg-white hover:bg-[#fafafa]'
+                  "
+                >
+                  <input
+                    v-model="adminMode"
+                    type="radio"
+                    value="new"
+                    class="mt-1"
+                  />
+                  <span>
+                    <span class="block font-semibold text-[#171322]">
+                      Akun admin baru
+                    </span>
+                    <span class="mt-1 block text-xs leading-5 text-[#6b7280]">
+                      Buat user global baru.
+                    </span>
+                  </span>
+                </label>
+
+                <label
+                  class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm transition"
+                  :class="
+                    adminMode === 'existing'
+                      ? 'border-[#ea580c] bg-[#fff7ed]'
+                      : 'border-[#e5e7eb] bg-white hover:bg-[#fafafa]'
+                  "
+                >
+                  <input
+                    v-model="adminMode"
+                    type="radio"
+                    value="existing"
+                    class="mt-1"
+                  />
+                  <span>
+                    <span class="block font-semibold text-[#171322]">
+                      Gunakan akun global
+                    </span>
+                    <span class="mt-1 block text-xs leading-5 text-[#6b7280]">
+                      Pakai user ID yang sudah ada.
+                    </span>
+                  </span>
+                </label>
+              </div>
+
+              <div v-if="adminMode === 'new'" class="space-y-4">
+                <label class="block text-sm font-medium text-[#374151]">
+                  Nama admin sekolah
+                  <input
+                    v-model="newAdminForm.fullName"
+                    type="text"
+                    class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                    placeholder="Admin Sekolah"
+                  />
+                </label>
+
+                <label class="block text-sm font-medium text-[#374151]">
+                  Email admin sekolah
+                  <input
+                    v-model="newAdminForm.email"
+                    type="email"
+                    class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                    placeholder="admin@sma.sch.id"
+                  />
+                </label>
+
+                <label class="block text-sm font-medium text-[#374151]">
+                  Password awal
+                  <input
+                    v-model="newAdminForm.password"
+                    type="password"
+                    class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                    placeholder="Minimal 6 karakter"
+                  />
+                </label>
+              </div>
+
+              <div v-else class="space-y-3">
+                <label class="block text-sm font-medium text-[#374151]">
+                  User ID akun global
+                  <input
+                    v-model="existingAdminForm.userId"
+                    type="text"
+                    class="mt-2 w-full rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#ea580c] focus:ring-2 focus:ring-[#fed7aa]"
+                    placeholder="UUID user global"
+                  />
+                </label>
+                <p
+                  class="rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-3 py-2 text-xs leading-5 text-[#6b7280]"
+                >
+                  Ambil User ID dari data akun global yang sudah ada. Setelah
+                  submit, akun tersebut mendapat role admin sekolah untuk
+                  sekolah baru.
+                </p>
+              </div>
+            </section>
 
             <button
               type="submit"
               class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#171322] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#2f2b3a] disabled:cursor-not-allowed disabled:opacity-60"
-              :disabled="isCreating || isLoading"
+              :disabled="isBootstrapping || isLoading"
             >
               <PhPlusCircle :size="18" weight="duotone" />
-              {{ isCreating ? "Menyimpan..." : "Tambah sekolah" }}
+              {{ isBootstrapping ? "Menyiapkan..." : "Setup sekolah" }}
             </button>
+
+            <div
+              class="flex gap-3 rounded-lg border border-[#ebe7df] bg-[#fcfbf8] p-3"
+            >
+              <PhIdentificationBadge
+                :size="20"
+                class="mt-0.5 shrink-0 text-[#ea580c]"
+                weight="duotone"
+              />
+              <p class="text-xs leading-5 text-[#6b7280]">
+                Flow ini hanya membuat tenant sekolah dan akses Admin Sekolah
+                awal. Tahun ajaran, kelas, dan penempatan tetap dikelola dari
+                area Admin Sekolah.
+              </p>
+            </div>
           </form>
         </section>
       </aside>

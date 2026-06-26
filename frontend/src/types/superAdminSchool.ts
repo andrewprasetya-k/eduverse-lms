@@ -34,3 +34,34 @@ export interface CreateSuperAdminSchoolPayload {
   schoolPhone: string;
   schoolWebsite?: string;
 }
+
+export interface SuperAdminSchoolBootstrapPayload {
+  school: CreateSuperAdminSchoolPayload;
+  adminUser:
+    | {
+        mode: "new";
+        fullName: string;
+        email: string;
+        password: string;
+      }
+    | {
+        mode: "existing";
+        userId: string;
+      };
+}
+
+export interface SuperAdminSchoolBootstrapResponse {
+  school: {
+    schoolId: string;
+    schoolName: string;
+    schoolCode: string;
+  };
+  adminUser: {
+    userId: string;
+    fullName: string;
+    email: string;
+    isActive: boolean;
+  };
+  schoolUserId: string;
+  assignedRoles: string[];
+}
