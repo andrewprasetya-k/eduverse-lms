@@ -290,7 +290,7 @@ function formatDateTime(value?: string | null) {
   <main class="min-h-screen min-w-0 flex-1 overflow-x-hidden bg-[#f8f7f4]">
     <section class="px-0 py-0 sm:px-0 lg:px-0">
       <div
-        class="mx-auto flex max-h-screen min-h-[calc(100vh-3rem)] max-w-screen flex-col gap-5"
+        class="mx-auto flex max-h-screen min-h-screen max-w-screen flex-col gap-5"
       >
         <div
           v-if="isBooting"
