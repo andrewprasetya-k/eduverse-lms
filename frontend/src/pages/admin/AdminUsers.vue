@@ -1,25 +1,33 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import {
+  PhDownloadSimple,
+  PhFileCsv,
   PhMagnifyingGlass,
   PhShieldCheck,
+  PhUploadSimple,
   PhUsers,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
 import {
-  enrollUserToSchool,
-  getAdminUsers,
   getRoles,
   getSchoolMembers,
   syncUserRoles,
 } from "../../services/adminUser";
+import {
+  commitSchoolMemberImport,
+  previewSchoolMemberImport,
+} from "../../services/adminSchoolMemberImport";
 import type {
-  AdminUserItem,
   RoleItem,
   SchoolMemberItem,
 } from "../../types/adminUser";
+import type {
+  AdminSchoolMemberImportCommitResponse,
+  AdminSchoolMemberImportPreviewResponse,
+} from "../../types/adminSchoolMemberImport";
 import { formatDateTime } from "../../utils/date";
 
 const allowedRoleNames = ["student", "teacher", "admin"];
@@ -44,22 +52,23 @@ const currentSchool = computed(() => {
 
 const members = ref<SchoolMemberItem[]>([]);
 const roles = ref<RoleItem[]>([]);
-const userResults = ref<AdminUserItem[]>([]);
 const memberRoleDrafts = ref<Record<string, string>>({});
 
 const membersLoading = ref(false);
 const rolesLoading = ref(false);
-const userSearchLoading = ref(false);
-const addExistingLoadingUserId = ref("");
 const savingRolesSchoolUserId = ref("");
+const importPreviewLoading = ref(false);
+const importCommitLoading = ref(false);
 
 const membersError = ref("");
 const rolesError = ref("");
-const userSearchError = ref("");
+const importError = ref("");
 
 const memberSearch = ref("");
-const userSearch = ref("");
-const existingRoleId = ref("");
+const importFile = ref<File | null>(null);
+const importDefaultPassword = ref("");
+const importPreview = ref<AdminSchoolMemberImportPreviewResponse | null>(null);
+const importResult = ref<AdminSchoolMemberImportCommitResponse | null>(null);
 
 const allowedRoles = computed(() =>
   roles.value.filter((role) =>
@@ -85,10 +94,6 @@ function rolePriority(roleName: string) {
   if (normalized === "teacher") return 1;
   if (normalized === "student") return 2;
   return 99;
-}
-
-function isMember(userId: string) {
-  return members.value.some((member) => member.userId === userId);
 }
 
 function initializeRoleDrafts() {
@@ -138,12 +143,6 @@ async function loadRoles() {
   try {
     const data = await getRoles();
     roles.value = data ?? [];
-    if (!existingRoleId.value) {
-      existingRoleId.value =
-        allowedRoles.value.find(
-          (role) => normalizeRoleName(role.roleName) === "student",
-        )?.roleId ?? "";
-    }
   } catch {
     rolesError.value = "Daftar peran belum bisa dimuat.";
   } finally {
@@ -171,36 +170,6 @@ async function loadMembers() {
   }
 }
 
-async function searchUsers() {
-  userSearchError.value = "";
-  userResults.value = [];
-
-  if (!userSearch.value.trim()) {
-    userSearchError.value = "Masukkan nama atau email pengguna.";
-    return;
-  }
-
-  userSearchLoading.value = true;
-  try {
-    const data = await getAdminUsers({
-      page: 1,
-      limit: 20,
-      search: userSearch.value.trim(),
-    });
-    userResults.value = data.data ?? [];
-  } catch {
-    userSearchError.value = "Akun global belum bisa dicari.";
-  } finally {
-    userSearchLoading.value = false;
-  }
-}
-
-async function reloadMembersAndFind(userId: string) {
-  memberSearch.value = "";
-  await loadMembers();
-  return members.value.find((member) => member.userId === userId) ?? null;
-}
-
 async function syncRoleForMember(schoolUserId: string, roleId: string) {
   if (!roleId) {
     toast.error("Pilih satu peran.");
@@ -219,52 +188,112 @@ async function syncRoleForMember(schoolUserId: string, roleId: string) {
   }
 }
 
-async function addExistingUser(user: AdminUserItem) {
-  if (!currentSchool.value.schoolId || !currentSchool.value.schoolCode) {
-    toast.error("Konteks sekolah aktif belum tersedia.");
-    return;
-  }
-  if (!existingRoleId.value) {
-    toast.error("Pilih peran untuk pengguna yang akan ditambahkan.");
-    return;
-  }
-  if (isMember(user.userId)) {
-    toast.info("Pengguna ini sudah menjadi warga sekolah aktif.");
-    return;
-  }
-
-  addExistingLoadingUserId.value = user.userId;
-  try {
-    await enrollUserToSchool({
-      userId: user.userId,
-      schoolId: currentSchool.value.schoolId,
-    });
-
-    const member = await reloadMembersAndFind(user.userId);
-    if (!member) {
-      toast.error(
-        "Akses sekolah belum ditemukan setelah pengguna ditambahkan.",
-      );
-      return;
-    }
-
-    await syncUserRoles(member.schoolUserId, {
-      roleIds: [existingRoleId.value],
-    });
-    toast.success("Pengguna berhasil ditambahkan sebagai warga sekolah.");
-    await loadMembers();
-  } catch {
-    toast.error("Pengguna belum bisa ditambahkan ke sekolah.");
-  } finally {
-    addExistingLoadingUserId.value = "";
-  }
-}
-
 function setRoleDraft(schoolUserId: string, roleId: string) {
   memberRoleDrafts.value = {
     ...memberRoleDrafts.value,
     [schoolUserId]: roleId,
   };
+}
+
+function getApiErrorMessage(error: unknown, fallback: string) {
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const response = (
+      error as {
+        response?: { data?: { error?: unknown; message?: unknown } | string };
+      }
+    ).response;
+    if (typeof response?.data === "string") return response.data;
+    if (typeof response?.data?.error === "string") return response.data.error;
+    if (typeof response?.data?.message === "string")
+      return response.data.message;
+  }
+  return fallback;
+}
+
+function downloadTemplate() {
+  const csv = "fullName,email,role,classCode\nBudi Santoso,budi@siswa.sch.id,student,X-IPA-1\nSiti Rahma,siti@guru.sch.id,teacher,\nAdmin Sekolah,admin@sekolah.sch.id,admin,\n";
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "template-import-warga-sekolah.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function resetImportState() {
+  importFile.value = null;
+  importPreview.value = null;
+  importResult.value = null;
+  importError.value = "";
+}
+
+async function handleImportFileChange(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0] ?? null;
+  importFile.value = file;
+  importPreview.value = null;
+  importResult.value = null;
+  importError.value = "";
+  if (!file) return;
+
+  importPreviewLoading.value = true;
+  try {
+    importPreview.value = await previewSchoolMemberImport(file);
+  } catch (error) {
+    importError.value = getApiErrorMessage(
+      error,
+      "File import belum bisa divalidasi. Pastikan format CSV sesuai template.",
+    );
+  } finally {
+    importPreviewLoading.value = false;
+  }
+}
+
+async function submitImportCommit() {
+  if (!importPreview.value || importPreview.value.rows.length === 0) {
+    toast.error("Preview import belum tersedia.");
+    return;
+  }
+  if (importPreview.value.invalidCount > 0) {
+    toast.error("Perbaiki baris yang tidak valid sebelum import.");
+    return;
+  }
+  if (!importDefaultPassword.value.trim()) {
+    toast.error("Password awal wajib diisi.");
+    return;
+  }
+
+  importCommitLoading.value = true;
+  importError.value = "";
+  importResult.value = null;
+  try {
+    importResult.value = await commitSchoolMemberImport({
+      defaultPassword: importDefaultPassword.value,
+      rows: importPreview.value.rows,
+    });
+    toast.success("Import warga sekolah selesai.");
+    memberSearch.value = "";
+    await loadMembers();
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "response" in error &&
+      (error as { response?: { data?: AdminSchoolMemberImportCommitResponse } })
+        .response?.data?.results
+    ) {
+      importResult.value = (
+        error as { response: { data: AdminSchoolMemberImportCommitResponse } }
+      ).response.data;
+    }
+    importError.value = getApiErrorMessage(
+      error,
+      "Import belum bisa diproses. Pastikan semua baris valid dan password awal terisi.",
+    );
+  } finally {
+    importCommitLoading.value = false;
+  }
 }
 
 onMounted(async () => {
@@ -285,8 +314,8 @@ onMounted(async () => {
             Warga Sekolah
           </h1>
           <p class="mt-2 max-w-3xl text-sm leading-6 text-[#6b7280]">
-            Hubungkan akun yang sudah ada ke sekolah dan atur perannya sebelum
-            melakukan penempatan kelas.
+            Kelola warga pada sekolah aktif dan import data siswa, guru, atau
+            admin sekolah dari template CSV.
           </p>
         </div>
         <div class="flex min-w-0 flex-wrap gap-2 text-xs">
@@ -414,7 +443,7 @@ onMounted(async () => {
                 Belum ada warga sekolah
               </h3>
               <p class="mt-2 text-sm leading-6 text-[#6b7280]">
-                Cari pengguna melalui panel tambah pengguna untuk memulai.
+                Import warga sekolah dari panel kanan untuk memulai.
               </p>
             </div>
 
@@ -524,105 +553,176 @@ onMounted(async () => {
                 <p
                   class="text-[10px] font-medium uppercase tracking-[0.08em] text-[#9ca3af]"
                 >
-                  Tambah pengguna
+                  Import warga sekolah
                 </p>
                 <h2 class="mt-1 text-base font-semibold text-[#171322]">
-                  Cari akun yang sudah ada
+                  Upload template CSV
                 </h2>
                 <p class="mt-1 text-xs leading-5 text-[#6b7280]">
-                  Cari akun EduVerse, pilih peran, lalu hubungkan ke sekolah.
+                  Import ini hanya menambahkan warga ke sekolah aktif. Akun
+                  global yang sudah ada akan dipakai ulang tanpa membuka daftar
+                  pengguna platform.
                 </p>
               </div>
-              <PhMagnifyingGlass
+              <PhFileCsv
                 :size="21"
                 class="text-[#ea580c]"
                 weight="duotone"
               />
             </div>
 
-            <form class="mt-5 space-y-3" @submit.prevent="searchUsers">
+            <div class="mt-5 space-y-4">
+              <button
+                type="button"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#ebe7df] bg-white px-4 py-2.5 text-sm font-medium text-[#171322] transition hover:border-[#ea580c] hover:text-[#ea580c]"
+                @click="downloadTemplate"
+              >
+                <PhDownloadSimple :size="17" weight="duotone" />
+                Download template CSV
+              </button>
+
               <label class="block text-xs font-medium text-[#6b7280]">
-                Nama atau email
+                File CSV
                 <input
-                  v-model="userSearch"
-                  type="search"
-                  placeholder="Cari pengguna"
+                  type="file"
+                  accept=".csv,text/csv"
+                  class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition file:mr-3 file:rounded-md file:border-0 file:bg-[#fff4ee] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#ea580c] focus:border-[#4f46e5] focus:bg-white"
+                  @change="handleImportFileChange"
+                />
+              </label>
+
+              <label class="block text-xs font-medium text-[#6b7280]">
+                Password awal untuk akun baru
+                <input
+                  v-model="importDefaultPassword"
+                  type="password"
+                  placeholder="Minimal 6 karakter"
                   class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#4f46e5] focus:bg-white"
                 />
               </label>
-              <label class="block text-xs font-medium text-[#6b7280]">
-                Peran saat ditambahkan
-                <select
-                  v-model="existingRoleId"
-                  class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition focus:border-[#4f46e5] focus:bg-white"
-                  :disabled="rolesLoading || allowedRoles.length === 0"
-                >
-                  <option value="" disabled>Pilih peran</option>
-                  <option
-                    v-for="role in allowedRoles"
-                    :key="role.roleId"
-                    :value="role.roleId"
-                  >
-                    {{ roleLabel(role.roleName) }}
-                  </option>
-                </select>
-              </label>
-              <button
-                type="submit"
-                class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#ea580c] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#c2410c] disabled:opacity-60"
-                :disabled="userSearchLoading"
-              >
-                <PhMagnifyingGlass :size="17" weight="duotone" />
-                {{ userSearchLoading ? "Mencari..." : "Cari pengguna" }}
-              </button>
-            </form>
 
-            <div class="mt-4 space-y-2">
+              <p class="rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#92400e]">
+                Password awal hanya dipakai untuk akun baru. Pengguna dapat
+                mengganti password setelah login.
+              </p>
+
+              <button
+                type="button"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#ea580c] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#c2410c] disabled:opacity-60"
+                :disabled="
+                  importCommitLoading ||
+                  importPreviewLoading ||
+                  !importPreview ||
+                  importPreview.invalidCount > 0
+                "
+                @click="submitImportCommit"
+              >
+                <PhUploadSimple :size="17" weight="duotone" />
+                {{ importCommitLoading ? "Mengimport..." : "Import warga" }}
+              </button>
+
+              <button
+                v-if="importPreview || importResult || importFile"
+                type="button"
+                class="inline-flex w-full items-center justify-center rounded-lg border border-[#ebe7df] bg-white px-4 py-2.5 text-sm font-medium text-[#171322] transition hover:bg-[#fbfaf8]"
+                :disabled="importCommitLoading || importPreviewLoading"
+                @click="resetImportState"
+              >
+                Reset import
+              </button>
+            </div>
+
+            <div class="mt-4 space-y-3">
               <p
-                v-if="userSearchError"
+                v-if="importError"
                 class="rounded-lg bg-[#fef2f2] px-3 py-2 text-xs leading-5 text-[#dc2626]"
               >
-                {{ userSearchError }}
+                {{ importError }}
               </p>
               <p
-                v-else-if="!userSearchLoading && userResults.length === 0"
+                v-else-if="importPreviewLoading"
                 class="rounded-lg bg-[#fbfaf8] px-3 py-3 text-xs leading-5 text-[#6b7280]"
               >
-                Hasil pencarian pengguna akan tampil di sini.
+                Memvalidasi file import...
+              </p>
+              <p
+                v-else-if="!importPreview"
+                class="rounded-lg bg-[#fbfaf8] px-3 py-3 text-xs leading-5 text-[#6b7280]"
+              >
+                Pilih file CSV untuk melihat preview validasi.
               </p>
 
-              <article
-                v-for="user in userResults"
-                :key="user.userId"
+              <div
+                v-if="importPreview"
                 class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-3"
               >
-                <h3
-                  class="wrap-break-word text-sm font-semibold text-[#171322]"
-                >
-                  {{ user.fullName }}
-                </h3>
-                <p class="mt-1 break-all text-xs text-[#6b7280]">
-                  {{ user.email }}
+                <div class="flex flex-wrap gap-2 text-xs">
+                  <span class="rounded-lg bg-[#ecfdf3] px-2.5 py-1 font-semibold text-[#027a48]">
+                    {{ importPreview.validCount }} valid
+                  </span>
+                  <span class="rounded-lg bg-[#fef2f2] px-2.5 py-1 font-semibold text-[#dc2626]">
+                    {{ importPreview.invalidCount }} invalid
+                  </span>
+                </div>
+
+                <div class="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
+                  <article
+                    v-for="row in importPreview.rows"
+                    :key="row.rowNumber"
+                    class="rounded-lg border bg-white p-3"
+                    :class="
+                      row.status === 'valid'
+                        ? 'border-[#bbf7d0]'
+                        : 'border-[#fecaca]'
+                    "
+                  >
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="min-w-0">
+                        <p class="text-xs font-semibold text-[#171322]">
+                          Baris {{ row.rowNumber }} · {{ row.fullName || "Nama kosong" }}
+                        </p>
+                        <p class="mt-1 break-all text-xs text-[#6b7280]">
+                          {{ row.email || "Email kosong" }}
+                        </p>
+                        <p class="mt-1 text-xs text-[#6b7280]">
+                          {{ roleLabel(row.role) }}
+                          <span v-if="row.classCode"> · {{ row.classCode }}</span>
+                        </p>
+                      </div>
+                      <span
+                        class="shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold"
+                        :class="
+                          row.status === 'valid'
+                            ? 'bg-[#ecfdf3] text-[#027a48]'
+                            : 'bg-[#fef2f2] text-[#dc2626]'
+                        "
+                      >
+                        {{ row.status === "valid" ? "Valid" : "Invalid" }}
+                      </span>
+                    </div>
+                    <ul
+                      v-if="row.errors.length > 0"
+                      class="mt-2 list-disc space-y-1 pl-4 text-xs leading-5 text-[#dc2626]"
+                    >
+                      <li v-for="error in row.errors" :key="error">
+                        {{ error }}
+                      </li>
+                    </ul>
+                  </article>
+                </div>
+              </div>
+
+              <div
+                v-if="importResult"
+                class="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] p-3 text-xs leading-5 text-[#166534]"
+              >
+                <p class="font-semibold">Import selesai</p>
+                <p class="mt-1">
+                  {{ importResult.importedCount }} diproses,
+                  {{ importResult.skippedCount }} dilewati,
+                  {{ importResult.failedCount }} gagal.
                 </p>
-                <button
-                  type="button"
-                  class="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-[#ebe7df] bg-white px-3 py-2 text-xs font-medium text-[#171322] transition hover:border-[#ea580c] hover:text-[#ea580c] disabled:opacity-60"
-                  :disabled="
-                    isMember(user.userId) ||
-                    !existingRoleId ||
-                    addExistingLoadingUserId === user.userId
-                  "
-                  @click="addExistingUser(user)"
-                >
-                  {{
-                    addExistingLoadingUserId === user.userId
-                      ? "Menambahkan..."
-                      : isMember(user.userId)
-                        ? "Sudah terhubung"
-                        : "Tambahkan ke sekolah"
-                  }}
-                </button>
-              </article>
+              </div>
             </div>
           </section>
         </aside>
