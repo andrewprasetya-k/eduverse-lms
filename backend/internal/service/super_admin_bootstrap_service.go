@@ -1,0 +1,240 @@
+package service
+
+import (
+	"backend/internal/domain"
+	"backend/internal/dto"
+	"errors"
+	"fmt"
+	"math/rand"
+	"net/mail"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+)
+
+type SuperAdminBootstrapService interface {
+	BootstrapSchool(input dto.SchoolBootstrapRequestDTO) (*dto.SchoolBootstrapResponseDTO, error)
+}
+
+type superAdminBootstrapService struct {
+	db *gorm.DB
+}
+
+func NewSuperAdminBootstrapService(db *gorm.DB) SuperAdminBootstrapService {
+	return &superAdminBootstrapService{db: db}
+}
+
+func (s *superAdminBootstrapService) BootstrapSchool(input dto.SchoolBootstrapRequestDTO) (*dto.SchoolBootstrapResponseDTO, error) {
+	var response *dto.SchoolBootstrapResponseDTO
+
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		school, err := s.createBootstrapSchool(tx, input.School)
+		if err != nil {
+			return err
+		}
+
+		adminUser, err := s.resolveBootstrapAdminUser(tx, input.AdminUser)
+		if err != nil {
+			return err
+		}
+
+		schoolUser := domain.SchoolUser{
+			UserID:   adminUser.ID,
+			SchoolID: school.ID,
+		}
+		if err := tx.Create(&schoolUser).Error; err != nil {
+			return err
+		}
+
+		var adminRole domain.Role
+		if err := tx.Where("rol_name = ?", "admin").First(&adminRole).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("bootstrap admin role not found")
+			}
+			return err
+		}
+
+		userRole := domain.UserRole{
+			SchoolUserID: schoolUser.ID,
+			RoleID:       adminRole.ID,
+		}
+		if err := tx.Create(&userRole).Error; err != nil {
+			return err
+		}
+
+		response = &dto.SchoolBootstrapResponseDTO{
+			School: dto.SchoolBootstrapSchoolDTO{
+				ID:   school.ID,
+				Name: school.Name,
+				Code: school.Code,
+			},
+			AdminUser: dto.BootstrapAdminUserResponseDTO{
+				ID:       adminUser.ID,
+				FullName: adminUser.FullName,
+				Email:    adminUser.Email,
+				IsActive: adminUser.IsActive,
+			},
+			SchoolUserID:  schoolUser.ID,
+			AssignedRoles: []string{"admin"},
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (s *superAdminBootstrapService) createBootstrapSchool(tx *gorm.DB, input dto.CreateSchoolDTO) (*domain.School, error) {
+	school := domain.School{
+		Name:    strings.TrimSpace(input.Name),
+		Code:    strings.TrimSpace(input.Code),
+		LogoID:  input.LogoID,
+		Address: strings.TrimSpace(input.Address),
+		Email:   strings.TrimSpace(input.Email),
+		Phone:   strings.TrimSpace(input.Phone),
+		Website: input.Website,
+	}
+	if school.Website != nil {
+		trimmed := strings.TrimSpace(*school.Website)
+		school.Website = &trimmed
+	}
+
+	if err := ensureNoSchoolConflict(tx, "sch_email", school.Email, "bootstrap duplicate school email"); err != nil {
+		return nil, err
+	}
+	if err := ensureNoSchoolConflict(tx, "sch_phone", school.Phone, "bootstrap duplicate school phone"); err != nil {
+		return nil, err
+	}
+
+	if school.Code == "" {
+		code, err := generateBootstrapSchoolCode(tx)
+		if err != nil {
+			return nil, err
+		}
+		school.Code = code
+	} else if err := ensureNoSchoolConflict(tx, "sch_code", school.Code, "bootstrap duplicate school code"); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Create(&school).Error; err != nil {
+		return nil, err
+	}
+	return &school, nil
+}
+
+func (s *superAdminBootstrapService) resolveBootstrapAdminUser(tx *gorm.DB, input dto.BootstrapAdminUserDTO) (*domain.User, error) {
+	mode := strings.TrimSpace(strings.ToLower(input.Mode))
+	switch mode {
+	case "new":
+		return createBootstrapAdminUser(tx, input)
+	case "existing":
+		return findExistingBootstrapAdminUser(tx, input.UserID)
+	default:
+		return nil, fmt.Errorf("bootstrap invalid admin user mode")
+	}
+}
+
+func createBootstrapAdminUser(tx *gorm.DB, input dto.BootstrapAdminUserDTO) (*domain.User, error) {
+	fullName := strings.TrimSpace(input.FullName)
+	email := strings.ToLower(strings.TrimSpace(input.Email))
+	password := input.Password
+
+	if fullName == "" || email == "" || password == "" {
+		return nil, fmt.Errorf("bootstrap new admin user fields are required")
+	}
+	if _, err := mail.ParseAddress(email); err != nil {
+		return nil, fmt.Errorf("bootstrap invalid admin user email")
+	}
+	if len(password) < 6 {
+		return nil, fmt.Errorf("bootstrap admin user password too short")
+	}
+
+	var count int64
+	if err := tx.Model(&domain.User{}).Where("usr_email = ?", email).Count(&count).Error; err != nil {
+		return nil, err
+	}
+	if count > 0 {
+		return nil, fmt.Errorf("bootstrap duplicate user email")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	user := domain.User{
+		FullName: fullName,
+		Email:    email,
+		Password: string(hashedPassword),
+		IsActive: true,
+	}
+	if err := tx.Create(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func findExistingBootstrapAdminUser(tx *gorm.DB, userID string) (*domain.User, error) {
+	userID = strings.TrimSpace(userID)
+	if userID == "" {
+		return nil, fmt.Errorf("bootstrap existing admin user id is required")
+	}
+	if _, err := uuid.Parse(userID); err != nil {
+		return nil, fmt.Errorf("bootstrap invalid existing admin user id")
+	}
+
+	var user domain.User
+	if err := tx.Where("usr_id = ? AND is_active = ?", userID, true).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("bootstrap existing admin user not found")
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func ensureNoSchoolConflict(tx *gorm.DB, column string, value string, message string) error {
+	if value == "" {
+		return nil
+	}
+
+	var count int64
+	query := tx.Model(&domain.School{})
+	if column == "sch_code" {
+		query = query.Unscoped()
+	}
+	if err := query.Where(column+" = ?", value).Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.New(message)
+	}
+	return nil
+}
+
+func generateBootstrapSchoolCode(tx *gorm.DB) (string, error) {
+	word := []rune("ABCDEFGHJKMNPQRSTUVWXYZ23456789")
+	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	for range 10 {
+		code := make([]rune, 6)
+		for i := range code {
+			code[i] = word[seededRand.Intn(len(word))]
+		}
+
+		var count int64
+		if err := tx.Unscoped().Model(&domain.School{}).Where("sch_code = ?", string(code)).Count(&count).Error; err != nil {
+			return "", err
+		}
+		if count == 0 {
+			return string(code), nil
+		}
+	}
+
+	return "", fmt.Errorf("bootstrap school code generation failed")
+}

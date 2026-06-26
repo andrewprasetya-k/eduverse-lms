@@ -139,6 +139,82 @@ Replace all roles for a user.
 
 ## 3. Super Admin Management
 
+### Bootstrap School Tenant with Initial Admin
+Create a new school tenant and assign one initial school admin in one database
+transaction. This is internal Super Admin MVP onboarding, not public landing-page
+school request onboarding.
+
+- **URL:** `/super-admin/school-bootstrap`
+- **Method:** `POST`
+- **Auth:** Required (`super_admin` on system school `sch_code = "0000"` only)
+
+**Create new admin user:**
+```json
+{
+  "school": {
+    "schoolName": "SMA EduVerse",
+    "schoolCode": "sma-eduverse",
+    "schoolAddress": "Jl. Pendidikan No. 1",
+    "schoolEmail": "admin@sma.sch.id",
+    "schoolPhone": "08123456789",
+    "schoolWebsite": "https://sma.sch.id"
+  },
+  "adminUser": {
+    "mode": "new",
+    "fullName": "Admin Sekolah",
+    "email": "admin@sma.sch.id",
+    "password": "InitialPassword123!"
+  }
+}
+```
+
+**Use existing global user:**
+```json
+{
+  "school": {
+    "schoolName": "SMA EduVerse",
+    "schoolCode": "sma-eduverse",
+    "schoolAddress": "Jl. Pendidikan No. 1",
+    "schoolEmail": "admin@sma.sch.id",
+    "schoolPhone": "08123456789"
+  },
+  "adminUser": {
+    "mode": "existing",
+    "userId": "uuid"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "school": {
+    "schoolId": "uuid",
+    "schoolName": "SMA EduVerse",
+    "schoolCode": "sma-eduverse"
+  },
+  "adminUser": {
+    "userId": "uuid",
+    "fullName": "Admin Sekolah",
+    "email": "admin@sma.sch.id",
+    "isActive": true
+  },
+  "schoolUserId": "uuid",
+  "assignedRoles": ["admin"]
+}
+```
+
+**Behavior:**
+- Creates the school tenant.
+- Creates a new global user or uses an existing active user.
+- Creates `school_users` membership for the new school.
+- Assigns only the `admin` role to that school membership.
+- Rolls back the whole transaction if any step fails.
+- Does not create public school request records.
+- Does not assign `super_admin`.
+
+---
+
 ### Create Super Admin
 Create a new super admin user (automatically enrolled to "admin" school with super_admin role).
 
@@ -208,8 +284,11 @@ Content-Type: application/json
 | Endpoint | Method | super_admin | admin | teacher | student |
 |----------|--------|-------------|-------|---------|---------|
 | `/schools` | POST | ✅ | ❌ | ❌ | ❌ |
+| `/super-admin/school-bootstrap` | POST | ✅* | ❌ | ❌ | ❌ |
 | `/rbac/roles` | POST | ✅ | ❌ | ❌ | ❌ |
 | `/rbac/super-admin` | POST | ✅ | ❌ | ❌ | ❌ |
+
+*Requires `super_admin` on the system school where `schools.sch_code = "0000"`.
 
 ### School Management
 | Endpoint | Method | super_admin | admin | teacher | student |

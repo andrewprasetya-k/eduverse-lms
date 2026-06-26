@@ -65,6 +65,8 @@ func main() {
 	rbacRepo := repository.NewRBACRepository(db)
 	rbacService := service.NewRBACService(rbacRepo, userService, schoolRepo)
 	rbacHandler := handler.NewRBACHandler(rbacService)
+	superAdminBootstrapService := service.NewSuperAdminBootstrapService(db)
+	superAdminBootstrapHandler := handler.NewSuperAdminBootstrapHandler(superAdminBootstrapService)
 
 	classRepo := repository.NewClassRepository(db)
 	classService := service.NewClassService(classRepo, schoolService)
@@ -234,6 +236,11 @@ func main() {
 
 			// Super Admin
 			rbacAPI.POST("/super-admin", middleware.RequireRole(schoolService, "super_admin"), rbacHandler.CreateSuperAdmin)
+		}
+
+		superAdminAPI := api.Group("/super-admin")
+		{
+			superAdminAPI.POST("/school-bootstrap", middleware.RequireSystemSuperAdmin(schoolService), superAdminBootstrapHandler.BootstrapSchool)
 		}
 
 		classAPI := api.Group("/classes")

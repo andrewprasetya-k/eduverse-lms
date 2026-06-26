@@ -19,6 +19,7 @@ Authorization: Bearer <your-jwt-token>
 
 ## 🏫 Schools
 - `POST /schools` - Create school
+- `POST /super-admin/school-bootstrap` - Atomically create school tenant and assign initial school admin (system super_admin only)
 - `GET /schools` - List all schools (with pagination)
 - `GET /schools/summary` - Get schools summary
 - `GET /schools/check-code/:schoolCode` - Check code availability
