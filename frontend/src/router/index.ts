@@ -59,6 +59,7 @@ const router = createRouter({
       path: "/home",
       name: "home",
       component: HomePage,
+      meta: { title: "Ruang belajar masa depan." },
     },
     {
       path: "/",
@@ -68,11 +69,13 @@ const router = createRouter({
           path: "login",
           name: "login",
           component: LoginPage,
+          meta: { title: "Masuk ke akunmu sekarang" },
         },
         {
           path: "unauthorized",
           name: "unauthorized",
           component: UnauthorizedPage,
+          meta: { title: "Role tidak diketahui" },
         },
       ],
     },
@@ -85,6 +88,7 @@ const router = createRouter({
           path: "dashboard",
           name: "student-dashboard",
           component: StudentDashboard,
+          meta: { title: "Mulai belajar di EduVerse" },
         },
         {
           path: "classes",
@@ -98,11 +102,13 @@ const router = createRouter({
           path: "subjects",
           name: "student-subjects",
           component: StudentSubjects,
+          meta: { title: "Pilih subjects untuk dipelajari" },
         },
         {
           path: "subjects/:sclId",
           name: "student-subject-detail",
           component: StudentSubjectDetail,
+          meta: { title: "Lihat materi untuk dipelajari" },
         },
         {
           path: "subjects/:sclId/materials/:matId",
@@ -340,6 +346,16 @@ const router = createRouter({
   ],
 });
 
+declare module "vue-router" {
+  interface RouteMeta {
+    title?: string;
+    requiresAuth?: boolean;
+    roles?: RoleName[];
+  }
+}
+
+const APP_NAME = "EduVerse";
+
 router.beforeEach((to) => {
   const auth = useAuthStore();
   auth.restoreSession();
@@ -359,6 +375,14 @@ router.beforeEach((to) => {
   }
 
   return true;
+});
+
+router.afterEach((to) => {
+  const nearestTitle = [...to.matched]
+    .reverse()
+    .find((record) => record.meta.title)?.meta.title;
+
+  document.title = nearestTitle ? `${nearestTitle} | ${APP_NAME}` : APP_NAME;
 });
 
 export default router;
