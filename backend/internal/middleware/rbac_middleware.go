@@ -10,6 +10,8 @@ import (
 
 var rbacRepo repository.RBACRepository
 
+const SystemSchoolCode = "000000"
+
 // InitRBAC initializes RBAC middleware with repository
 func InitRBAC(repo repository.RBACRepository) {
 	rbacRepo = repo
@@ -163,7 +165,7 @@ func RequireRole(schoolService interface {
 }
 
 // RequireSystemSuperAdmin checks whether the current user has super_admin role
-// on the system school (sch_code = 0000), regardless of the active SchoolId header.
+// on the system school, regardless of the active SchoolId header.
 func RequireSystemSuperAdmin(schoolService interface {
 	ConvertCodeToID(code string) (string, error)
 }) gin.HandlerFunc {
@@ -180,7 +182,7 @@ func RequireSystemSuperAdmin(schoolService interface {
 			return
 		}
 
-		systemSchoolID, err := schoolService.ConvertCodeToID("0000")
+		systemSchoolID, err := schoolService.ConvertCodeToID(SystemSchoolCode)
 		if err != nil {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: system super admin context not available"})
 			c.Abort()

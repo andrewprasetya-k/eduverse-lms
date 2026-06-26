@@ -33,7 +33,7 @@ Register a new global user profile. Password will be securely hashed.
 
 - **URL:** `(base URL)`
 - **Method:** `POST`
-- **Auth:** Required (`super_admin` on system school `sch_code = "0000"` only)
+- **Auth:** Required (`super_admin` on system school `sch_code = "000000"` only)
 - **Scope:** Global platform account creation. School admins must not create global users
   directly; they can add existing global users to their school through school membership
   and assign school roles through RBAC.
@@ -49,14 +49,14 @@ Register a new global user profile. Password will be securely hashed.
 ## 3. Get User Detail
 - **URL:** `/:id`
 - **Method:** `GET`
-- **Auth:** Required (`super_admin` on system school `sch_code = "0000"` only)
+- **Auth:** Required (`super_admin` on system school `sch_code = "000000"` only)
 
 ---
 
 ## 4. Update User Detail
 - **URL:** `/:id`
 - **Method:** `PATCH`
-- **Auth:** Required (`super_admin` on system school `sch_code = "0000"` only)
+- **Auth:** Required (`super_admin` on system school `sch_code = "000000"` only)
 - **Body:** `fullName`, `email`.
 
 ---
@@ -66,7 +66,7 @@ Update user password. Old password verification is required.
 
 - **URL:** `/:id/change-password`
 - **Method:** `PATCH`
-- **Auth:** Required (`super_admin` on system school `sch_code = "0000"` only)
+- **Auth:** Required (`super_admin` on system school `sch_code = "000000"` only)
 - **Note:** Current-user password changes should move to a future `/me/change-password`
   endpoint that uses JWT identity instead of path `:id`.
 - **Body:**
@@ -78,4 +78,4 @@ Update user password. Old password verification is required.
 ## 6. Delete User
 - **URL:** `/:id`
 - **Method:** `DELETE`
-- **Auth:** Required (`super_admin` on system school `sch_code = "0000"` only)
+- **Auth:** Required (`super_admin` on system school `sch_code = "000000"` only)

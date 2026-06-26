@@ -146,7 +146,7 @@ school request onboarding.
 
 - **URL:** `/super-admin/school-bootstrap`
 - **Method:** `POST`
-- **Auth:** Required (`super_admin` on system school `sch_code = "0000"` only)
+- **Auth:** Required (`super_admin` on system school `sch_code = "000000"` only)
 
 **Create new admin user:**
 ```json
@@ -288,7 +288,7 @@ Content-Type: application/json
 | `/rbac/roles` | POST | ✅ | ❌ | ❌ | ❌ |
 | `/rbac/super-admin` | POST | ✅ | ❌ | ❌ | ❌ |
 
-*Requires `super_admin` on the system school where `schools.sch_code = "0000"`.
+*Requires `super_admin` on the system school where `schools.sch_code = "000000"`.
 
 ### School Management
 | Endpoint | Method | super_admin | admin | teacher | student |
@@ -404,7 +404,7 @@ Assessment weight management is admin-only for MVP. Weights are subject-level, s
 | `/users/:id` | DELETE | ✅ | ❌ | ❌ | ❌ |
 
 Global user creation is platform scope and only allowed for a `super_admin` membership
-on the system school where `schools.sch_code = "0000"`.
+on the system school where `schools.sch_code = "000000"`.
 School admins manage existing global users as school memberships and assign roles in
 their active school context.
 Public `/register` remains available for users creating their own plain global
