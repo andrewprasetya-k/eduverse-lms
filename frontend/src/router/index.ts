@@ -18,6 +18,7 @@ import StudentMaterialNoteEditor from "../pages/student/StudentMaterialNoteEdito
 import StudentNotes from "../pages/student/StudentNotes.vue";
 import StudentSubjects from "../pages/student/StudentSubjects.vue";
 import StudentGrades from "../pages/student/StudentGrades.vue";
+import StudentChat from "../pages/student/StudentChat.vue";
 import TeacherDashboard from "../pages/teacher/TeacherDashboard.vue";
 import TeacherSubjectDetail from "../pages/teacher/TeacherSubjectDetail.vue";
 import TeacherSubjects from "../pages/teacher/TeacherSubjects.vue";
@@ -30,7 +31,6 @@ import AdminUsers from "../pages/admin/AdminUsers.vue";
 import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard.vue";
 import SuperAdminSchools from "../pages/superadmin/SuperAdminSchools.vue";
 import SuperAdminUsers from "../pages/superadmin/SuperAdminUsers.vue";
-import FeaturePlaceholder from "../components/common/FeaturePlaceholder.vue";
 import ReadProfile from "../pages/profile/ReadProfile.vue";
 import TeacherCreate from "../pages/teacher/TeacherCreate.vue";
 import TeacherContentCreate from "../pages/teacher/TeacherContentCreate.vue";
@@ -39,6 +39,7 @@ import TeacherMaterialDetail from "../pages/teacher/TeacherMaterialDetail.vue";
 import TeacherSubmissions from "../pages/teacher/TeacherSubmissions.vue";
 import TeacherAssignments from "../pages/teacher/TeacherAssignments.vue";
 import TeacherFeed from "../pages/teacher/TeacherFeed.vue";
+import TeacherChat from "../pages/teacher/TeacherChat.vue";
 import HomePage from "../pages/preview/HomePage.vue";
 
 export const dashboardByRole: Record<RoleName, string> = {
@@ -143,13 +144,8 @@ const router = createRouter({
         {
           path: "chat",
           name: "student-chat",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Realtime chat",
-            title: "Chat student",
-            description:
-              "Chat student direncanakan untuk komunikasi kelas dan subject setelah MVP sekolah. Untuk saat ini, komunikasi kelas berjalan melalui Feed kelas.",
-          },
+          component: StudentChat,
+          meta: { title: "Chat" },
         },
         {
           path: "notes",
@@ -241,13 +237,8 @@ const router = createRouter({
         {
           path: "chat",
           name: "teacher-chat",
-          component: FeaturePlaceholder,
-          props: {
-            eyebrow: "Realtime chat",
-            title: "Chat kelas",
-            description:
-              "Chat kelas direncanakan untuk komunikasi cepat guru dan siswa setelah MVP sekolah. Untuk saat ini, pengumuman kelas berjalan melalui Feed.",
-          },
+          component: TeacherChat,
+          meta: { title: "Chat" },
         },
         {
           path: "profile",
