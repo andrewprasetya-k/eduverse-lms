@@ -299,6 +299,16 @@ Content-Type: application/json
 
 *Super admin harus enroll sebagai admin di sekolah tersebut
 
+### School Member Import
+| Endpoint | Method | super_admin | admin | teacher | student |
+|----------|--------|-------------|-------|---------|---------|
+| `/admin/school-members/import/preview` | POST | ❌ | ✅ | ❌ | ❌ |
+| `/admin/school-members/import/commit` | POST | ❌ | ✅ | ❌ | ❌ |
+
+Import warga sekolah hanya bekerja pada sekolah aktif milik Admin Sekolah.
+Role yang diterima hanya `student`, `teacher`, dan `admin`; `super_admin`
+ditolak.
+
 ### Academic Structure
 | Endpoint | Method | super_admin | admin | teacher | student |
 |----------|--------|-------------|-------|---------|---------|

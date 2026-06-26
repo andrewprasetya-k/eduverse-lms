@@ -54,6 +54,8 @@ func main() {
 	schoolUserRepo := repository.NewSchoolUserRepository(db)
 	schoolUserService := service.NewSchoolUserService(schoolUserRepo, schoolService)
 	schoolUserHandler := handler.NewSchoolUserHandler(schoolUserService, schoolService)
+	adminSchoolMemberImportService := service.NewAdminSchoolMemberImportService(db)
+	adminSchoolMemberImportHandler := handler.NewAdminSchoolMemberImportHandler(adminSchoolMemberImportService)
 
 	authService := service.NewAuthService(userRepo, schoolUserRepo)
 	authHandler := handler.NewAuthHandler(authService)
@@ -206,6 +208,13 @@ func main() {
 			schoolUserAPI.GET("/school/:schoolCode", middleware.RequireSchoolMember(schoolService), schoolUserHandler.GetMembersBySchool)
 			schoolUserAPI.GET("/user/:userId", schoolUserHandler.GetSchoolsByUser)
 			schoolUserAPI.DELETE("/:userId", middleware.RequireRole(schoolService, "admin", "super_admin"), schoolUserHandler.Unenroll)
+		}
+
+		adminSchoolMemberImportAPI := api.Group("/admin/school-members/import")
+		adminSchoolMemberImportAPI.Use(middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin"))
+		{
+			adminSchoolMemberImportAPI.POST("/preview", adminSchoolMemberImportHandler.Preview)
+			adminSchoolMemberImportAPI.POST("/commit", adminSchoolMemberImportHandler.Commit)
 		}
 
 		subjectAPI := api.Group("/subjects")

@@ -57,6 +57,10 @@ Authorization: Bearer <your-jwt-token>
 - `PATCH /users/change-password/:id` - Change password by ID (system super_admin only; future `/me/change-password` recommended)
 - `DELETE /users/:id` - Delete user (system super_admin only)
 
+## 👥 Admin School Member Import
+- `POST /admin/school-members/import/preview` - Validate CSV import rows for active-school members (admin only)
+- `POST /admin/school-members/import/commit` - Import active-school members from validated rows (admin only)
+
 ## 🏢 School Users (User-School Relationship)
 - `POST /school-users/enroll` - Enroll user to school
 - `GET /school-users/school/:schoolCode` - Get members by school
