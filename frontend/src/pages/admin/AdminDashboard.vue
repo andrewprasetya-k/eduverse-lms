@@ -119,7 +119,7 @@ const managementLinks = [
       class="grid w-full max-w-none gap-6 px-5 py-6 sm:px-6 lg:px-8 xl:grid-cols-[minmax(0,1fr)_340px]"
     >
       <div class="flex min-w-0 flex-col gap-6">
-        <section
+        <!-- <section
           class="rounded-xl border border-[#ebe7df] bg-white p-5 shadow-sm"
         >
           <div
@@ -140,13 +140,8 @@ const managementLinks = [
                 menyesatkan.
               </p>
             </div>
-            <span
-              class="inline-flex rounded-lg bg-[#fff4ee] px-3 py-2 text-xs font-semibold text-[#ea580c]"
-            >
-              MVP sekolah
-            </span>
           </div>
-        </section>
+        </section> -->
 
         <section>
           <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
