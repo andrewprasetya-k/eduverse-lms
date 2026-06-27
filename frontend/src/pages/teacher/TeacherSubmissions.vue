@@ -113,9 +113,6 @@ onMounted(loadInbox);
   <main class="min-h-screen min-w-0 flex-1 overflow-x-hidden bg-[#f8f7f4]">
     <header class="border-b border-[#ebe7df] bg-white">
       <div class="px-5 py-5 sm:px-6 lg:px-8">
-        <p class="text-xs font-medium uppercase tracking-wide text-[#7b61a8]">
-          Pengumpulan siswa
-        </p>
         <div
           class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
         >
