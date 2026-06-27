@@ -42,6 +42,7 @@ import TeacherAssignments from "../pages/teacher/TeacherAssignments.vue";
 import TeacherFeed from "../pages/teacher/TeacherFeed.vue";
 import TeacherChat from "../pages/teacher/TeacherChat.vue";
 import HomePage from "../pages/preview/HomePage.vue";
+import NotFoundPage from "../pages/common/NotFoundPage.vue";
 
 export const dashboardByRole: Record<RoleName, string> = {
   super_admin: "/superadmin/dashboard",
@@ -372,6 +373,12 @@ const router = createRouter({
           },
         },
       ],
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      name: "not-found",
+      component: NotFoundPage,
+      meta: { title: "404 - Halaman Tidak Ditemukan" },
     },
   ],
 });

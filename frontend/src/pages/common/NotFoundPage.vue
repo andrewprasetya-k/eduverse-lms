@@ -1,0 +1,71 @@
+<script setup lang="ts">
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import { PhCompassTool } from "@phosphor-icons/vue";
+import { useAuthStore } from "../../stores/auth";
+import type { RoleName } from "../../types/auth";
+
+const router = useRouter();
+const auth = useAuthStore();
+
+const dashboardByRole: Record<RoleName, string> = {
+  super_admin: "/superadmin/dashboard",
+  admin: "/admin/dashboard",
+  teacher: "/teacher/dashboard",
+  student: "/student/dashboard",
+};
+
+const primaryTarget = computed(() => {
+  if (!auth.isAuthenticated) {
+    return "/home";
+  }
+
+  const role = auth.primaryRole();
+  return role ? dashboardByRole[role] : "/home";
+});
+
+const primaryLabel = computed(() =>
+  auth.isAuthenticated ? "Kembali ke Dashboard" : "Kembali ke Beranda",
+);
+
+function goBack() {
+  if (window.history.length > 1) {
+    router.back();
+    return;
+  }
+
+  router.push(primaryTarget.value);
+}
+</script>
+
+<template>
+  <section class="soft-card w-full max-w-screen rounded-[28px] p-8 text-center">
+    <div
+      class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eef2ff] text-[#4f46e5]"
+    >
+      <PhCompassTool :size="22" weight="duotone" />
+    </div>
+    <p class="mt-4 text-sm font-medium text-[#f2756a]">Error 404</p>
+    <h1 class="mt-3 text-3xl font-medium text-[#171322]">
+      Halaman tidak ditemukan
+    </h1>
+    <p class="mt-4 text-sm leading-6 text-[#6b6475]">
+      Halaman yang kamu cari tidak tersedia atau mungkin sudah dipindahkan.
+    </p>
+    <div class="mt-7 flex flex-col items-center justify-center gap-3">
+      <RouterLink
+        class="inline-flex h-11 items-center justify-center rounded-2xl bg-[#4f46e5] px-5 text-sm font-medium text-white"
+        :to="primaryTarget"
+      >
+        {{ primaryLabel }}
+      </RouterLink>
+      <button
+        type="button"
+        class="inline-flex h-11 items-center justify-center rounded-2xl border border-[#ddd6cb] bg-white px-5 text-sm font-medium text-[#171322] transition hover:bg-[#f8f7f4]"
+        @click="goBack"
+      >
+        Kembali ke halaman sebelumnya
+      </button>
+    </div>
+  </section>
+</template>
