@@ -31,7 +31,7 @@ func (h *ChatHandler) ListRooms(c *gin.Context) {
 		return
 	}
 
-	rooms, err := h.service.ListMyRooms(userID, schoolID)
+	rooms, err := h.service.ListMyRooms(userID, schoolID, c.Query("search"))
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -54,7 +54,11 @@ func (h *ChatHandler) ListMembers(c *gin.Context) {
 		return
 	}
 
-	members, err := h.service.ListMembers(userID, schoolID, c.Query("search"))
+	var excludeRoomID *string
+	if value := c.Query("excludeRoomId"); value != "" {
+		excludeRoomID = &value
+	}
+	members, err := h.service.ListMembers(userID, schoolID, c.Query("search"), excludeRoomID)
 	if err != nil {
 		HandleError(c, err)
 		return
@@ -109,6 +113,115 @@ func (h *ChatHandler) CreateGroupRoom(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusCreated, dto.ChatRoomResponseDTO{Room: *room})
+}
+
+func (h *ChatHandler) GetGroupInfo(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getChatActiveSchoolID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+
+	group, err := h.service.GetGroupInfo(userID, schoolID, c.Param("roomId"))
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.ChatGroupInfoResponseDTO{Group: *group})
+}
+
+func (h *ChatHandler) RenameGroupRoom(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getChatActiveSchoolID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+
+	var input dto.UpdateChatGroupDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		HandleBindingError(c, err)
+		return
+	}
+
+	room, err := h.service.RenameGroupRoom(userID, schoolID, c.Param("roomId"), input.RoomName)
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, dto.ChatRoomResponseDTO{Room: *room})
+}
+
+func (h *ChatHandler) LeaveGroupRoom(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getChatActiveSchoolID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+
+	if err := h.service.LeaveGroupRoom(userID, schoolID, c.Param("roomId")); err != nil {
+		HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Keluar dari grup berhasil"})
+}
+
+func (h *ChatHandler) AddGroupMembers(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getChatActiveSchoolID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+
+	var input dto.AddChatGroupMembersDTO
+	if err := c.ShouldBindJSON(&input); err != nil {
+		HandleBindingError(c, err)
+		return
+	}
+
+	if err := h.service.AddGroupMembers(userID, schoolID, c.Param("roomId"), input.MemberUserIDs); err != nil {
+		HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Anggota grup ditambahkan"})
+}
+
+func (h *ChatHandler) RemoveGroupMember(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getChatActiveSchoolID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+
+	if err := h.service.RemoveGroupMember(userID, schoolID, c.Param("roomId"), c.Param("userId")); err != nil {
+		HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Anggota grup dikeluarkan"})
 }
 
 func (h *ChatHandler) ListMessages(c *gin.Context) {

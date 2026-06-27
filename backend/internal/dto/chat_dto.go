@@ -49,8 +49,34 @@ type ChatMemberDTO struct {
 	Roles    []string `json:"roles"`
 }
 
+type ChatGroupMemberDTO struct {
+	UserID   string  `json:"userId"`
+	FullName string  `json:"fullName"`
+	Email    string  `json:"email"`
+	Role     string  `json:"role"`
+	JoinedAt string  `json:"joinedAt"`
+	LeftAt   *string `json:"leftAt,omitempty"`
+}
+
+type ChatGroupInfoDTO struct {
+	RoomID      string               `json:"roomId"`
+	RoomName    string               `json:"roomName"`
+	RoomType    string               `json:"roomType"`
+	SchoolID    string               `json:"schoolId"`
+	SchoolName  string               `json:"schoolName"`
+	Creator     *ChatMemberDTO       `json:"creator"`
+	Admins      []ChatGroupMemberDTO `json:"admins"`
+	Members     []ChatGroupMemberDTO `json:"members"`
+	CreatedAt   string               `json:"createdAt"`
+	MemberCount int                  `json:"memberCount"`
+}
+
 type ChatMembersResponseDTO struct {
 	Members []ChatMemberDTO `json:"members"`
+}
+
+type ChatGroupInfoResponseDTO struct {
+	Group ChatGroupInfoDTO `json:"group"`
 }
 
 type ChatMessagesResponseDTO struct {
@@ -65,6 +91,14 @@ type CreateChatMessageDTO struct {
 
 type CreateChatGroupDTO struct {
 	RoomName      string   `json:"roomName" binding:"required"`
+	MemberUserIDs []string `json:"memberUserIds" binding:"required,dive,uuid"`
+}
+
+type UpdateChatGroupDTO struct {
+	RoomName string `json:"roomName" binding:"required"`
+}
+
+type AddChatGroupMembersDTO struct {
 	MemberUserIDs []string `json:"memberUserIds" binding:"required,dive,uuid"`
 }
 

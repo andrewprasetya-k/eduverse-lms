@@ -2,6 +2,7 @@ package repository
 
 import (
 	"backend/internal/domain"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -9,15 +10,21 @@ import (
 )
 
 type ChatRepository interface {
-	ListSchoolRooms(userID string, schoolID string) ([]ChatRoomRow, error)
-	ListChatMembers(schoolID string, search string) ([]ChatMemberRow, error)
+	ListSchoolRooms(userID string, schoolID string, search string) ([]ChatRoomRow, error)
+	ListChatMembers(schoolID string, search string, excludeRoomID *string) ([]ChatMemberRow, error)
 	GetSchoolRoom(schoolID string) (*domain.ChatRoom, error)
 	CreateSchoolRoom(room *domain.ChatRoom) error
 	GetRoomContext(roomID string, schoolID string) (*ChatRoomRow, error)
+	GetGroupInfo(roomID string, schoolID string) (*ChatGroupInfoRow, []ChatGroupMemberRow, error)
 	UserIsActiveSchoolMember(userID string, schoolID string) (bool, error)
 	UsersAreActiveSchoolMembers(userIDs []string, schoolID string) (map[string]bool, error)
 	UserIsActiveRoomMember(userID string, roomID string) (bool, error)
+	UserIsRoomAdmin(userID string, roomID string) (bool, error)
 	CreateGroupRoomWithMembers(schoolID string, roomName string, creatorID string, memberUserIDs []string) (*domain.ChatRoom, error)
+	UpdateGroupRoomName(roomID string, schoolID string, roomName string) error
+	LeaveGroupRoom(roomID string, schoolID string, userID string) error
+	AddGroupRoomMembers(roomID string, schoolID string, memberUserIDs []string) error
+	RemoveGroupRoomMember(roomID string, schoolID string, targetUserID string) error
 	ListMessages(roomID string, limit int, before *time.Time) ([]ChatMessageRow, error)
 	CreateMessage(message *domain.ChatMessage) error
 	GetMessageByID(messageID string, roomID string) (*ChatMessageRow, error)
@@ -51,6 +58,29 @@ type ChatMemberRow struct {
 	Roles    string `gorm:"column:roles"`
 }
 
+type ChatGroupInfoRow struct {
+	RoomID            string    `gorm:"column:room_id"`
+	RoomName          string    `gorm:"column:room_name"`
+	RoomType          string    `gorm:"column:room_type"`
+	SchoolID          string    `gorm:"column:school_id"`
+	SchoolName        string    `gorm:"column:school_name"`
+	CreatorID         *string   `gorm:"column:creator_id"`
+	CreatorName       *string   `gorm:"column:creator_name"`
+	CreatorEmail      *string   `gorm:"column:creator_email"`
+	CreatorRoles      *string   `gorm:"column:creator_roles"`
+	CreatedAt         time.Time `gorm:"column:created_at"`
+	ActiveMemberCount int       `gorm:"column:active_member_count"`
+}
+
+type ChatGroupMemberRow struct {
+	UserID   string     `gorm:"column:user_id"`
+	FullName string     `gorm:"column:full_name"`
+	Email    string     `gorm:"column:email"`
+	Role     string     `gorm:"column:role"`
+	JoinedAt time.Time  `gorm:"column:joined_at"`
+	LeftAt   *time.Time `gorm:"column:left_at"`
+}
+
 type ChatMessageRow struct {
 	MessageID  string    `gorm:"column:message_id"`
 	RoomID     string    `gorm:"column:room_id"`
@@ -66,8 +96,9 @@ func NewChatRepository(db *gorm.DB) ChatRepository {
 	return &chatRepository{db: db}
 }
 
-func (r *chatRepository) ListSchoolRooms(userID string, schoolID string) ([]ChatRoomRow, error) {
+func (r *chatRepository) ListSchoolRooms(userID string, schoolID string, search string) ([]ChatRoomRow, error) {
 	var rows []ChatRoomRow
+	searchPattern := "%" + search + "%"
 	err := r.db.Raw(chatRoomListSelect()+`
 		JOIN edv.school_users scu
 			ON scu.scu_usr_id = ?
@@ -80,6 +111,11 @@ func (r *chatRepository) ListSchoolRooms(userID string, schoolID string) ([]Chat
 			AND cr.room_type = 'group'
 			AND cr.deleted_at IS NULL
 			AND s.deleted_at IS NULL
+			AND (
+				? = ''
+				OR cr.room_name ILIKE ?
+				OR s.sch_name ILIKE ?
+			)
 			AND (
 				(cr.room_ref_type = 'school' AND cr.room_ref_id = ?)
 				OR (
@@ -95,11 +131,11 @@ func (r *chatRepository) ListSchoolRooms(userID string, schoolID string) ([]Chat
 				)
 			)
 		ORDER BY COALESCE(lm.created_at, cr.created_at) DESC
-	`, userID, schoolID, schoolID, userID).Scan(&rows).Error
+	`, userID, schoolID, search, searchPattern, searchPattern, schoolID, userID).Scan(&rows).Error
 	return rows, err
 }
 
-func (r *chatRepository) ListChatMembers(schoolID string, search string) ([]ChatMemberRow, error) {
+func (r *chatRepository) ListChatMembers(schoolID string, search string, excludeRoomID *string) ([]ChatMemberRow, error) {
 	var rows []ChatMemberRow
 	searchPattern := "%" + search + "%"
 	err := r.db.Raw(`
@@ -121,10 +157,20 @@ func (r *chatRepository) ListChatMembers(schoolID string, search string) ([]Chat
 				OR u.usr_nama_lengkap ILIKE ?
 				OR u.usr_email ILIKE ?
 			)
+			AND (
+				?::uuid IS NULL
+				OR NOT EXISTS (
+					SELECT 1
+					FROM edv.chat_room_members crm
+					WHERE crm.crm_room_id = ?::uuid
+						AND crm.crm_usr_id = u.usr_id
+						AND crm.left_at IS NULL
+				)
+			)
 		GROUP BY u.usr_id, u.usr_nama_lengkap, u.usr_email
 		ORDER BY u.usr_nama_lengkap ASC, u.usr_email ASC
 		LIMIT 50
-	`, schoolID, search, searchPattern, searchPattern).Scan(&rows).Error
+	`, schoolID, search, searchPattern, searchPattern, excludeRoomID, excludeRoomID).Scan(&rows).Error
 	return rows, err
 }
 
@@ -158,6 +204,79 @@ func (r *chatRepository) GetRoomContext(roomID string, schoolID string) (*ChatRo
 		return nil, gorm.ErrRecordNotFound
 	}
 	return &row, nil
+}
+
+func (r *chatRepository) GetGroupInfo(roomID string, schoolID string) (*ChatGroupInfoRow, []ChatGroupMemberRow, error) {
+	var info ChatGroupInfoRow
+	err := r.db.Raw(`
+		SELECT
+			cr.room_id,
+			cr.room_name,
+			cr.room_type,
+			s.sch_id AS school_id,
+			s.sch_name AS school_name,
+			creator.usr_id AS creator_id,
+			creator.usr_nama_lengkap AS creator_name,
+			creator.usr_email AS creator_email,
+			creator_roles.roles AS creator_roles,
+			cr.created_at,
+			COUNT(active_members.crm_id)::int AS active_member_count
+		FROM edv.chat_rooms cr
+		JOIN edv.schools s
+			ON s.sch_id = cr.room_sch_id
+			AND s.deleted_at IS NULL
+		LEFT JOIN edv.users creator
+			ON creator.usr_id = cr.created_by
+			AND creator.deleted_at IS NULL
+		LEFT JOIN LATERAL (
+			SELECT COALESCE(string_agg(DISTINCT rol.rol_name, ',' ORDER BY rol.rol_name), '') AS roles
+			FROM edv.school_users scu
+			LEFT JOIN edv.user_roles ur ON ur.urol_scu_id = scu.scu_id
+			LEFT JOIN edv.roles rol ON rol.rol_id = ur.urol_rol_id
+			WHERE scu.scu_usr_id = creator.usr_id
+				AND scu.scu_sch_id = cr.room_sch_id
+				AND scu.deleted_at IS NULL
+		) creator_roles ON true
+		LEFT JOIN edv.chat_room_members active_members
+			ON active_members.crm_room_id = cr.room_id
+			AND active_members.left_at IS NULL
+		WHERE cr.room_id = ?
+			AND cr.room_sch_id = ?
+			AND cr.room_type = 'group'
+			AND cr.room_ref_type IS NULL
+			AND cr.room_ref_id IS NULL
+			AND cr.deleted_at IS NULL
+		GROUP BY cr.room_id, cr.room_name, cr.room_type, s.sch_id, s.sch_name, creator.usr_id, creator.usr_nama_lengkap, creator.usr_email, creator_roles.roles, cr.created_at
+		LIMIT 1
+	`, roomID, schoolID).Scan(&info).Error
+	if err != nil {
+		return nil, nil, err
+	}
+	if info.RoomID == "" {
+		return nil, nil, gorm.ErrRecordNotFound
+	}
+
+	var members []ChatGroupMemberRow
+	err = r.db.Raw(`
+		SELECT
+			u.usr_id AS user_id,
+			COALESCE(u.usr_nama_lengkap, '') AS full_name,
+			u.usr_email AS email,
+			crm.crm_role AS role,
+			crm.joined_at,
+			crm.left_at
+		FROM edv.chat_room_members crm
+		JOIN edv.users u
+			ON u.usr_id = crm.crm_usr_id
+			AND u.deleted_at IS NULL
+		WHERE crm.crm_room_id = ?
+			AND crm.left_at IS NULL
+		ORDER BY CASE crm.crm_role WHEN 'admin' THEN 1 ELSE 2 END, crm.joined_at ASC
+	`, roomID).Scan(&members).Error
+	if err != nil {
+		return nil, nil, err
+	}
+	return &info, members, nil
 }
 
 func (r *chatRepository) UserIsActiveSchoolMember(userID string, schoolID string) (bool, error) {
@@ -206,6 +325,15 @@ func (r *chatRepository) UserIsActiveRoomMember(userID string, roomID string) (b
 	return count > 0, err
 }
 
+func (r *chatRepository) UserIsRoomAdmin(userID string, roomID string) (bool, error) {
+	var count int64
+	err := r.db.Table("edv.chat_room_members AS crm").
+		Joins("JOIN edv.users u ON u.usr_id = crm.crm_usr_id AND u.deleted_at IS NULL").
+		Where("crm.crm_room_id = ? AND crm.crm_usr_id = ? AND crm.crm_role = 'admin' AND crm.left_at IS NULL", roomID, userID).
+		Count(&count).Error
+	return count > 0, err
+}
+
 func (r *chatRepository) CreateGroupRoomWithMembers(schoolID string, roomName string, creatorID string, memberUserIDs []string) (*domain.ChatRoom, error) {
 	var created domain.ChatRoom
 	err := r.db.Transaction(func(tx *gorm.DB) error {
@@ -241,6 +369,288 @@ func (r *chatRepository) CreateGroupRoomWithMembers(schoolID string, roomName st
 		return nil, err
 	}
 	return &created, nil
+}
+
+func (r *chatRepository) UpdateGroupRoomName(roomID string, schoolID string, roomName string) error {
+	result := r.db.Exec(`
+		UPDATE edv.chat_rooms
+		SET room_name = ?
+		WHERE room_id = ?
+			AND room_sch_id = ?
+			AND room_type = 'group'
+			AND room_ref_type IS NULL
+			AND room_ref_id IS NULL
+			AND deleted_at IS NULL
+	`, roomName, roomID, schoolID)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
+}
+
+func (r *chatRepository) LeaveGroupRoom(roomID string, schoolID string, userID string) error {
+	now := time.Now()
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var room struct {
+			RoomID    string `gorm:"column:room_id"`
+			CreatedBy string `gorm:"column:created_by"`
+		}
+		if err := tx.Raw(`
+			SELECT room_id, created_by
+			FROM edv.chat_rooms
+			WHERE room_id = ?
+				AND room_sch_id = ?
+				AND room_type = 'group'
+				AND room_ref_type IS NULL
+				AND room_ref_id IS NULL
+				AND deleted_at IS NULL
+			FOR UPDATE
+		`, roomID, schoolID).Scan(&room).Error; err != nil {
+			return err
+		}
+		if room.RoomID == "" {
+			return gorm.ErrRecordNotFound
+		}
+
+		result := tx.Exec(`
+			UPDATE edv.chat_room_members
+			SET left_at = ?
+			WHERE crm_room_id = ?
+				AND crm_usr_id = ?
+				AND left_at IS NULL
+		`, now, roomID, userID)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+
+		var activeCount int64
+		if err := tx.Table("edv.chat_room_members").
+			Where("crm_room_id = ? AND left_at IS NULL", roomID).
+			Count(&activeCount).Error; err != nil {
+			return err
+		}
+		if activeCount == 0 {
+			return tx.Exec("UPDATE edv.chat_rooms SET deleted_at = ? WHERE room_id = ?", now, roomID).Error
+		}
+
+		if room.CreatedBy == userID {
+			return transferGroupOwnership(tx, roomID)
+		}
+		return nil
+	})
+}
+
+func (r *chatRepository) AddGroupRoomMembers(roomID string, schoolID string, memberUserIDs []string) error {
+	now := time.Now()
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var roomIDFound string
+		if err := tx.Raw(`
+			SELECT room_id
+			FROM edv.chat_rooms
+			WHERE room_id = ?
+				AND room_sch_id = ?
+				AND room_type = 'group'
+				AND room_ref_type IS NULL
+				AND room_ref_id IS NULL
+				AND deleted_at IS NULL
+			FOR UPDATE
+		`, roomID, schoolID).Scan(&roomIDFound).Error; err != nil {
+			return err
+		}
+		if roomIDFound == "" {
+			return gorm.ErrRecordNotFound
+		}
+
+		for _, memberID := range memberUserIDs {
+			var existing struct {
+				UserID string     `gorm:"column:crm_usr_id"`
+				LeftAt *time.Time `gorm:"column:left_at"`
+			}
+			if err := tx.Raw(`
+				SELECT crm_usr_id, left_at
+				FROM edv.chat_room_members
+				WHERE crm_room_id = ?
+					AND crm_usr_id = ?
+				LIMIT 1
+			`, roomID, memberID).Scan(&existing).Error; err != nil {
+				return err
+			}
+			if existing.UserID != "" && existing.LeftAt == nil {
+				return fmt.Errorf("chat group member already active")
+			}
+			if existing.UserID != "" {
+				if err := tx.Exec(`
+					UPDATE edv.chat_room_members
+					SET left_at = NULL, crm_role = 'member'
+					WHERE crm_room_id = ?
+						AND crm_usr_id = ?
+				`, roomID, memberID).Error; err != nil {
+					return err
+				}
+				continue
+			}
+			member := domain.ChatRoomMember{
+				RoomID:   roomID,
+				UserID:   memberID,
+				Role:     "member",
+				JoinedAt: now,
+			}
+			if err := tx.Create(&member).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (r *chatRepository) RemoveGroupRoomMember(roomID string, schoolID string, targetUserID string) error {
+	now := time.Now()
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var room struct {
+			RoomID    string `gorm:"column:room_id"`
+			CreatedBy string `gorm:"column:created_by"`
+		}
+		if err := tx.Raw(`
+			SELECT room_id, created_by
+			FROM edv.chat_rooms
+			WHERE room_id = ?
+				AND room_sch_id = ?
+				AND room_type = 'group'
+				AND room_ref_type IS NULL
+				AND room_ref_id IS NULL
+				AND deleted_at IS NULL
+			FOR UPDATE
+		`, roomID, schoolID).Scan(&room).Error; err != nil {
+			return err
+		}
+		if room.RoomID == "" {
+			return gorm.ErrRecordNotFound
+		}
+
+		var target struct {
+			UserID string `gorm:"column:crm_usr_id"`
+			Role   string `gorm:"column:crm_role"`
+		}
+		if err := tx.Raw(`
+			SELECT crm_usr_id, crm_role
+			FROM edv.chat_room_members
+			WHERE crm_room_id = ?
+				AND crm_usr_id = ?
+				AND left_at IS NULL
+			LIMIT 1
+		`, roomID, targetUserID).Scan(&target).Error; err != nil {
+			return err
+		}
+		if target.UserID == "" {
+			return gorm.ErrRecordNotFound
+		}
+
+		if target.Role == "admin" {
+			var otherAdmins int64
+			if err := tx.Table("edv.chat_room_members").
+				Where("crm_room_id = ? AND crm_usr_id <> ? AND crm_role = 'admin' AND left_at IS NULL", roomID, targetUserID).
+				Count(&otherAdmins).Error; err != nil {
+				return err
+			}
+			if otherAdmins == 0 {
+				if _, err := promoteOldestMember(tx, roomID, targetUserID); err != nil {
+					return err
+				}
+			}
+		}
+
+		result := tx.Exec(`
+			UPDATE edv.chat_room_members
+			SET left_at = ?
+			WHERE crm_room_id = ?
+				AND crm_usr_id = ?
+				AND left_at IS NULL
+		`, now, roomID, targetUserID)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return gorm.ErrRecordNotFound
+		}
+
+		if room.CreatedBy == targetUserID {
+			return transferGroupOwnership(tx, roomID)
+		}
+		return nil
+	})
+}
+
+func transferGroupOwnership(tx *gorm.DB, roomID string) error {
+	var newOwnerID string
+	if err := tx.Raw(`
+		SELECT crm_usr_id
+		FROM edv.chat_room_members
+		WHERE crm_room_id = ?
+			AND crm_role = 'admin'
+			AND left_at IS NULL
+		ORDER BY joined_at ASC
+		LIMIT 1
+	`, roomID).Scan(&newOwnerID).Error; err != nil {
+		return err
+	}
+	if newOwnerID == "" {
+		var err error
+		newOwnerID, err = promoteOldestMember(tx, roomID, "")
+		if err != nil {
+			return err
+		}
+	}
+	if newOwnerID == "" {
+		return fmt.Errorf("chat group has no active member")
+	}
+	return tx.Exec("UPDATE edv.chat_rooms SET created_by = ? WHERE room_id = ?", newOwnerID, roomID).Error
+}
+
+func promoteOldestMember(tx *gorm.DB, roomID string, excludeUserID string) (string, error) {
+	var newAdminID string
+	if excludeUserID == "" {
+		if err := tx.Raw(`
+			SELECT crm_usr_id
+			FROM edv.chat_room_members
+			WHERE crm_room_id = ?
+				AND left_at IS NULL
+			ORDER BY joined_at ASC
+			LIMIT 1
+		`, roomID).Scan(&newAdminID).Error; err != nil {
+			return "", err
+		}
+	} else {
+		if err := tx.Raw(`
+			SELECT crm_usr_id
+			FROM edv.chat_room_members
+			WHERE crm_room_id = ?
+				AND left_at IS NULL
+				AND crm_usr_id <> ?
+			ORDER BY joined_at ASC
+			LIMIT 1
+		`, roomID, excludeUserID).Scan(&newAdminID).Error; err != nil {
+			return "", err
+		}
+	}
+	if newAdminID == "" {
+		return "", nil
+	}
+	if err := tx.Exec(`
+		UPDATE edv.chat_room_members
+		SET crm_role = 'admin'
+		WHERE crm_room_id = ?
+			AND crm_usr_id = ?
+			AND left_at IS NULL
+	`, roomID, newAdminID).Error; err != nil {
+		return "", err
+	}
+	return newAdminID, nil
 }
 
 func (r *chatRepository) ListMessages(roomID string, limit int, before *time.Time) ([]ChatMessageRow, error) {

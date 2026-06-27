@@ -78,6 +78,11 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
+	if strings.Contains(errStr, "chat group room name is too short") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nama ruang minimal 3 karakter"})
+		return
+	}
+
 	if strings.Contains(errStr, "chat group members are required") ||
 		strings.Contains(errStr, "chat group member is required") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Pilih minimal satu anggota ruang"})
@@ -91,6 +96,16 @@ func HandleError(c *gin.Context, err error) {
 
 	if strings.Contains(errStr, "invalid chat group member") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Anggota ruang harus warga aktif di sekolah ini"})
+		return
+	}
+
+	if strings.Contains(errStr, "chat group member already active") {
+		c.JSON(http.StatusConflict, gin.H{"error": "Anggota sudah ada di ruang ini"})
+		return
+	}
+
+	if strings.Contains(errStr, "chat group cannot remove self") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Gunakan fitur Keluar grup untuk mengeluarkan diri sendiri"})
 		return
 	}
 

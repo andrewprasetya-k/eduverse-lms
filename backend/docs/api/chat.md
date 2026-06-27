@@ -50,10 +50,11 @@ Custom group room permission:
 
 ### List My Rooms
 
-`GET /rooms`
+`GET /rooms?search=`
 
 Mengembalikan room sekolah dan custom group room yang dapat diakses oleh user
-saat ini.
+saat ini. Query `search` opsional, case-insensitive, dan mencari berdasarkan
+nama room atau nama sekolah. Ordering tetap berdasarkan aktivitas terakhir.
 
 ```json
 {
@@ -83,10 +84,12 @@ saat ini.
 
 ### List Chat Members
 
-`GET /members?search=nama`
+`GET /members?search=nama&excludeRoomId=uuid`
 
 Mengembalikan warga aktif di active school untuk member picker group chat.
-Tidak mengekspos membership dari sekolah lain.
+Tidak mengekspos membership dari sekolah lain. `excludeRoomId` opsional dipakai
+saat menambah anggota ke grup, sehingga user yang masih aktif di grup tersebut
+tidak ikut muncul.
 
 ```json
 {
@@ -160,6 +163,97 @@ Response:
   }
 }
 ```
+
+### Get Group Info
+
+`GET /groups/:roomId`
+
+Mengembalikan info room, pembuat, admin, anggota aktif, waktu dibuat, dan jumlah
+anggota. Hanya active member grup yang boleh membaca info grup.
+
+```json
+{
+  "group": {
+    "roomId": "uuid",
+    "roomName": "Grup Belajar Fisika",
+    "roomType": "group",
+    "schoolId": "school-uuid",
+    "schoolName": "SMA EduVerse",
+    "creator": {
+      "userId": "uuid",
+      "fullName": "Budi",
+      "email": "budi@siswa.sch.id",
+      "roles": ["student"]
+    },
+    "admins": [],
+    "members": [],
+    "createdAt": "2026-06-26T03:00:00Z",
+    "memberCount": 3
+  }
+}
+```
+
+### Rename Group Room
+
+`PATCH /groups/:roomId`
+
+```json
+{
+  "roomName": "Grup Persiapan UTS"
+}
+```
+
+Rules:
+
+- School room tidak bisa diubah namanya.
+- Hanya admin/creator grup aktif yang boleh rename.
+- Nama di-trim.
+- Minimal 3 karakter.
+- Maksimal 150 karakter.
+
+### Leave Group Room
+
+`POST /groups/:roomId/leave`
+
+Menandai membership current user dengan `left_at`. Setelah keluar, user tidak
+melihat room di daftar dan tidak bisa membaca/mengirim pesan ke grup tersebut.
+
+Ownership transfer:
+
+- Jika creator keluar dan masih ada admin aktif lain, creator dipindahkan ke
+  admin aktif paling lama.
+- Jika tidak ada admin lain, anggota aktif paling lama dipromosikan menjadi
+  admin dan menjadi creator baru.
+- Jika tidak ada anggota tersisa, room di-soft-delete.
+
+### Add Group Members
+
+`POST /groups/:roomId/members`
+
+```json
+{
+  "memberUserIds": ["user-uuid"]
+}
+```
+
+Rules:
+
+- Hanya admin grup.
+- Semua user harus active school member di sekolah aktif.
+- Active duplicate ditolak.
+- Membership yang sebelumnya `left_at` akan direstore sebagai `member`.
+
+### Remove Group Member
+
+`DELETE /groups/:roomId/members/:userId`
+
+Rules:
+
+- Hanya admin grup.
+- Admin tidak bisa mengeluarkan diri sendiri; gunakan endpoint leave.
+- Jika target adalah admin terakhir, anggota aktif paling lama dipromosikan
+  sebelum target dikeluarkan.
+- Removed member langsung kehilangan akses karena `left_at` diisi.
 
 ### List Messages
 
