@@ -1,4 +1,3 @@
-<script></script>
 <template>
   <main class="max-w-screen bg-[#fbfaf8] text-[#171322]">
     <!-- Navbar -->
@@ -6,15 +5,17 @@
       <div
         class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-6 lg:px-8"
       >
-        <RouterLink to="/" class="flex items-center gap-3">
+        <RouterLink to="/home" class="flex min-w-0 items-center gap-3">
           <img
             src="/logo_fix.svg"
             alt="Eduverse"
             class="h-11 w-11 rounded-2xl object-contain"
           />
-          <div>
-            <p class="text-sm font-medium text-[#4f46e5]">Eduverse</p>
-            <p class="text-xs text-[#6b7280]">Academic workspace</p>
+          <div class="min-w-0">
+            <p class="text-sm font-medium text-[#4f46e5]">EduVerse</p>
+            <p class="truncate text-xs text-[#6b7280]">
+              Workspace akademik sekolah
+            </p>
           </div>
         </RouterLink>
 
@@ -39,16 +40,20 @@
       class="mx-auto grid max-w-7xl gap-12 px-5 py-16 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:py-24"
     >
       <div class="flex flex-col justify-center">
+        <p class="text-sm font-medium text-[#4f46e5]">
+          EduVerse Academic Workspace
+        </p>
         <h1
-          class="max-w-3xl text-4xl font-medium leading-tight tracking-tight text-[#171322] sm:text-5xl lg:text-6xl"
+          class="mt-4 max-w-3xl text-4xl font-medium leading-tight tracking-tight text-[#171322] sm:text-5xl lg:text-6xl"
         >
-          Ruang belajar digital yang lebih tenang.
+          Workspace akademik sekolah yang menyatukan belajar, mengajar, dan
+          operasional.
         </h1>
 
         <p class="mt-6 max-w-2xl text-base leading-8 text-[#6b6475] sm:text-lg">
-          Eduverse membantu siswa, guru, dan admin sekolah mengelola materi,
-          tugas, catatan, nilai, pengumuman, dan kelas dalam satu workspace
-          akademik.
+          EduVerse dirancang untuk sekolah yang membutuhkan alur kerja akademik
+          yang rapi: dari setup tahun ajaran, pengelolaan warga sekolah, materi
+          dan tugas, sampai chat sekolah dan grup diskusi.
         </p>
 
         <div class="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -56,7 +61,7 @@
             to="/login"
             class="inline-flex h-12 items-center justify-center rounded-2xl bg-[#4f46e5] px-6 text-sm font-medium text-white transition hover:bg-[#4338ca]"
           >
-            Masuk ke Eduverse
+            Masuk ke EduVerse
           </RouterLink>
 
           <a
@@ -70,17 +75,17 @@
 
       <!-- Product Preview -->
       <div
-        class="rounded-4xl border border-[#e7e2da] bg-white p-3 shadow-xl shadow-[#d8d2c6]/30"
+        class="rounded-4xl border border-[#e7e2da] bg-white p-3 shadow-xl shadow-[#d8d2c6]/25"
       >
-        <div class="rounded-3xl bg-[#eef2ff] p-4">
+        <div class="rounded-[1.75rem] bg-[#eef2ff] p-4">
           <div class="rounded-[1.25rem] border border-white/80 bg-white p-5">
             <div class="mb-5 flex items-center justify-between gap-4">
-              <div>
+              <div class="min-w-0">
                 <p class="text-xs font-medium text-[#7a7385]">
                   Dashboard siswa
                 </p>
-                <h2 class="mt-1 text-xl font-medium text-[#171322]">
-                  Selamat datang kembali
+                <h2 class="mt-1 truncate text-xl font-medium text-[#171322]">
+                  Belajar lebih terarah
                 </h2>
               </div>
               <div
@@ -149,102 +154,106 @@
       </div>
     </section>
 
-    <!-- Product Principles -->
+    <!-- Workspace Story -->
     <section id="fitur" class="mx-auto max-w-7xl px-5 pb-20 sm:px-6 lg:px-8">
-      <div class="grid gap-4 md:grid-cols-3">
-        <article
-          v-for="principle in principles"
-          :key="principle.title"
-          class="rounded-3xl border border-[#e7e2da] bg-white p-6"
-        >
-          <div
-            class="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#eef2ff] text-lg"
+      <div
+        class="grid gap-8 rounded-4xl border border-[#e7e2da] bg-white p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-8"
+      >
+        <div class="max-w-xl">
+          <p class="text-sm font-medium text-[#4f46e5]">Cara kerja EduVerse</p>
+          <h2
+            class="mt-3 text-3xl font-medium tracking-tight text-[#171322] sm:text-4xl"
           >
-            {{ principle.icon }}
-          </div>
-          <h2 class="text-lg font-medium text-[#171322]">
-            {{ principle.title }}
+            Aktivitas sekolah bergerak dalam satu alur yang sama.
           </h2>
+          <p class="mt-4 text-base leading-8 text-[#6b6475]">
+            EduVerse dimulai dari struktur sekolah yang rapi, lalu mengalir ke
+            kelas, materi, tugas, pengumpulan, nilai, dan percakapan harian.
+            Hasilnya bukan halaman yang berdiri sendiri, tetapi satu workspace
+            yang terasa nyambung.
+          </p>
+          <p class="mt-4 text-base leading-8 text-[#6b6475]">
+            Siswa melihat apa yang perlu dipelajari. Guru mengajar dan menilai
+            dari tempat yang sama. Admin sekolah menjaga semuanya tetap teratur.
+            Super Admin menangani struktur platform tanpa ikut masuk ke
+            operasional akademik sekolah.
+          </p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2">
+          <article
+            v-for="story in workspaceStory"
+            :key="story.title"
+            class="rounded-3xl border border-[#e7e2da] bg-[#fbfaf8] p-5"
+          >
+            <p class="text-sm font-medium text-[#171322]">{{ story.title }}</p>
+            <p class="mt-2 text-sm leading-7 text-[#6b6475]">
+              {{ story.description }}
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Roles -->
+    <section class="mx-auto max-w-7xl px-5 pb-20 sm:px-6 lg:px-8">
+      <div class="max-w-2xl">
+        <p class="text-sm font-medium text-[#4f46e5]">Untuk setiap peran</p>
+        <h2
+          class="mt-3 text-3xl font-medium tracking-tight text-[#171322] sm:text-4xl"
+        >
+          Satu produk, dengan ruang kerja yang terasa tepat untuk masing-masing
+          pengguna.
+        </h2>
+      </div>
+
+      <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <article
+          v-for="role in roleSummaries"
+          :key="role.title"
+          :id="role.anchor"
+          class="rounded-4xl border border-[#e7e2da] bg-white p-6"
+        >
+          <p class="text-sm font-medium text-[#4f46e5]">{{ role.eyebrow }}</p>
+          <h3 class="mt-3 text-xl font-medium text-[#171322]">
+            {{ role.title }}
+          </h3>
           <p class="mt-3 text-sm leading-7 text-[#6b6475]">
-            {{ principle.description }}
+            {{ role.description }}
           </p>
         </article>
       </div>
     </section>
 
-    <!-- Role Sections -->
-    <section class="mx-auto max-w-7xl space-y-6 px-5 pb-20 sm:px-6 lg:px-8">
-      <section
-        id="siswa"
-        class="grid gap-8 rounded-4xl border border-[#e7e2da] bg-white p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-8"
-      >
-        <RoleIntro
-          eyebrow="Untuk siswa"
-          title="Belajar lebih terarah dari satu tempat."
-          description="Siswa dapat membuka materi, mengumpulkan tugas, menulis catatan pribadi, membaca pengumuman, dan melihat nilai tanpa berpindah platform."
-        />
-
-        <FeatureGrid :features="studentFeatures" />
-      </section>
-
-      <section
-        id="guru"
-        class="grid gap-8 rounded-4xl border border-[#e7e2da] bg-white p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-8"
-      >
-        <RoleIntro
-          eyebrow="Untuk guru"
-          title="Ruang kerja mengajar yang rapi."
-          description="Guru dapat mengelola materi, membuat tugas, memantau pengumpulan, memberi nilai, dan membagikan pengumuman kelas."
-        />
-
-        <FeatureGrid :features="teacherFeatures" />
-      </section>
-
-      <section
-        id="admin"
-        class="grid gap-8 rounded-4xl border border-[#e7e2da] bg-white p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-8"
-      >
-        <RoleIntro
-          eyebrow="Untuk admin sekolah"
-          title="Administrasi akademik lebih terstruktur."
-          description="Admin sekolah dapat mengatur tahun ajaran, kelas, warga sekolah, penempatan siswa, dan penugasan guru."
-        />
-
-        <FeatureGrid :features="adminFeatures" />
-      </section>
-    </section>
-
-    <!-- Showcase -->
+    <!-- Core Workflows -->
     <section class="border-y border-[#e7e2da] bg-white">
       <div class="mx-auto max-w-7xl px-5 py-20 sm:px-6 lg:px-8">
         <div class="max-w-2xl">
-          <p class="text-sm font-medium text-[#4f46e5]">Tampilan produk</p>
+          <p class="text-sm font-medium text-[#4f46e5]">Workflow inti</p>
           <h2
             class="mt-3 text-3xl font-medium tracking-tight text-[#171322] sm:text-4xl"
           >
-            Dibuat untuk aktivitas akademik sehari-hari.
+            Empat hal yang paling sering dikerjakan sekolah, disusun agar lebih
+            mudah diikuti.
           </h2>
-          <p class="mt-4 text-base leading-8 text-[#6b6475]">
-            Eduverse menyatukan pengalaman siswa, guru, dan admin dalam visual
-            yang konsisten, tenang, dan mudah dipindai.
-          </p>
         </div>
 
-        <div class="mt-10 grid gap-5 lg:grid-cols-3">
-          <ShowcaseCard
-            title="Dashboard siswa"
-            description="Ringkasan mata pelajaran, tugas, catatan, nilai, feed, dan notifikasi."
-          />
-
-          <ShowcaseCard
-            title="Workspace guru"
-            description="Kelola materi, tugas, pengumpulan, penilaian, dan pengumuman kelas."
-          />
-
-          <ShowcaseCard
-            title="Admin sekolah"
-            description="Atur struktur akademik, kelas, warga sekolah, dan penugasan mengajar."
-          />
+        <div class="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <article
+            v-for="workflow in workflows"
+            :key="workflow.title"
+            class="rounded-4xl border border-[#e7e2da] bg-[#fbfaf8] p-6"
+          >
+            <p class="text-sm font-medium text-[#4f46e5]">
+              {{ workflow.eyebrow }}
+            </p>
+            <h3 class="mt-3 text-lg font-medium text-[#171322]">
+              {{ workflow.title }}
+            </h3>
+            <p class="mt-3 text-sm leading-7 text-[#6b6475]">
+              {{ workflow.description }}
+            </p>
+          </article>
         </div>
       </div>
     </section>
@@ -252,23 +261,23 @@
     <!-- CTA -->
     <section class="mx-auto max-w-4xl px-5 py-20 text-center sm:px-6 lg:px-8">
       <p class="text-sm font-medium text-[#4f46e5]">
-        Eduverse Academic Workspace
+        EduVerse Academic Workspace
       </p>
       <h2
         class="mt-4 text-3xl font-medium tracking-tight text-[#171322] sm:text-4xl"
       >
-        Masuk ke ruang belajar yang lebih tenang.
+        Masuk ke workspace sekolah yang sudah siap dipakai.
       </h2>
       <p class="mx-auto mt-4 max-w-2xl text-base leading-8 text-[#6b6475]">
-        Gunakan akun Eduverse yang sudah terdaftar untuk masuk ke workspace
-        sesuai role dan konteks sekolah.
+        Gunakan akun EduVerse yang sudah terdaftar untuk melanjutkan pekerjaan
+        belajar, mengajar, atau operasional sekolah dari tempat yang sama.
       </p>
 
       <RouterLink
         to="/login"
         class="mt-8 inline-flex h-12 items-center justify-center rounded-2xl bg-[#4f46e5] px-7 text-sm font-medium text-white transition hover:bg-[#4338ca]"
       >
-        Masuk ke Eduverse
+        Masuk ke EduVerse
       </RouterLink>
     </section>
 
@@ -277,7 +286,7 @@
       <div
         class="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-sm text-[#7a7385] sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8"
       >
-        <p>© 2026 Eduverse. All rights reserved.</p>
+        <p>© 2026 EduVerse. All rights reserved.</p>
         <p>Learning Management System untuk sekolah modern.</p>
       </div>
     </footer>
@@ -285,13 +294,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineComponent } from "vue";
 import { RouterLink } from "vue-router";
-
-type Feature = {
-  title: string;
-  description: string;
-};
 
 const previewStats = [
   { value: "8", label: "Mata pelajaran" },
@@ -314,168 +317,84 @@ const activities = [
   },
 ];
 
-const principles = [
+const workspaceStory = [
   {
-    icon: "✦",
-    title: "Tenang",
+    title: "Sekolah disiapkan lebih dulu",
     description:
-      "Antarmuka dibuat bersih dan fokus agar aktivitas belajar tidak terasa ramai.",
+      "Tahun ajaran, semester, kelas, mata pelajaran, dan struktur sekolah dibangun lebih dulu agar operasional berikutnya tidak berantakan.",
   },
   {
-    icon: "◇",
-    title: "Terstruktur",
+    title: "Pembelajaran berjalan dari konteks yang jelas",
     description:
-      "Materi, tugas, pengumpulan, nilai, dan administrasi sekolah berada dalam alur yang jelas.",
+      "Materi, tugas, pengumpulan, dan nilai hadir di tempat yang sama sehingga guru dan siswa tidak perlu berpindah alur.",
   },
   {
-    icon: "◌",
-    title: "Satu workspace",
+    title: "Warga sekolah dikelola dengan tenang",
     description:
-      "Siswa, guru, dan admin sekolah bekerja di platform yang sama dengan ruang kerja sesuai peran.",
+      "Penambahan warga sekolah, import CSV, dan pengelolaan membership tetap berada dalam konteks sekolah aktif.",
+  },
+  {
+    title: "Percakapan ikut tinggal di dalam workspace",
+    description:
+      "Feed kelas, chat sekolah, dan grup diskusi hadir sebagai bagian dari kerja harian, bukan produk terpisah.",
   },
 ];
 
-const studentFeatures: Feature[] = [
+const roleSummaries = [
   {
-    title: "Materi & lampiran",
-    description: "Akses materi dengan preview gambar, PDF, dan file pendukung.",
-  },
-  {
-    title: "Tugas & pengumpulan",
-    description: "Kumpulkan tugas dan pantau status penilaian dari guru.",
-  },
-  {
-    title: "Catatan pribadi",
-    description: "Tulis catatan per materi yang hanya bisa dilihat oleh siswa.",
-  },
-  {
-    title: "Nilai & umpan balik",
-    description: "Lihat nilai, status tugas, dan umpan balik pembelajaran.",
-  },
-];
-
-const teacherFeatures: Feature[] = [
-  {
-    title: "Workspace mengajar",
-    description: "Kelola materi, tugas, dan pengumpulan per mata pelajaran.",
-  },
-  {
-    title: "Penilaian tugas",
-    description: "Tinjau jawaban siswa, beri nilai, dan tulis umpan balik.",
-  },
-  {
-    title: "Pengumuman kelas",
-    description: "Bagikan informasi kelas dan kelola komentar siswa.",
-  },
-  {
-    title: "Lampiran pembelajaran",
-    description: "Tambahkan file pendukung untuk materi maupun tugas.",
-  },
-];
-
-const adminFeatures: Feature[] = [
-  {
-    title: "Struktur akademik",
+    anchor: "siswa",
+    eyebrow: "Siswa",
+    title: "Belajar dengan arah yang jelas",
     description:
-      "Atur tahun ajaran, semester, mata pelajaran, dan kategori tugas.",
+      "Buka materi, kirim tugas, simpan catatan pribadi, lihat nilai, dan ikuti percakapan sekolah dari satu tempat yang terasa ringan dipakai.",
   },
   {
-    title: "Manajemen kelas",
-    description: "Buat kelas dan hubungkan dengan periode akademik.",
+    anchor: "guru",
+    eyebrow: "Guru",
+    title: "Mengajar tanpa panel yang tercerai",
+    description:
+      "Materi, tugas, pengumpulan, penilaian, dan pengumuman tersusun dalam satu workspace sehingga proses mengajar lebih mudah dipantau.",
   },
   {
-    title: "Warga sekolah",
-    description: "Kelola siswa, guru, dan admin sekolah dalam satu konteks.",
+    anchor: "admin",
+    eyebrow: "Admin Sekolah",
+    title: "Menjaga sekolah tetap rapi",
+    description:
+      "Kelola struktur akademik, kelas, penugasan guru, dan warga sekolah dalam konteks sekolah aktif yang jelas dan aman.",
   },
   {
-    title: "Penugasan mengajar",
-    description: "Hubungkan guru dengan kelas dan mata pelajaran.",
+    anchor: "super-admin",
+    eyebrow: "Super Admin",
+    title: "Mengelola struktur platform",
+    description:
+      "Sekolah dan akun global tetap bisa diatur dari lapisan platform, tanpa mencampur operasional akademik harian sekolah.",
   },
 ];
 
-const RoleIntro = defineComponent({
-  props: {
-    eyebrow: {
-      type: String,
-      required: true,
-    },
-    title: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
+const workflows = [
+  {
+    eyebrow: "Akademik",
+    title: "Struktur sekolah dibentuk lebih dulu",
+    description:
+      "Tahun ajaran, semester, kelas, mata pelajaran, dan penugasan guru disusun sebagai fondasi sebelum pembelajaran berjalan.",
   },
-  template: `
-    <div>
-      <p class="text-sm font-medium text-[#4f46e5]">{{ eyebrow }}</p>
-      <h2 class="mt-3 text-3xl font-medium tracking-tight text-[#171322]">
-        {{ title }}
-      </h2>
-      <p class="mt-4 text-base leading-8 text-[#6b6475]">
-        {{ description }}
-      </p>
-    </div>
-  `,
-});
-
-const FeatureGrid = defineComponent({
-  props: {
-    features: {
-      type: Array as () => Feature[],
-      required: true,
-    },
+  {
+    eyebrow: "Pembelajaran",
+    title: "Materi, tugas, dan nilai saling terhubung",
+    description:
+      "Guru membagikan materi, memberi tugas, meninjau pengumpulan, lalu siswa melihat hasil belajar dan umpan balik di alur yang sama.",
   },
-  template: `
-    <div class="grid gap-3 sm:grid-cols-2">
-      <article
-        v-for="feature in features"
-        :key="feature.title"
-        class="rounded-2xl border border-[#e7e2da] bg-[#fbfaf8] p-5"
-      >
-        <h3 class="text-sm font-medium text-[#171322]">{{ feature.title }}</h3>
-        <p class="mt-2 text-sm leading-6 text-[#6b6475]">
-          {{ feature.description }}
-        </p>
-      </article>
-    </div>
-  `,
-});
-
-const ShowcaseCard = defineComponent({
-  props: {
-    title: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
+  {
+    eyebrow: "Komunikasi",
+    title: "Percakapan tidak lepas dari konteks sekolah",
+    description:
+      "Feed kelas, chat sekolah, dan grup diskusi membantu informasi berjalan tanpa memisahkan aktivitas akademik dari komunikasi.",
   },
-  template: `
-    <article class="rounded-[2rem] border border-[#e7e2da] bg-[#fbfaf8] p-4">
-      <div class="aspect-[4/3] rounded-[1.5rem] border border-[#e7e2da] bg-white p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="h-3 w-24 rounded-full bg-[#e7e2da]"></div>
-            <div class="mt-2 h-3 w-16 rounded-full bg-[#eef2ff]"></div>
-          </div>
-          <div class="h-9 w-9 rounded-2xl bg-[#4f46e5]"></div>
-        </div>
-
-        <div class="mt-5 grid gap-3">
-          <div class="h-14 rounded-2xl bg-[#fbfaf8]"></div>
-          <div class="h-14 rounded-2xl bg-[#fbfaf8]"></div>
-          <div class="h-14 rounded-2xl bg-[#fbfaf8]"></div>
-        </div>
-      </div>
-
-      <h3 class="mt-5 text-base font-medium text-[#171322]">{{ title }}</h3>
-      <p class="mt-2 text-sm leading-6 text-[#6b6475]">{{ description }}</p>
-    </article>
-  `,
-});
+  {
+    eyebrow: "Administrasi sekolah",
+    title: "Warga sekolah dikelola seperlunya",
+    description:
+      "Penambahan warga sekolah, import CSV, dan perubahan membership tetap berada dalam kontrol admin sekolah yang sedang aktif.",
+  },
+];
 </script>
