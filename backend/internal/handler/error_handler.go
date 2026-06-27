@@ -68,6 +68,32 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
+	if strings.Contains(errStr, "chat group room name is required") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nama ruang wajib diisi"})
+		return
+	}
+
+	if strings.Contains(errStr, "chat group room name exceeds") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nama ruang maksimal 150 karakter"})
+		return
+	}
+
+	if strings.Contains(errStr, "chat group members are required") ||
+		strings.Contains(errStr, "chat group member is required") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Pilih minimal satu anggota ruang"})
+		return
+	}
+
+	if strings.Contains(errStr, "duplicate chat group member") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Anggota ruang tidak boleh duplikat"})
+		return
+	}
+
+	if strings.Contains(errStr, "invalid chat group member") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Anggota ruang harus warga aktif di sekolah ini"})
+		return
+	}
+
 	if strings.Contains(errStr, "student note content is required") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Isi catatan wajib diisi"})
 		return

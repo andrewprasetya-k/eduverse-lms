@@ -12,8 +12,8 @@ type ChatRoomDTO struct {
 	RoomID        string              `json:"roomId"`
 	RoomName      string              `json:"roomName"`
 	RoomType      string              `json:"roomType"`
-	RoomRefType   string              `json:"roomRefType"`
-	RoomRefID     string              `json:"roomRefId"`
+	RoomRefType   *string             `json:"roomRefType"`
+	RoomRefID     *string             `json:"roomRefId"`
 	SchoolID      string              `json:"schoolId"`
 	SchoolName    string              `json:"schoolName"`
 	LastMessage   *ChatLastMessageDTO `json:"lastMessage"`
@@ -42,6 +42,17 @@ type ChatRoomResponseDTO struct {
 	Room ChatRoomDTO `json:"room"`
 }
 
+type ChatMemberDTO struct {
+	UserID   string   `json:"userId"`
+	FullName string   `json:"fullName"`
+	Email    string   `json:"email"`
+	Roles    []string `json:"roles"`
+}
+
+type ChatMembersResponseDTO struct {
+	Members []ChatMemberDTO `json:"members"`
+}
+
 type ChatMessagesResponseDTO struct {
 	Messages   []ChatMessageDTO `json:"messages"`
 	NextBefore *string          `json:"nextBefore"`
@@ -50,6 +61,11 @@ type ChatMessagesResponseDTO struct {
 
 type CreateChatMessageDTO struct {
 	Content string `json:"content" binding:"required"`
+}
+
+type CreateChatGroupDTO struct {
+	RoomName      string   `json:"roomName" binding:"required"`
+	MemberUserIDs []string `json:"memberUserIds" binding:"required,dive,uuid"`
 }
 
 type MarkChatRoomReadDTO struct {

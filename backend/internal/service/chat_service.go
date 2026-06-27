@@ -18,12 +18,15 @@ const (
 	chatMessageTypeText = "text"
 	maxChatMessageLimit = 50
 	maxChatContentLen   = 5000
+	maxChatRoomNameLen  = 150
 	defaultSchoolRoom   = "Ruang sekolah"
 )
 
 type ChatService interface {
 	ListMyRooms(userID string, schoolID string) ([]dto.ChatRoomDTO, error)
+	ListMembers(userID string, schoolID string, search string) ([]dto.ChatMemberDTO, error)
 	OpenSchoolRoom(userID string, schoolID string) (*dto.ChatRoomDTO, error)
+	CreateGroupRoom(userID string, schoolID string, roomName string, memberUserIDs []string) (*dto.ChatRoomDTO, error)
 	ListMessages(userID string, schoolID string, roomID string, limit int, before *time.Time) (*dto.ChatMessagesResponseDTO, error)
 	CreateMessage(userID string, schoolID string, roomID string, content string) (*dto.ChatMessageDTO, error)
 	MarkRead(userID string, schoolID string, roomID string, lastReadMessageID *string) error
@@ -62,6 +65,41 @@ func (s *chatService) ListMyRooms(userID string, schoolID string) ([]dto.ChatRoo
 		rooms = append(rooms, mapChatRoomRow(row, unread))
 	}
 	return rooms, nil
+}
+
+func (s *chatService) ListMembers(userID string, schoolID string, search string) ([]dto.ChatMemberDTO, error) {
+	allowed, err := s.CanAccessSchoolChat(userID, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	if !allowed {
+		return nil, fmt.Errorf("forbidden: chat school access denied")
+	}
+
+	rows, err := s.repo.ListChatMembers(schoolID, strings.TrimSpace(search))
+	if err != nil {
+		return nil, err
+	}
+
+	members := make([]dto.ChatMemberDTO, 0, len(rows))
+	for _, row := range rows {
+		roles := make([]string, 0)
+		if row.Roles != "" {
+			for _, role := range strings.Split(row.Roles, ",") {
+				role = strings.TrimSpace(role)
+				if role != "" {
+					roles = append(roles, role)
+				}
+			}
+		}
+		members = append(members, dto.ChatMemberDTO{
+			UserID:   row.UserID,
+			FullName: row.FullName,
+			Email:    row.Email,
+			Roles:    roles,
+		})
+	}
+	return members, nil
 }
 
 func (s *chatService) OpenSchoolRoom(userID string, schoolID string) (*dto.ChatRoomDTO, error) {
@@ -105,6 +143,71 @@ func (s *chatService) OpenSchoolRoom(userID string, schoolID string) (*dto.ChatR
 	}
 	roomDTO := mapChatRoomRow(*context, unread)
 	return &roomDTO, nil
+}
+
+func (s *chatService) CreateGroupRoom(userID string, schoolID string, roomName string, memberUserIDs []string) (*dto.ChatRoomDTO, error) {
+	allowed, err := s.CanAccessSchoolChat(userID, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	if !allowed {
+		return nil, fmt.Errorf("forbidden: chat school access denied")
+	}
+
+	roomName = strings.TrimSpace(roomName)
+	if roomName == "" {
+		return nil, fmt.Errorf("chat group room name is required")
+	}
+	if len([]rune(roomName)) > maxChatRoomNameLen {
+		return nil, fmt.Errorf("chat group room name exceeds %d characters", maxChatRoomNameLen)
+	}
+	if len(memberUserIDs) == 0 {
+		return nil, fmt.Errorf("chat group members are required")
+	}
+
+	seenInput := make(map[string]bool, len(memberUserIDs))
+	for _, memberID := range memberUserIDs {
+		memberID = strings.TrimSpace(memberID)
+		if memberID == "" {
+			return nil, fmt.Errorf("chat group member is required")
+		}
+		if seenInput[memberID] {
+			return nil, fmt.Errorf("duplicate chat group member")
+		}
+		seenInput[memberID] = true
+	}
+
+	memberSet := make(map[string]bool, len(memberUserIDs)+1)
+	memberSet[userID] = true
+	for _, memberID := range memberUserIDs {
+		memberSet[memberID] = true
+	}
+
+	allMemberIDs := make([]string, 0, len(memberSet))
+	for memberID := range memberSet {
+		allMemberIDs = append(allMemberIDs, memberID)
+	}
+
+	activeMembers, err := s.repo.UsersAreActiveSchoolMembers(allMemberIDs, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	for _, memberID := range allMemberIDs {
+		if !activeMembers[memberID] {
+			return nil, fmt.Errorf("invalid chat group member")
+		}
+	}
+
+	room, err := s.repo.CreateGroupRoomWithMembers(schoolID, roomName, userID, allMemberIDs)
+	if err != nil {
+		return nil, err
+	}
+	context, err := s.repo.GetRoomContext(room.ID, schoolID)
+	if err != nil {
+		return nil, err
+	}
+	mapped := mapChatRoomRow(*context, 0)
+	return &mapped, nil
 }
 
 func (s *chatService) ListMessages(userID string, schoolID string, roomID string, limit int, before *time.Time) (*dto.ChatMessagesResponseDTO, error) {
@@ -211,14 +314,31 @@ func (s *chatService) CanAccessRoom(userID string, schoolID string, roomID strin
 	if err != nil {
 		return false, nil, err
 	}
-	if room.RoomType != chatRoomTypeSchool || room.RoomRefType != chatRefTypeSchool || room.RoomRefID != schoolID || room.SchoolID != schoolID {
+	if room.RoomType != chatRoomTypeSchool || room.SchoolID != schoolID {
 		return false, room, nil
 	}
-	allowed, err := s.CanAccessSchoolChat(userID, schoolID)
+
+	activeSchoolMember, err := s.CanAccessSchoolChat(userID, schoolID)
 	if err != nil {
 		return false, nil, err
 	}
-	return allowed, room, nil
+	if !activeSchoolMember {
+		return false, room, nil
+	}
+
+	if room.RoomRefType != nil && *room.RoomRefType == chatRefTypeSchool && room.RoomRefID != nil && *room.RoomRefID == schoolID {
+		return true, room, nil
+	}
+
+	if room.RoomRefType == nil && room.RoomRefID == nil {
+		activeRoomMember, err := s.repo.UserIsActiveRoomMember(userID, roomID)
+		if err != nil {
+			return false, nil, err
+		}
+		return activeRoomMember, room, nil
+	}
+
+	return false, room, nil
 }
 
 func mapChatRoomRow(row repository.ChatRoomRow, unread int64) dto.ChatRoomDTO {

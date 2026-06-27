@@ -156,16 +156,20 @@ Notes are material-only for MVP. They are scoped to the JWT user and active `Sch
 - `DELETE /comments/:id` - Delete own feed comment, or admin-delete active-school comment
 
 ## 💬 Chat
-- `GET /chat/rooms` - List current active-school chat rooms (school-wide MVP returns one room)
+- `GET /chat/rooms` - List school-wide room and accessible custom group rooms
+- `GET /chat/members` - Search active school members for chat group member picker
 - `POST /chat/school/open` - Open or create the active school's main chat room
+- `POST /chat/groups` - Create custom group room with active school members
 - `GET /chat/rooms/:roomId/messages` - List text messages with `limit` and `before` pagination
 - `POST /chat/rooms/:roomId/messages` - Create text-only message and return canonical message DTO
 - `PATCH /chat/rooms/:roomId/read` - Mark accessible room as read
 
-Chat MVP is REST-only, school-wide, and text-only. Active school admins,
-teachers, and students can participate. It does not enable WebSocket,
-subject/class rooms, DM/group chat, attachments, typing indicators, message
-delete, or notifications.
+Chat MVP is REST-only and text-only. Active school admins, teachers, and
+students can participate in the school-wide room if their school membership is
+active. Custom group rooms are limited to selected active school members through
+`chat_room_members.left_at IS NULL`. It does not enable WebSocket,
+subject/class rooms, DM, attachments, typing indicators, message delete, or
+notifications.
 
 ## 📝 Assignments & Grading
 ### Categories

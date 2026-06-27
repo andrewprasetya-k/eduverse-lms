@@ -343,7 +343,9 @@ func main() {
 		chatAPI := api.Group("/chat")
 		{
 			chatAPI.GET("/rooms", middleware.RequireSchoolMember(schoolService), chatHandler.ListRooms)
+			chatAPI.GET("/members", middleware.RequireSchoolMember(schoolService), chatHandler.ListMembers)
 			chatAPI.POST("/school/open", middleware.RequireSchoolMember(schoolService), chatHandler.OpenSchoolRoom)
+			chatAPI.POST("/groups", middleware.RequireSchoolMember(schoolService), chatHandler.CreateGroupRoom)
 			chatAPI.GET("/rooms/:roomId/messages", middleware.RequireSchoolMember(schoolService), chatHandler.ListMessages)
 			chatAPI.POST("/rooms/:roomId/messages", middleware.RequireSchoolMember(schoolService), chatHandler.CreateMessage)
 			chatAPI.PATCH("/rooms/:roomId/read", middleware.RequireSchoolMember(schoolService), chatHandler.MarkRead)
