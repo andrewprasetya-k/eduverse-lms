@@ -16,6 +16,7 @@ import { getTeacherDashboard } from "../../services/teacherDashboard";
 import type { MembershipInfo } from "../../types/auth";
 import type { TeacherDashboardSummary } from "../../types/teacherDashboard";
 import { getSubjectColor } from "../../utils/color";
+import LatestChatCard from "../../components/chat/LatestChatCard.vue";
 
 const auth = useAuthStore();
 
@@ -318,6 +319,8 @@ onMounted(loadDashboard);
           </article>
 
           <aside class="grid min-w-0 gap-3">
+            <LatestChatCard to="/teacher/chat" :limit="4" />
+
             <RouterLink
               to="/teacher/submissions"
               class="group rounded-xl border border-[#ebe7df] bg-white p-4 transition hover:border-[#c7d2fe]"

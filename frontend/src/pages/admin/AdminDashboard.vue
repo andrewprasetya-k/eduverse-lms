@@ -10,6 +10,7 @@ import {
   PhStudent,
   PhUsers,
 } from "@phosphor-icons/vue";
+import LatestChatCard from "../../components/chat/LatestChatCard.vue";
 
 const quickActions = [
   {
@@ -258,6 +259,8 @@ const managementLinks = [
       </div>
 
       <aside class="flex min-w-0 flex-col gap-5">
+        <LatestChatCard to="/admin/chat" :limit="5" />
+
         <section
           class="rounded-xl border border-[#ebe7df] bg-white p-5 shadow-sm"
         >

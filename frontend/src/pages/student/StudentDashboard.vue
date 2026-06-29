@@ -7,7 +7,6 @@ import {
   PhBookOpen,
   PhCaretLeft,
   PhCaretRight,
-  PhChatCircleText,
   PhClipboardText,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
@@ -29,6 +28,7 @@ import type { StudentAssignmentInboxItem } from "../../types/assignment";
 import { formatDate, formatDateTime } from "../../utils/date";
 import { getSubjectColor } from "../../utils/color";
 import { useToastStore } from "../../stores/toast";
+import LatestChatCard from "../../components/chat/LatestChatCard.vue";
 
 const auth = useAuthStore();
 const activeClassStore = useActiveClassStore();
@@ -492,7 +492,7 @@ onMounted(loadDashboard);
                   </div>
                   <div class="min-w-0 flex-1">
                     <p
-                      class="line-clamp-2 wrap-break-word text-sm font-medium text-[#171322]"
+                      class="line-clamp-2 break-words text-sm font-medium text-[#171322]"
                     >
                       {{
                         subject.subjectName ||
@@ -644,7 +644,7 @@ onMounted(loadDashboard);
                 class="min-w-0 py-3 first:pt-0 last:pb-0"
               >
                 <p
-                  class="line-clamp-3 wrap-break-word text-sm leading-6 text-[#3f3a4a]"
+                  class="line-clamp-3 break-words text-sm leading-6 text-[#3f3a4a]"
                 >
                   {{ post.content }}
                 </p>
@@ -663,26 +663,7 @@ onMounted(loadDashboard);
             </p>
           </article>
 
-          <article
-            class="min-w-0 rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
-          >
-            <p class="text-sm font-medium text-[#171322]">Komunikasi kelas</p>
-            <p class="mt-1 text-xs text-[#8b8592]">
-              Chat belum aktif. Gunakan Feed kelas untuk mengikuti pengumuman.
-            </p>
-            <div class="mt-4">
-              <div class="flex gap-3 rounded-lg bg-[#eef2ff] p-4">
-                <PhChatCircleText
-                  :size="20"
-                  class="mt-0.5 shrink-0 text-[#4f46e5]"
-                />
-                <p class="text-sm leading-6 text-[#6b6475]">
-                  Feed kelas menjadi ruang informasi bersama guru untuk saat
-                  ini.
-                </p>
-              </div>
-            </div>
-          </article>
+          <LatestChatCard to="/student/chat" :limit="4" />
         </section>
       </div>
     </section>

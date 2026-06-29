@@ -3,6 +3,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import {
   PhArrowClockwise,
   PhChatCircleText,
+  PhCheck,
+  PhChecks,
   PhPaperPlaneTilt,
   PhWarningCircle,
   PhPlus,
@@ -24,6 +26,7 @@ import {
   sendMessage,
 } from "../../services/chat";
 import { connectChatSocket } from "../../services/chatSocket";
+import type { ChatSocketStatus } from "../../services/chatSocket";
 import { useAuthStore } from "../../stores/auth";
 import type {
   ChatGroupInfo,
@@ -52,7 +55,7 @@ const draft = ref("");
 const isBooting = ref(true);
 const isLoadingMessages = ref(false);
 const isLoadingOlder = ref(false);
-const isSending = ref(false);
+const pendingSendCount = ref(0);
 const isRefreshing = ref(false);
 const accessError = ref("");
 const threadError = ref("");
@@ -88,21 +91,20 @@ const isLoadingAddMembers = ref(false);
 const isAddingMembers = ref(false);
 const isLeavingGroup = ref(false);
 const removingMemberId = ref<string | null>(null);
-let poller: number | undefined;
+let pollTimeout: number | undefined;
 let roomRefreshTimer: number | undefined;
 let readSummaryRefreshTimer: number | undefined;
 let socketConnection: { close: () => void } | null = null;
+let isDestroyed = false;
 const authStore = useAuthStore();
+const socketStatus = ref<ChatSocketStatus>("disconnected");
 
 const selectedRoomName = computed(() => roomDisplayName(selectedRoom.value));
 const selectedSchoolName = computed(
   () => selectedRoom.value?.schoolName || "Sekolah aktif",
 );
 const canSend = computed(
-  () =>
-    Boolean(selectedRoom.value?.canSend) &&
-    draft.value.trim().length > 0 &&
-    !isSending.value,
+  () => Boolean(selectedRoom.value?.canSend) && draft.value.trim().length > 0,
 );
 const roomInitial = computed(() => {
   const source = selectedRoomName.value || selectedSchoolName.value;
@@ -150,18 +152,17 @@ const latestOwnMessageId = computed(() => {
 });
 
 onMounted(async () => {
+  isDestroyed = false;
   await bootstrapChat();
   connectRealtimeChat();
-  poller = window.setInterval(() => {
-    if (selectedRoom.value && !isRefreshing.value && !isLoadingMessages.value) {
-      refreshMessages({ silent: true });
-    }
-  }, 20000);
+  scheduleNextPoll();
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 });
 
 onUnmounted(() => {
-  if (poller) {
-    window.clearInterval(poller);
+  isDestroyed = true;
+  if (pollTimeout) {
+    window.clearTimeout(pollTimeout);
   }
   if (roomRefreshTimer) {
     window.clearTimeout(roomRefreshTimer);
@@ -170,6 +171,7 @@ onUnmounted(() => {
     window.clearTimeout(readSummaryRefreshTimer);
   }
   socketConnection?.close();
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
 });
 
 async function bootstrapChat() {
@@ -245,6 +247,28 @@ async function refreshMessages(options: { silent?: boolean } = {}) {
     }
   } finally {
     isRefreshing.value = false;
+  }
+}
+
+function scheduleNextPoll() {
+  if (isDestroyed) return;
+  if (pollTimeout) {
+    window.clearTimeout(pollTimeout);
+  }
+  const delay = socketStatus.value === "connected" ? 90000 : 18000;
+  pollTimeout = window.setTimeout(async () => {
+    if (selectedRoom.value && !isRefreshing.value && !isLoadingMessages.value) {
+      await refreshMessages({ silent: true });
+    }
+    scheduleNextPoll();
+  }, delay);
+}
+
+async function handleVisibilityChange() {
+  if (document.visibilityState !== "visible") return;
+  await refreshRooms();
+  if (selectedRoom.value) {
+    await refreshMessages({ silent: true });
   }
 }
 
@@ -554,21 +578,30 @@ async function submitMessage() {
   if (!selectedRoom.value) return;
   const content = draft.value.trim();
   if (!content) return;
-  isSending.value = true;
+  const roomID = selectedRoom.value.roomId;
+  const optimistic = createOptimisticMessage(roomID, content);
+  messages.value = dedupeMessages([...messages.value, optimistic]);
+  draft.value = "";
+  pendingSendCount.value += 1;
   composerError.value = "";
+  await nextTick();
+  scrollToBottom();
   try {
-    const created = await sendMessage(selectedRoom.value.roomId, content);
-    messages.value = dedupeMessages([...messages.value, created]);
-    draft.value = "";
+    const created = await sendMessage(roomID, content);
+    replaceOptimisticMessage(optimistic.messageId, {
+      ...created,
+      deliveryStatus: "sent",
+    });
     await markSelectedRoomRead(created.messageId);
     await refreshReadSummary();
     await refreshRooms();
     await nextTick();
     scrollToBottom();
   } catch (error) {
+    markOptimisticFailed(optimistic.messageId);
     composerError.value = resolveChatError(error);
   } finally {
-    isSending.value = false;
+    pendingSendCount.value = Math.max(0, pendingSendCount.value - 1);
   }
 }
 
@@ -602,6 +635,11 @@ function connectRealtimeChat() {
   socketConnection?.close();
   socketConnection = connectChatSocket({
     onEvent: handleRealtimeEvent,
+    onStatusChange(status) {
+      if (isDestroyed) return;
+      socketStatus.value = status;
+      scheduleNextPoll();
+    },
   });
 }
 
@@ -649,6 +687,50 @@ function handleRoomUpdatedEvent(event: RoomUpdatedEvent) {
   }
 }
 
+function createOptimisticMessage(roomId: string, content: string): ChatMessage {
+  return {
+    messageId: `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    roomId,
+    senderId: currentUserId.value,
+    senderName: authStore.user?.fullName || "Anda",
+    senderRole: authStore.activeRoles[0] || "member",
+    content,
+    messageType: "text",
+    createdAt: new Date().toISOString(),
+    isMine: true,
+    deliveryStatus: "pending",
+  };
+}
+
+function replaceOptimisticMessage(tempId: string, canonical: ChatMessage) {
+  messages.value = dedupeMessages(
+    messages.value.map((message) =>
+      message.messageId === tempId ? canonical : message,
+    ),
+  );
+}
+
+function markOptimisticFailed(tempId: string) {
+  messages.value = messages.value.map((message) =>
+    message.messageId === tempId
+      ? {
+          ...message,
+          deliveryStatus: "failed",
+        }
+      : message,
+  );
+}
+
+function retryFailedMessage(message: ChatMessage) {
+  messages.value = messages.value.filter(
+    (item) => item.messageId !== message.messageId,
+  );
+  draft.value = message.content;
+  nextTick(() => {
+    void submitMessage();
+  });
+}
+
 function scheduleRoomRefresh() {
   if (roomRefreshTimer) {
     window.clearTimeout(roomRefreshTimer);
@@ -676,13 +758,29 @@ function handleComposerKeydown(event: KeyboardEvent) {
 
 function dedupeMessages(items: ChatMessage[]) {
   const seen = new Set<string>();
+  const canonicalKeys = new Set(
+    items
+      .filter((item) => !item.messageId.startsWith("temp-"))
+      .map((item) => messageContentKey(item)),
+  );
   const result: ChatMessage[] = [];
   for (const item of items) {
     if (!item.messageId || seen.has(item.messageId)) continue;
+    if (
+      item.messageId.startsWith("temp-") &&
+      item.deliveryStatus !== "failed" &&
+      canonicalKeys.has(messageContentKey(item))
+    ) {
+      continue;
+    }
     seen.add(item.messageId);
     result.push(item);
   }
   return result;
+}
+
+function messageContentKey(message: ChatMessage) {
+  return `${message.roomId}:${message.senderId}:${message.content}`;
 }
 
 function scrollToBottom() {
@@ -696,7 +794,12 @@ function lastMessage(items: ChatMessage[]) {
 }
 
 function readIndicatorFor(message: ChatMessage) {
-  if (!message.isMine || message.messageId !== latestOwnMessageId.value) {
+  if (
+    !message.isMine ||
+    message.deliveryStatus === "pending" ||
+    message.deliveryStatus === "failed" ||
+    message.messageId !== latestOwnMessageId.value
+  ) {
     return "";
   }
   const count = readByOtherCount(message);
@@ -704,6 +807,21 @@ function readIndicatorFor(message: ChatMessage) {
     return count > 0 ? "Dibaca" : "Terkirim";
   }
   return count > 0 ? `Dibaca ${count} orang` : "Terkirim";
+}
+
+function readIndicatorLabel(message: ChatMessage) {
+  const label = readIndicatorFor(message);
+  return label || undefined;
+}
+
+function isReadByOthers(message: ChatMessage) {
+  return readByOtherCount(message) > 0;
+}
+
+function readIndicatorCount(message: ChatMessage) {
+  if (selectedRoomIsDM.value) return "";
+  const count = readByOtherCount(message);
+  return count > 0 ? String(count) : "";
 }
 
 function readByOtherCount(message: ChatMessage) {
@@ -774,6 +892,20 @@ function roomMatchesSearch(room: ChatRoom) {
     .join(" ")
     .toLowerCase();
   return haystack.includes(query);
+}
+
+function roomPreview(room: ChatRoom) {
+  if (!room.lastMessage?.content) {
+    return isDirectMessageRoom(room)
+      ? room.dmTargetEmail || "Belum ada pesan."
+      : room.schoolName || "Belum ada pesan.";
+  }
+  const content = room.lastMessage.content;
+  const senderName =
+    room.lastMessage.senderId === currentUserId.value
+      ? "Anda"
+      : room.lastMessage.senderName || "Pengguna";
+  return `${senderName}: ${content}`;
 }
 
 function resolveChatError(error: unknown) {
@@ -860,9 +992,11 @@ function formatDateTime(value?: string | null) {
 
         <div
           v-else
-          class="grid min-h-155 flex-1 overflow-hidden rounded-xl bg-white lg:grid-cols-[300px_minmax(0,1fr)]"
+          class="grid h-[calc(100vh-1.5rem)] min-h-155 flex-1 overflow-hidden rounded-xl bg-white lg:grid-cols-[300px_minmax(0,1fr)]"
         >
-          <aside class="min-w-0 border-[#ebe7df] bg-[#fbfaf8] lg:border-r">
+          <aside
+            class="min-w-0 overflow-y-auto border-[#ebe7df] bg-[#fbfaf8] lg:border-r"
+          >
             <div class="border-b border-[#ebe7df] bg-white px-4 py-4 sm:px-5">
               <div class="flex items-center justify-between gap-3">
                 <p class="text-sm font-semibold text-[#171322]">
@@ -917,7 +1051,9 @@ function formatDateTime(value?: string | null) {
                 :class="
                   selectedRoom?.roomId === room.roomId
                     ? 'border-[#d7d1ff] bg-white shadow-sm'
-                    : 'border-[#ebe7df] bg-[#fbfaf8]'
+                    : room.unreadCount > 0
+                      ? 'border-[#c7d2fe] bg-white'
+                      : 'border-[#ebe7df] bg-[#fbfaf8]'
                 "
                 @click="
                   selectedRoom = room;
@@ -931,16 +1067,22 @@ function formatDateTime(value?: string | null) {
                 </span>
                 <span class="min-w-0 flex-1">
                   <span
-                    class="block truncate text-sm font-semibold text-[#171322]"
+                    class="block truncate text-sm text-[#171322]"
+                    :class="
+                      room.unreadCount > 0 ? 'font-bold' : 'font-semibold'
+                    "
                   >
                     {{ roomDisplayName(room) }}
                   </span>
-                  <span class="mt-0.5 block truncate text-xs text-[#6b7280]">
-                    {{
-                      room.lastMessage?.content ||
-                      room.schoolName ||
-                      "Belum ada pesan."
-                    }}
+                  <span
+                    class="mt-0.5 block truncate text-xs"
+                    :class="
+                      room.unreadCount > 0
+                        ? 'font-semibold text-[#3f3a4a]'
+                        : 'text-[#6b7280]'
+                    "
+                  >
+                    {{ roomPreview(room) }}
                   </span>
                 </span>
                 <span class="flex shrink-0 flex-col items-end gap-1">
@@ -969,7 +1111,9 @@ function formatDateTime(value?: string | null) {
                 :class="
                   selectedRoom?.roomId === room.roomId
                     ? 'border-[#d7d1ff] bg-white shadow-sm'
-                    : 'border-[#ebe7df] bg-[#fbfaf8]'
+                    : room.unreadCount > 0
+                      ? 'border-[#c7d2fe] bg-white'
+                      : 'border-[#ebe7df] bg-[#fbfaf8]'
                 "
                 @click="
                   selectedRoom = room;
@@ -983,12 +1127,22 @@ function formatDateTime(value?: string | null) {
                 </span>
                 <span class="min-w-0 flex-1">
                   <span
-                    class="block truncate text-sm font-semibold text-[#171322]"
+                    class="block truncate text-sm text-[#171322]"
+                    :class="
+                      room.unreadCount > 0 ? 'font-bold' : 'font-semibold'
+                    "
                   >
                     {{ roomDisplayName(room) }}
                   </span>
-                  <span class="mt-0.5 block truncate text-xs text-[#6b7280]">
-                    {{ room.lastMessage?.content || "Belum ada pesan." }}
+                  <span
+                    class="mt-0.5 block truncate text-xs"
+                    :class="
+                      room.unreadCount > 0
+                        ? 'font-semibold text-[#3f3a4a]'
+                        : 'text-[#6b7280]'
+                    "
+                  >
+                    {{ roomPreview(room) }}
                   </span>
                 </span>
                 <span class="flex shrink-0 flex-col items-end gap-1">
@@ -1024,7 +1178,9 @@ function formatDateTime(value?: string | null) {
                 :class="
                   selectedRoom?.roomId === room.roomId
                     ? 'border-[#d7d1ff] bg-white shadow-sm'
-                    : 'border-[#ebe7df] bg-[#fbfaf8]'
+                    : room.unreadCount > 0
+                      ? 'border-[#c7d2fe] bg-white'
+                      : 'border-[#ebe7df] bg-[#fbfaf8]'
                 "
                 @click="
                   selectedRoom = room;
@@ -1038,16 +1194,22 @@ function formatDateTime(value?: string | null) {
                 </span>
                 <span class="min-w-0 flex-1">
                   <span
-                    class="block truncate text-sm font-semibold text-[#171322]"
+                    class="block truncate text-sm text-[#171322]"
+                    :class="
+                      room.unreadCount > 0 ? 'font-bold' : 'font-semibold'
+                    "
                   >
                     {{ roomDisplayName(room) }}
                   </span>
-                  <span class="mt-0.5 block truncate text-xs text-[#6b7280]">
-                    {{
-                      room.lastMessage?.content ||
-                      room.dmTargetEmail ||
-                      "Belum ada pesan."
-                    }}
+                  <span
+                    class="mt-0.5 block truncate text-xs"
+                    :class="
+                      room.unreadCount > 0
+                        ? 'font-semibold text-[#3f3a4a]'
+                        : 'text-[#6b7280]'
+                    "
+                  >
+                    {{ roomPreview(room) }}
                   </span>
                 </span>
                 <span class="flex shrink-0 flex-col items-end gap-1">
@@ -1085,7 +1247,7 @@ function formatDateTime(value?: string | null) {
             </div>
           </aside>
 
-          <section class="flex min-w-0 flex-col bg-[#f8f7f4]">
+          <section class="flex min-h-0 min-w-0 flex-col bg-[#f8f7f4]">
             <div
               class="flex items-center gap-3 border-b border-[#ebe7df] bg-white px-4 py-3 sm:px-5"
             >
@@ -1211,13 +1373,48 @@ function formatDateTime(value?: string | null) {
                           {{ message.content }}
                         </p>
                       </div>
-                      <p class="flex gap-2 px-2 text-[11px] text-[#9ca3af]">
+                      <p
+                        class="flex items-center gap-2 px-2 text-[11px] text-[#9ca3af]"
+                      >
                         <span>{{ formatDateTime(message.createdAt) }}</span>
                         <span
-                          v-if="readIndicatorFor(message)"
-                          class="font-medium text-[#6b7280]"
+                          v-if="message.deliveryStatus === 'pending'"
+                          class="font-medium text-[#9ca3af]"
                         >
-                          {{ readIndicatorFor(message) }}
+                          Mengirim...
+                        </span>
+                        <button
+                          v-else-if="message.deliveryStatus === 'failed'"
+                          type="button"
+                          class="font-medium text-[#dc2626] underline decoration-dotted underline-offset-2"
+                          @click="retryFailedMessage(message)"
+                        >
+                          Gagal · coba lagi
+                        </button>
+                        <span
+                          v-else-if="readIndicatorLabel(message)"
+                          class="inline-flex items-center gap-1 text-[#6b7280]"
+                          :title="readIndicatorLabel(message)"
+                          :aria-label="readIndicatorLabel(message)"
+                        >
+                          <PhChecks
+                            v-if="isReadByOthers(message)"
+                            :size="13"
+                            weight="bold"
+                            class="text-[#4f46e5]"
+                          />
+                          <PhCheck
+                            v-else
+                            :size="13"
+                            weight="bold"
+                            class="text-[#9ca3af]"
+                          />
+                          <span
+                            v-if="readIndicatorCount(message)"
+                            class="text-[10px] font-medium"
+                          >
+                            {{ readIndicatorCount(message) }}
+                          </span>
                         </span>
                       </p>
                     </div>
@@ -1227,7 +1424,7 @@ function formatDateTime(value?: string | null) {
             </div>
 
             <form
-              class="border-t border-[#ebe7df] bg-white px-4 py-3 sm:px-5"
+              class="shrink-0 border-t border-[#ebe7df] bg-white px-4 py-3 sm:px-5"
               @submit.prevent="submitMessage"
             >
               <p v-if="composerError" class="mb-2 text-sm text-red-600">
@@ -1239,7 +1436,7 @@ function formatDateTime(value?: string | null) {
                   rows="1"
                   class="max-h-32 min-h-11 flex-1 resize-none rounded-xl border border-transparent bg-[#f3f4f6] px-4 py-3 text-sm text-[#171322] outline-none transition placeholder:text-[#aaa29a] focus:border-[#c7d2fe] focus:bg-white focus:ring-2 focus:ring-[#4f46e5]/15"
                   placeholder="Tulis pesan..."
-                  :disabled="!selectedRoom?.canSend || isSending"
+                  :disabled="!selectedRoom?.canSend"
                   @keydown="handleComposerKeydown"
                 />
                 <button

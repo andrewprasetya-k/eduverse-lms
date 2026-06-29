@@ -3,6 +3,7 @@ import type { ChatSocketEvent } from '../types/chat'
 
 type ChatSocketOptions = {
   onEvent: (event: ChatSocketEvent) => void
+  onStatusChange?: (status: ChatSocketStatus) => void
   onOpen?: () => void
   onClose?: () => void
 }
@@ -11,19 +12,33 @@ type ChatSocketConnection = {
   close: () => void
 }
 
-const reconnectDelayMs = 3000
+export type ChatSocketStatus = 'connecting' | 'connected' | 'disconnected'
+
+const reconnectDelaysMs = [1000, 2000, 5000, 10000]
 
 export function connectChatSocket(options: ChatSocketOptions): ChatSocketConnection {
   let socket: WebSocket | null = null
   let reconnectTimer: number | undefined
   let closedByClient = false
+  let retryIndex = 0
+  let hasOpenedCurrentSocket = false
+  let failedBeforeOpenCount = 0
 
   function connect() {
     const url = buildChatSocketUrl()
-    if (!url) return
+    if (!url) {
+      setStatus('disconnected')
+      return
+    }
 
+    setStatus('connecting')
+    hasOpenedCurrentSocket = false
     socket = new WebSocket(url)
     socket.onopen = () => {
+      retryIndex = 0
+      failedBeforeOpenCount = 0
+      hasOpenedCurrentSocket = true
+      setStatus('connected')
       options.onOpen?.()
     }
     socket.onmessage = (message) => {
@@ -34,10 +49,17 @@ export function connectChatSocket(options: ChatSocketOptions): ChatSocketConnect
       }
     }
     socket.onclose = () => {
+      setStatus('disconnected')
       options.onClose?.()
       socket = null
-      if (!closedByClient) {
-        reconnectTimer = window.setTimeout(connect, reconnectDelayMs)
+      if (!hasOpenedCurrentSocket) {
+        failedBeforeOpenCount += 1
+      }
+      if (failedBeforeOpenCount >= 5) return
+      if (!closedByClient && getStoredToken() && getActiveSchoolId()) {
+        const delay = reconnectDelaysMs[Math.min(retryIndex, reconnectDelaysMs.length - 1)]
+        retryIndex += 1
+        reconnectTimer = window.setTimeout(connect, delay)
       }
     }
     socket.onerror = () => {
@@ -55,7 +77,12 @@ export function connectChatSocket(options: ChatSocketOptions): ChatSocketConnect
       }
       socket?.close()
       socket = null
+      setStatus('disconnected')
     },
+  }
+
+  function setStatus(status: ChatSocketStatus) {
+    options.onStatusChange?.(status)
   }
 }
 

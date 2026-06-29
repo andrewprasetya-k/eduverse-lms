@@ -33,6 +33,7 @@ export interface ChatMessage {
   messageType: 'text' | string
   createdAt: string
   isMine: boolean
+  deliveryStatus?: 'pending' | 'sent' | 'failed'
 }
 
 export interface ChatRoomsResponse {
