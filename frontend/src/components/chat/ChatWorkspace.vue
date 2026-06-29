@@ -1050,7 +1050,7 @@ function formatDateTime(value?: string | null) {
                 class="flex w-full min-w-0 items-center gap-3 rounded-lg border px-3 py-3 text-left transition hover:bg-white"
                 :class="
                   selectedRoom?.roomId === room.roomId
-                    ? 'border-[#d7d1ff] bg-white shadow-sm'
+                    ? 'border-[#d7d1ff] bg-white '
                     : room.unreadCount > 0
                       ? 'border-[#c7d2fe] bg-white'
                       : 'border-[#ebe7df] bg-[#fbfaf8]'
@@ -1110,7 +1110,7 @@ function formatDateTime(value?: string | null) {
                 class="flex w-full min-w-0 items-center gap-3 rounded-lg border px-3 py-3 text-left transition hover:bg-white"
                 :class="
                   selectedRoom?.roomId === room.roomId
-                    ? 'border-[#d7d1ff] bg-white shadow-sm'
+                    ? 'border-[#d7d1ff] bg-white '
                     : room.unreadCount > 0
                       ? 'border-[#c7d2fe] bg-white'
                       : 'border-[#ebe7df] bg-[#fbfaf8]'
@@ -1177,7 +1177,7 @@ function formatDateTime(value?: string | null) {
                 class="flex w-full min-w-0 items-center gap-3 rounded-lg border px-3 py-3 text-left transition hover:bg-white"
                 :class="
                   selectedRoom?.roomId === room.roomId
-                    ? 'border-[#d7d1ff] bg-white shadow-sm'
+                    ? 'border-[#d7d1ff] bg-white '
                     : room.unreadCount > 0
                       ? 'border-[#c7d2fe] bg-white'
                       : 'border-[#ebe7df] bg-[#fbfaf8]'
@@ -1362,7 +1362,7 @@ function formatDateTime(value?: string | null) {
                         {{ message.senderName }}
                       </p>
                       <div
-                        class="rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm"
+                        class="rounded-2xl px-4 py-2 text-sm leading-relaxed"
                         :class="
                           message.isMine
                             ? 'rounded-br-md bg-[#4f46e5] text-white'
@@ -1462,7 +1462,7 @@ function formatDateTime(value?: string | null) {
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6"
     >
       <div
-        class="max-h-[90vh] w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-xl"
+        class="max-h-[90vh] w-full max-w-xl overflow-hidden rounded-xl bg-white"
       >
         <div class="border-b border-[#ebe7df] px-5 py-4">
           <h2 class="text-base font-semibold text-[#171322]">
@@ -1589,7 +1589,7 @@ function formatDateTime(value?: string | null) {
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6"
     >
       <div
-        class="max-h-[90vh] w-full max-w-xl overflow-hidden rounded-xl bg-white shadow-xl"
+        class="max-h-[90vh] w-full max-w-xl overflow-hidden rounded-xl bg-white"
       >
         <div class="border-b border-[#ebe7df] px-5 py-4">
           <h2 class="text-base font-semibold text-[#171322]">
@@ -1617,7 +1617,7 @@ function formatDateTime(value?: string | null) {
                 id="chat-group-name"
                 v-model="groupRoomName"
                 type="text"
-                class="mt-1 w-full rounded-lg border border-[#d8d2c8] px-3 py-2 text-sm text-[#171322] outline-none transition focus:border-[#4f46e5] focus:ring-2 focus:ring-[#4f46e5]/15"
+                class="mt-1 w-full rounded-lg border border-[#d8d2c8] px-3 py-2 text-sm text-[#171322] outline-none transition focus:border-blue focus:ring-1 focus:ring-[#4f46e5]"
                 placeholder="Contoh: Grup Belajar Fisika"
               />
             </div>
@@ -1732,7 +1732,7 @@ function formatDateTime(value?: string | null) {
       class="fixed inset-0 z-50 flex justify-end bg-black/30"
     >
       <div
-        class="flex h-full w-full max-w-lg flex-col overflow-hidden bg-white shadow-xl"
+        class="flex h-full w-full max-w-lg flex-col overflow-hidden bg-white"
       >
         <div class="border-b border-[#ebe7df] px-5 py-4">
           <div class="flex items-start justify-between gap-4">
