@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
-import { PhArrowRight, PhChatCircleText, PhWarningCircle } from "@phosphor-icons/vue";
+import {
+  PhArrowRight,
+  PhChatCircleText,
+  PhWarningCircle,
+} from "@phosphor-icons/vue";
 import { useAuthStore } from "../../stores/auth";
 import { getChatRooms } from "../../services/chat";
 import type { ChatRoom } from "../../types/chat";
@@ -61,12 +65,16 @@ function roomPreview(room: ChatRoom) {
   if (!room.lastMessage) return "Belum ada pesan.";
   const content =
     room.lastMessage.content ||
-    attachmentPreview(room.lastMessage.attachmentCount, room.lastMessage.attachmentMimeType, room.lastMessage.attachmentFileName);
+    attachmentPreview(
+      room.lastMessage.attachmentCount,
+      room.lastMessage.attachmentMimeType,
+      room.lastMessage.attachmentFileName,
+    );
   if (room.roomType === "dm") return content;
   if (room.lastMessage.senderId === currentUserId.value) {
     return `✓ ${content}`;
   }
-  const sender = room.lastMessage.senderName || "Pengguna";
+  const sender = room.lastMessage.senderName.split(" ")[0] || "Pengguna";
   return `${sender}: ${content}`;
 }
 
