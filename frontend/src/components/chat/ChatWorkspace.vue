@@ -13,6 +13,7 @@ import {
   getChatRooms,
   getChatGroupInfo,
   getMessages,
+  getRoomReadSummary,
   leaveChatGroup,
   markRoomRead,
   openDirectMessage,
@@ -28,6 +29,7 @@ import type {
   ChatGroupMember,
   ChatMember,
   ChatMessage,
+  ChatReadSummary,
   ChatRoom,
 } from "../../types/chat";
 
@@ -38,6 +40,7 @@ defineProps<{
 const rooms = ref<ChatRoom[]>([]);
 const selectedRoom = ref<ChatRoom | null>(null);
 const messages = ref<ChatMessage[]>([]);
+const readSummary = ref<ChatReadSummary | null>(null);
 const nextBefore = ref<string | null>(null);
 const hasMore = ref(false);
 const draft = ref("");
@@ -129,6 +132,14 @@ const selectedAddMembers = computed(() =>
     selectedAddMemberIds.value.includes(member.userId),
   ),
 );
+const latestOwnMessageId = computed(() => {
+  for (let index = messages.value.length - 1; index >= 0; index -= 1) {
+    if (messages.value[index].isMine) {
+      return messages.value[index].messageId;
+    }
+  }
+  return "";
+});
 
 onMounted(async () => {
   await bootstrapChat();
@@ -174,6 +185,7 @@ async function loadLatestMessages() {
     nextBefore.value = response.nextBefore ?? null;
     hasMore.value = response.hasMore;
     await markSelectedRoomRead();
+    await refreshReadSummary();
     await nextTick();
     scrollToBottom();
   } catch (error) {
@@ -198,6 +210,7 @@ async function refreshMessages(options: { silent?: boolean } = {}) {
     hasMore.value = response.hasMore;
     await refreshRooms();
     await markSelectedRoomRead();
+    await refreshReadSummary();
     await nextTick();
     if (
       !previousLastId ||
@@ -526,6 +539,7 @@ async function submitMessage() {
     messages.value = dedupeMessages([...messages.value, created]);
     draft.value = "";
     await markSelectedRoomRead(created.messageId);
+    await refreshReadSummary();
     await refreshRooms();
     await nextTick();
     scrollToBottom();
@@ -547,6 +561,18 @@ async function markSelectedRoomRead(lastReadMessageId?: string) {
     );
   } catch {
     // Read receipt failure should not block chat usage.
+  }
+}
+
+async function refreshReadSummary() {
+  if (!selectedRoom.value) {
+    readSummary.value = null;
+    return;
+  }
+  try {
+    readSummary.value = await getRoomReadSummary(selectedRoom.value.roomId);
+  } catch {
+    // Read summary should not block chat usage.
   }
 }
 
@@ -576,6 +602,29 @@ function scrollToBottom() {
 
 function lastMessage(items: ChatMessage[]) {
   return items.length > 0 ? items[items.length - 1] : undefined;
+}
+
+function readIndicatorFor(message: ChatMessage) {
+  if (!message.isMine || message.messageId !== latestOwnMessageId.value) {
+    return "";
+  }
+  const count = readByOtherCount(message);
+  if (selectedRoomIsDM.value) {
+    return count > 0 ? "Dibaca" : "Terkirim";
+  }
+  return count > 0 ? `Dibaca ${count} orang` : "Terkirim";
+}
+
+function readByOtherCount(message: ChatMessage) {
+  if (!readSummary.value?.members.length) return 0;
+  const messageCreatedAt = new Date(message.createdAt).getTime();
+  return readSummary.value.members.filter((member) => {
+    if (member.userId === currentUserId.value) return false;
+    if (member.lastReadMessageId === message.messageId) return true;
+    if (!member.lastReadAt || Number.isNaN(messageCreatedAt)) return false;
+    const lastReadAt = new Date(member.lastReadAt).getTime();
+    return !Number.isNaN(lastReadAt) && lastReadAt >= messageCreatedAt;
+  }).length;
 }
 
 function getInitials(value?: string | null) {
@@ -1071,8 +1120,14 @@ function formatDateTime(value?: string | null) {
 	                          {{ message.content }}
 	                        </p>
                       </div>
-                      <p class="px-2 text-[11px] text-[#9ca3af]">
-                        {{ formatDateTime(message.createdAt) }}
+                      <p class="flex gap-2 px-2 text-[11px] text-[#9ca3af]">
+                        <span>{{ formatDateTime(message.createdAt) }}</span>
+                        <span
+                          v-if="readIndicatorFor(message)"
+                          class="font-medium text-[#6b7280]"
+                        >
+                          {{ readIndicatorFor(message) }}
+                        </span>
                       </p>
                     </div>
                   </article>

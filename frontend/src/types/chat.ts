@@ -80,6 +80,21 @@ export interface ChatGroupInfoResponse {
   group: ChatGroupInfo
 }
 
+export interface ChatReadMember {
+  userId: string
+  fullName: string
+  email: string
+  lastReadMessageId?: string | null
+  lastReadAt?: string | null
+}
+
+export interface ChatReadSummary {
+  roomId: string
+  lastReadMessageId?: string | null
+  lastReadAt?: string | null
+  members: ChatReadMember[]
+}
+
 export interface ChatMessagesResponse {
   messages: ChatMessage[]
   nextBefore?: string | null

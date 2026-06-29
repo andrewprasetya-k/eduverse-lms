@@ -9,6 +9,7 @@ import type {
   AddChatGroupMembersPayload,
   CreateChatGroupPayload,
   ChatGroupInfoResponse,
+  ChatReadSummary,
   MarkRoomReadPayload,
   OpenDirectMessagePayload,
   UpdateChatGroupPayload,
@@ -51,6 +52,14 @@ export async function openDirectMessage(payload: OpenDirectMessagePayload) {
 export async function getChatGroupInfo(roomId: string) {
   const { data } = await api.get<ChatGroupInfoResponse>(`/chat/groups/${roomId}`)
   return data.group
+}
+
+export async function getRoomReadSummary(roomId: string) {
+  const { data } = await api.get<ChatReadSummary>(`/chat/rooms/${roomId}/read-summary`)
+  return {
+    ...data,
+    members: data.members ?? [],
+  }
 }
 
 export async function renameChatGroup(roomId: string, payload: UpdateChatGroupPayload) {
