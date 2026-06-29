@@ -190,7 +190,7 @@ const screenshotSlots = [
             class="h-7 w-7 rounded-lg object-contain"
           />
           <span class="text-[15px] font-semibold tracking-tight text-[#171322]"
-            >Wiyata</span
+            >Wiyata Academic Workspace</span
           >
         </RouterLink>
 
@@ -245,10 +245,7 @@ const screenshotSlots = [
         leave-from-class="opacity-100 translate-y-0"
         leave-to-class="opacity-0 -translate-y-1"
       >
-        <nav
-          v-if="mobileOpen"
-          class="border-t border-[#e7e2da] bg-white md:hidden"
-        >
+        <nav v-if="mobileOpen" class="border-[#e7e2da] bg-white md:hidden">
           <div class="flex flex-col gap-1 px-6 py-4">
             <a
               href="#fitur"
@@ -284,11 +281,6 @@ const screenshotSlots = [
 
     <!-- ───────────── HERO ───────────── -->
     <section class="mx-auto max-w-7xl px-6 pb-0 pt-24 lg:px-8 lg:pt-32">
-      <!-- Eyebrow -->
-      <p class="text-sm font-medium tracking-wide text-[#4f46e5]">
-        Wiyata Academic Workspace
-      </p>
-
       <!-- Headline -->
       <h1
         class="mt-5 max-w-3xl text-5xl font-semibold leading-[1.1] tracking-tight text-[#171322] sm:text-6xl lg:text-[68px]"
@@ -394,9 +386,7 @@ const screenshotSlots = [
       </div>
 
       <!-- Feature rows — editorial split layout -->
-      <div
-        class="mt-20 space-y-0 divide-y divide-[#e7e2da] border-t border-b border-[#e7e2da]"
-      >
+      <div class="mt-20 space-y-0 divide-y divide-[#e7e2da]">
         <div
           v-for="(feature, i) in features"
           :key="feature.title"
@@ -437,7 +427,7 @@ const screenshotSlots = [
     </section>
 
     <!-- ───────────── ROLE SECTION ───────────── -->
-    <section id="peran" class="border-t border-[#e7e2da] bg-white scroll-mt-24">
+    <section id="peran" class="border-[#e7e2da] bg-white scroll-mt-24">
       <div class="mx-auto max-w-7xl px-6 py-32 lg:px-8">
         <div class="max-w-2xl">
           <p class="text-sm font-medium text-[#4f46e5]">Untuk setiap peran</p>
@@ -490,10 +480,7 @@ const screenshotSlots = [
 
     <!-- ───────────── PRODUCT VIDEO / MEDIA PLACEHOLDER ───────────── -->
     <!-- TODO: Replace with product video or feature screenshot carousel later. -->
-    <section
-      id="preview"
-      class="border-t border-[#e7e2da] bg-[#fbfaf8] scroll-mt-24"
-    >
+    <section id="preview" class="border-[#e7e2da] bg-[#fbfaf8] scroll-mt-24">
       <div class="mx-auto max-w-7xl px-6 py-32 lg:px-8">
         <div class="mx-auto max-w-2xl text-center">
           <p class="text-sm font-medium text-[#4f46e5]">Demo produk</p>
@@ -578,7 +565,7 @@ const screenshotSlots = [
     </section>
 
     <!-- ───────────── FINAL CTA ───────────── -->
-    <section class="border-t border-[#e7e2da] bg-white">
+    <section class="border-[#e7e2da] bg-white">
       <div class="mx-auto max-w-7xl px-6 py-32 lg:px-8">
         <div class="grid gap-12 lg:grid-cols-[1fr_auto] lg:items-center">
           <div class="max-w-2xl">
@@ -622,7 +609,7 @@ const screenshotSlots = [
     </section>
 
     <!-- ───────────── FOOTER ───────────── -->
-    <footer class="border-t border-[#e7e2da] bg-[#fbfaf8]">
+    <footer class="border-[#e7e2da] bg-[#fbfaf8] border-t pt-10">
       <div class="mx-auto max-w-7xl px-6 py-8 lg:px-8">
         <div
           class="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between"
@@ -664,7 +651,7 @@ const screenshotSlots = [
         </div>
 
         <div
-          class="mt-8 flex flex-col gap-1 border-t border-[#e7e2da] pt-6 text-xs text-[#c4bfcc] sm:flex-row sm:justify-between"
+          class="mt-8 flex flex-col gap-1 border-[#e7e2da] pt-6 text-xs text-[#c4bfcc] sm:flex-row sm:justify-between"
         >
           <p>© 2026 Wiyata. All rights reserved.</p>
           <p>Learning Management System by Loka Wiyata</p>
