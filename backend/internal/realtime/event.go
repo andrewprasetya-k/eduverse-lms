@@ -7,4 +7,8 @@ type Event struct {
 	Payload  any    `json:"payload"`
 }
 
-const EventTypeNewMessage = "new_message"
+const (
+	EventTypeNewMessage  = "new_message"
+	EventTypeMessageRead = "message_read"
+	EventTypeRoomUpdated = "room_updated"
+)

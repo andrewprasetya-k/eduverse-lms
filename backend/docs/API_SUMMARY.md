@@ -177,7 +177,7 @@ Notes are material-only for MVP. They are scoped to the JWT user and active `Sch
 
 ## 💬 Chat
 
-- `GET /ws/chat?token=&schoolId=` - Connect WebSocket realtime transport for chat `new_message` events
+- `GET /ws/chat?token=&schoolId=` - Connect WebSocket realtime transport for chat `new_message`, `message_read`, and `room_updated` events
 - `GET /chat/rooms?search=` - List room sekolah, grup kustom yang bisa diakses, dan direct message aktif; `search` juga mencocokkan nama/email target DM
 - `GET /chat/members?search=&excludeRoomId=` - Search active school members for chat picker grup/DM, optionally excluding active members of a room
 - `POST /chat/school/open` - Open or create the active school's main chat room
@@ -201,8 +201,9 @@ automatic ownership transfer when the creator leaves. Direct message rooms are
 limited to exactly two active members in the same active school and are reused
 idempotently when the same pair opens DM again. Unread counts exclude messages
 sent by the current user and are based on `chat_read_receipts.last_read_msg_id`
-or `last_read_at`. WebSocket in Sprint 18A is event transport only for
-`new_message`; message creation still uses REST and polling remains as fallback.
+or `last_read_at`. WebSocket in Sprint 18B is event transport only for
+`new_message`, `message_read`, and `room_updated`; message creation still uses
+REST and polling remains as fallback.
 It does not enable subject/class rooms, attachments, typing indicators, message
 delete, or notifications.
 

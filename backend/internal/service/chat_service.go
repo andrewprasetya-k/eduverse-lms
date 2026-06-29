@@ -36,7 +36,7 @@ type ChatService interface {
 	RemoveGroupMember(userID string, schoolID string, roomID string, targetUserID string) error
 	ListMessages(userID string, schoolID string, roomID string, limit int, before *time.Time) (*dto.ChatMessagesResponseDTO, error)
 	CreateMessage(userID string, schoolID string, roomID string, content string) (*dto.ChatMessageDTO, error)
-	MarkRead(userID string, schoolID string, roomID string, lastReadMessageID *string) error
+	MarkRead(userID string, schoolID string, roomID string, lastReadMessageID *string) (*dto.ChatReadReceiptDTO, error)
 	GetReadSummary(userID string, schoolID string, roomID string) (*dto.ChatReadSummaryDTO, error)
 	ListRealtimeRecipients(userID string, schoolID string, roomID string) ([]string, error)
 	CanAccessSchoolChat(userID string, schoolID string) (bool, error)
@@ -440,21 +440,28 @@ func (s *chatService) CreateMessage(userID string, schoolID string, roomID strin
 	return &mapped, nil
 }
 
-func (s *chatService) MarkRead(userID string, schoolID string, roomID string, lastReadMessageID *string) error {
+func (s *chatService) MarkRead(userID string, schoolID string, roomID string, lastReadMessageID *string) (*dto.ChatReadReceiptDTO, error) {
 	allowed, _, err := s.CanAccessRoom(userID, schoolID, roomID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !allowed {
-		return fmt.Errorf("forbidden: chat room access denied")
+		return nil, fmt.Errorf("forbidden: chat room access denied")
 	}
 
 	if lastReadMessageID != nil && *lastReadMessageID != "" {
 		if _, err := s.repo.GetMessageByID(*lastReadMessageID, roomID); err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return s.repo.UpsertReadReceipt(roomID, userID, lastReadMessageID)
+	if err := s.repo.UpsertReadReceipt(roomID, userID, lastReadMessageID); err != nil {
+		return nil, err
+	}
+	receipt, err := s.repo.GetReadReceipt(roomID, userID)
+	if err != nil {
+		return nil, err
+	}
+	return mapChatReadReceipt(*receipt, userID), nil
 }
 
 func (s *chatService) GetReadSummary(userID string, schoolID string, roomID string) (*dto.ChatReadSummaryDTO, error) {
@@ -730,6 +737,19 @@ func mapChatReadMembers(rows []repository.ChatReadMemberRow) []dto.ChatReadMembe
 		})
 	}
 	return members
+}
+
+func mapChatReadReceipt(row repository.ChatReadReceiptRow, userID string) *dto.ChatReadReceiptDTO {
+	lastReadAt := ""
+	if row.LastReadAt != nil {
+		lastReadAt = formatChatTime(*row.LastReadAt)
+	}
+	return &dto.ChatReadReceiptDTO{
+		RoomID:            row.RoomID,
+		UserID:            userID,
+		LastReadMessageID: row.LastReadMessageID,
+		LastReadAt:        lastReadAt,
+	}
 }
 
 func isSchoolChatRoom(room *repository.ChatRoomRow, schoolID string) bool {

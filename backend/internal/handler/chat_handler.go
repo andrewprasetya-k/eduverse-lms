@@ -310,6 +310,7 @@ func (h *ChatHandler) CreateMessage(c *gin.Context) {
 		return
 	}
 	h.broadcastNewMessage(userID, schoolID, c.Param("roomId"), *message)
+	h.broadcastRoomUpdated(userID, schoolID, c.Param("roomId"), "new_message")
 	c.JSON(http.StatusCreated, message)
 }
 
@@ -331,6 +332,40 @@ func (h *ChatHandler) broadcastNewMessage(userID string, schoolID string, roomID
 			Payload:  payload,
 		})
 	}
+}
+
+func (h *ChatHandler) broadcastMessageRead(userID string, schoolID string, roomID string, receipt dto.ChatReadReceiptDTO) {
+	if h.hub == nil {
+		return
+	}
+	recipients, err := h.service.ListRealtimeRecipients(userID, schoolID, roomID)
+	if err != nil {
+		return
+	}
+	h.hub.BroadcastToUsers(schoolID, recipients, realtime.Event{
+		Type:     realtime.EventTypeMessageRead,
+		RoomID:   roomID,
+		SchoolID: schoolID,
+		Payload:  receipt,
+	})
+}
+
+func (h *ChatHandler) broadcastRoomUpdated(userID string, schoolID string, roomID string, reason string) {
+	if h.hub == nil {
+		return
+	}
+	recipients, err := h.service.ListRealtimeRecipients(userID, schoolID, roomID)
+	if err != nil {
+		return
+	}
+	h.hub.BroadcastToUsers(schoolID, recipients, realtime.Event{
+		Type:     realtime.EventTypeRoomUpdated,
+		RoomID:   roomID,
+		SchoolID: schoolID,
+		Payload: gin.H{
+			"reason": reason,
+		},
+	})
 }
 
 func (h *ChatHandler) GetReadSummary(c *gin.Context) {
@@ -374,11 +409,20 @@ func (h *ChatHandler) MarkRead(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.MarkRead(userID, schoolID, c.Param("roomId"), input.LastReadMessageID); err != nil {
+	receipt, err := h.service.MarkRead(userID, schoolID, c.Param("roomId"), input.LastReadMessageID)
+	if err != nil {
 		HandleError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Chat room marked as read"})
+	h.broadcastMessageRead(userID, schoolID, c.Param("roomId"), *receipt)
+	h.broadcastRoomUpdated(userID, schoolID, c.Param("roomId"), "message_read")
+	c.JSON(http.StatusOK, dto.MarkChatRoomReadResponseDTO{
+		Message:           "Chat room marked as read",
+		RoomID:            receipt.RoomID,
+		UserID:            receipt.UserID,
+		LastReadMessageID: receipt.LastReadMessageID,
+		LastReadAt:        receipt.LastReadAt,
+	})
 }
 
 func getChatActiveSchoolID(c *gin.Context) (string, bool) {

@@ -411,6 +411,18 @@ Endpoint menyimpan `last_read_msg_id` dan memperbarui `last_read_at`. Jika body
 kosong, endpoint hanya memperbarui `last_read_at` tanpa menghapus
 `last_read_msg_id` yang sudah tersimpan.
 
+Response:
+
+```json
+{
+  "message": "Chat room marked as read",
+  "roomId": "uuid",
+  "userId": "uuid",
+  "lastReadMessageId": "uuid",
+  "lastReadAt": "2026-06-26T03:05:00Z"
+}
+```
+
 Unread count pada `GET /rooms` dihitung dari read receipt current user,
 menggunakan `last_read_msg_id` jika tersedia atau `last_read_at` sebagai
 fallback, dan tidak menghitung pesan yang dikirim oleh current user.
@@ -436,7 +448,7 @@ Handshake:
 - Super admin hanya dapat terkoneksi jika juga memiliki membership aktif di
   school tersebut.
 
-Event shape:
+Event `new_message`:
 
 ```json
 {
@@ -457,6 +469,38 @@ Event shape:
 }
 ```
 
+Event `message_read`:
+
+```json
+{
+  "type": "message_read",
+  "roomId": "uuid",
+  "schoolId": "school-uuid",
+  "payload": {
+    "roomId": "uuid",
+    "userId": "uuid",
+    "lastReadMessageId": "uuid",
+    "lastReadAt": "2026-06-26T03:05:00Z"
+  }
+}
+```
+
+Event `room_updated`:
+
+```json
+{
+  "type": "room_updated",
+  "roomId": "uuid",
+  "schoolId": "school-uuid",
+  "payload": {
+    "reason": "new_message"
+  }
+}
+```
+
+`room_updated.payload.reason` saat ini berisi `new_message` atau
+`message_read`.
+
 Broadcast eligibility:
 
 - School room dikirim hanya ke active school members di school yang sama.
@@ -465,6 +509,7 @@ Broadcast eligibility:
 - Removed school member tidak menerima event.
 - Event tidak pernah dibroadcast lintas sekolah.
 
-Sprint 18A hanya mengirim event `new_message`. Read receipt, room management,
-typing indicator, presence, notifications, dan message creation via WebSocket
-belum diimplementasikan.
+Sprint 18B mengirim event `new_message`, `message_read`, dan `room_updated`.
+Message creation tetap melalui REST. Polling masih dipertahankan sebagai
+fallback. Typing indicator, presence, notifications, browser notification, dan
+message creation via WebSocket belum diimplementasikan.
