@@ -31,6 +31,9 @@ type ChatRepository interface {
 	CreateMessage(message *domain.ChatMessage) error
 	GetMessageByID(messageID string, roomID string) (*ChatMessageRow, error)
 	UpsertReadReceipt(roomID string, userID string, messageID *string) error
+	GetReadReceipt(roomID string, userID string) (*ChatReadReceiptRow, error)
+	ListSchoolReadMembers(roomID string, schoolID string) ([]ChatReadMemberRow, error)
+	ListRoomReadMembers(roomID string, schoolID string) ([]ChatReadMemberRow, error)
 	UnreadCount(roomID string, userID string) (int64, error)
 }
 
@@ -95,6 +98,20 @@ type ChatMessageRow struct {
 	Content    string    `gorm:"column:content"`
 	Type       string    `gorm:"column:message_type"`
 	CreatedAt  time.Time `gorm:"column:created_at"`
+}
+
+type ChatReadReceiptRow struct {
+	RoomID            string     `gorm:"column:room_id"`
+	LastReadMessageID *string    `gorm:"column:last_read_message_id"`
+	LastReadAt        *time.Time `gorm:"column:last_read_at"`
+}
+
+type ChatReadMemberRow struct {
+	UserID            string     `gorm:"column:user_id"`
+	FullName          string     `gorm:"column:full_name"`
+	Email             string     `gorm:"column:email"`
+	LastReadMessageID *string    `gorm:"column:last_read_message_id"`
+	LastReadAt        *time.Time `gorm:"column:last_read_at"`
 }
 
 func NewChatRepository(db *gorm.DB) ChatRepository {
@@ -879,13 +896,91 @@ func (r *chatRepository) UpsertReadReceipt(roomID string, userID string, message
 		LastReadMessageID: messageID,
 		LastReadAt:        now,
 	}
+	assignments := map[string]any{
+		"last_read_at": now,
+	}
+	if messageID != nil && *messageID != "" {
+		assignments["last_read_msg_id"] = messageID
+	}
 	return r.db.Clauses(clause.OnConflict{
-		Columns: []clause.Column{{Name: "rct_room_id"}, {Name: "rct_usr_id"}},
-		DoUpdates: clause.Assignments(map[string]any{
-			"last_read_msg_id": messageID,
-			"last_read_at":     now,
-		}),
+		Columns:   []clause.Column{{Name: "rct_room_id"}, {Name: "rct_usr_id"}},
+		DoUpdates: clause.Assignments(assignments),
 	}).Create(&receipt).Error
+}
+
+func (r *chatRepository) GetReadReceipt(roomID string, userID string) (*ChatReadReceiptRow, error) {
+	var row ChatReadReceiptRow
+	err := r.db.Raw(`
+		SELECT
+			rct.rct_room_id AS room_id,
+			rct.last_read_msg_id AS last_read_message_id,
+			rct.last_read_at
+		FROM edv.chat_read_receipts rct
+		WHERE rct.rct_room_id = ?
+			AND rct.rct_usr_id = ?
+		LIMIT 1
+	`, roomID, userID).Scan(&row).Error
+	if err != nil {
+		return nil, err
+	}
+	if row.RoomID == "" {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &row, nil
+}
+
+func (r *chatRepository) ListSchoolReadMembers(roomID string, schoolID string) ([]ChatReadMemberRow, error) {
+	var rows []ChatReadMemberRow
+	err := r.db.Raw(`
+		SELECT
+			u.usr_id AS user_id,
+			COALESCE(u.usr_nama_lengkap, '') AS full_name,
+			u.usr_email AS email,
+			rct.last_read_msg_id AS last_read_message_id,
+			rct.last_read_at
+		FROM edv.school_users scu
+		JOIN edv.users u
+			ON u.usr_id = scu.scu_usr_id
+			AND u.deleted_at IS NULL
+		LEFT JOIN edv.chat_read_receipts rct
+			ON rct.rct_room_id = ?
+			AND rct.rct_usr_id = u.usr_id
+		WHERE scu.scu_sch_id = ?
+			AND scu.deleted_at IS NULL
+		ORDER BY u.usr_nama_lengkap ASC, u.usr_email ASC
+	`, roomID, schoolID).Scan(&rows).Error
+	return rows, err
+}
+
+func (r *chatRepository) ListRoomReadMembers(roomID string, schoolID string) ([]ChatReadMemberRow, error) {
+	var rows []ChatReadMemberRow
+	err := r.db.Raw(`
+		SELECT
+			u.usr_id AS user_id,
+			COALESCE(u.usr_nama_lengkap, '') AS full_name,
+			u.usr_email AS email,
+			rct.last_read_msg_id AS last_read_message_id,
+			rct.last_read_at
+		FROM edv.chat_room_members crm
+		JOIN edv.chat_rooms cr
+			ON cr.room_id = crm.crm_room_id
+			AND cr.room_sch_id = ?
+			AND cr.deleted_at IS NULL
+		JOIN edv.school_users scu
+			ON scu.scu_usr_id = crm.crm_usr_id
+			AND scu.scu_sch_id = cr.room_sch_id
+			AND scu.deleted_at IS NULL
+		JOIN edv.users u
+			ON u.usr_id = crm.crm_usr_id
+			AND u.deleted_at IS NULL
+		LEFT JOIN edv.chat_read_receipts rct
+			ON rct.rct_room_id = crm.crm_room_id
+			AND rct.rct_usr_id = u.usr_id
+		WHERE crm.crm_room_id = ?
+			AND crm.left_at IS NULL
+		ORDER BY crm.joined_at ASC, u.usr_nama_lengkap ASC, u.usr_email ASC
+	`, schoolID, roomID).Scan(&rows).Error
+	return rows, err
 }
 
 func (r *chatRepository) UnreadCount(roomID string, userID string) (int64, error) {
@@ -896,11 +991,30 @@ func (r *chatRepository) UnreadCount(roomID string, userID string) (int64, error
 		LEFT JOIN edv.chat_read_receipts rct
 			ON rct.rct_room_id = msg.msg_room_id
 			AND rct.rct_usr_id = ?
+		LEFT JOIN edv.chat_messages last_read_msg
+			ON last_read_msg.msg_id = rct.last_read_msg_id
+			AND last_read_msg.msg_room_id = msg.msg_room_id
+			AND last_read_msg.deleted_at IS NULL
 		WHERE msg.msg_room_id = ?
 			AND msg.msg_usr_id <> ?
 			AND msg.msg_type = 'text'
 			AND msg.deleted_at IS NULL
-			AND (rct.last_read_at IS NULL OR msg.created_at > rct.last_read_at)
+			AND (
+				CASE
+					WHEN last_read_msg.created_at IS NOT NULL AND rct.last_read_at IS NOT NULL
+						THEN GREATEST(last_read_msg.created_at, rct.last_read_at)
+					WHEN last_read_msg.created_at IS NOT NULL
+						THEN last_read_msg.created_at
+					ELSE rct.last_read_at
+				END IS NULL
+				OR msg.created_at > CASE
+					WHEN last_read_msg.created_at IS NOT NULL AND rct.last_read_at IS NOT NULL
+						THEN GREATEST(last_read_msg.created_at, rct.last_read_at)
+					WHEN last_read_msg.created_at IS NOT NULL
+						THEN last_read_msg.created_at
+					ELSE rct.last_read_at
+				END
+			)
 	`, userID, roomID, userID).Scan(&count).Error
 	return count, err
 }

@@ -310,6 +310,29 @@ func (h *ChatHandler) CreateMessage(c *gin.Context) {
 	c.JSON(http.StatusCreated, message)
 }
 
+func (h *ChatHandler) GetReadSummary(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	schoolID, ok := getChatActiveSchoolID(c)
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "School context required"})
+		return
+	}
+
+	summary, err := h.service.GetReadSummary(userID, schoolID, c.Param("roomId"))
+	if err != nil {
+		HandleError(c, err)
+		return
+	}
+	if summary.Members == nil {
+		summary.Members = make([]dto.ChatReadMemberDTO, 0)
+	}
+	c.JSON(http.StatusOK, summary)
+}
+
 func (h *ChatHandler) MarkRead(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	schoolID, ok := getChatActiveSchoolID(c)

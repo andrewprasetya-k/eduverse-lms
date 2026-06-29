@@ -352,6 +352,7 @@ func main() {
 			chatAPI.POST("/groups/:roomId/leave", middleware.RequireSchoolMember(schoolService), chatHandler.LeaveGroupRoom)
 			chatAPI.POST("/groups/:roomId/members", middleware.RequireSchoolMember(schoolService), chatHandler.AddGroupMembers)
 			chatAPI.DELETE("/groups/:roomId/members/:userId", middleware.RequireSchoolMember(schoolService), chatHandler.RemoveGroupMember)
+			chatAPI.GET("/rooms/:roomId/read-summary", middleware.RequireSchoolMember(schoolService), chatHandler.GetReadSummary)
 			chatAPI.GET("/rooms/:roomId/messages", middleware.RequireSchoolMember(schoolService), chatHandler.ListMessages)
 			chatAPI.POST("/rooms/:roomId/messages", middleware.RequireSchoolMember(schoolService), chatHandler.CreateMessage)
 			chatAPI.PATCH("/rooms/:roomId/read", middleware.RequireSchoolMember(schoolService), chatHandler.MarkRead)

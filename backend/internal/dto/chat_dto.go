@@ -82,6 +82,21 @@ type ChatGroupInfoResponseDTO struct {
 	Group ChatGroupInfoDTO `json:"group"`
 }
 
+type ChatReadMemberDTO struct {
+	UserID            string  `json:"userId"`
+	FullName          string  `json:"fullName"`
+	Email             string  `json:"email"`
+	LastReadMessageID *string `json:"lastReadMessageId"`
+	LastReadAt        *string `json:"lastReadAt"`
+}
+
+type ChatReadSummaryDTO struct {
+	RoomID            string              `json:"roomId"`
+	LastReadMessageID *string             `json:"lastReadMessageId"`
+	LastReadAt        *string             `json:"lastReadAt"`
+	Members           []ChatReadMemberDTO `json:"members"`
+}
+
 type ChatMessagesResponseDTO struct {
 	Messages   []ChatMessageDTO `json:"messages"`
 	NextBefore *string          `json:"nextBefore"`

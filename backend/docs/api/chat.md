@@ -335,6 +335,41 @@ lebih lama.
 }
 ```
 
+### Get Read Summary
+
+`GET /rooms/:roomId/read-summary`
+
+Mengembalikan ringkasan read receipt untuk room yang dapat diakses current
+user. Endpoint ini dipakai UI untuk menampilkan indikator `Terkirim`,
+`Dibaca`, dan `Dibaca X orang`.
+
+Rules:
+
+- Memerlukan akses ke room melalui permission chat yang sama dengan message
+  list/send.
+- School room hanya mengembalikan active school members.
+- Group room dan direct message hanya mengembalikan active `chat_room_members`.
+- Removed school member (`school_users.deleted_at IS NOT NULL`) tidak ikut
+  dihitung.
+- Tidak mengekspos member dari sekolah lain.
+
+```json
+{
+  "roomId": "uuid",
+  "lastReadMessageId": "uuid",
+  "lastReadAt": "2026-06-26T03:05:00Z",
+  "members": [
+    {
+      "userId": "uuid",
+      "fullName": "Budi Santoso",
+      "email": "budi@siswa.sch.id",
+      "lastReadMessageId": "uuid",
+      "lastReadAt": "2026-06-26T03:05:00Z"
+    }
+  ]
+}
+```
+
 ### Create Message
 
 `POST /rooms/:roomId/messages`
@@ -367,3 +402,12 @@ payload WebSocket `new_message`.
 
 `lastReadMessageId` opsional. Endpoint ini idempotent dan hanya berlaku jika
 current user memiliki akses ke room.
+
+Jika `lastReadMessageId` dikirim, message harus berada di room tersebut.
+Endpoint menyimpan `last_read_msg_id` dan memperbarui `last_read_at`. Jika body
+kosong, endpoint hanya memperbarui `last_read_at` tanpa menghapus
+`last_read_msg_id` yang sudah tersimpan.
+
+Unread count pada `GET /rooms` dihitung dari read receipt current user,
+menggunakan `last_read_msg_id` jika tersedia atau `last_read_at` sebagai
+fallback, dan tidak menghitung pesan yang dikirim oleh current user.

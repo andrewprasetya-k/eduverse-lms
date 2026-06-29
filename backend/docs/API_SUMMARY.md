@@ -187,9 +187,10 @@ Notes are material-only for MVP. They are scoped to the JWT user and active `Sch
 - `POST /chat/groups/:roomId/leave` - Leave a custom group room
 - `POST /chat/groups/:roomId/members` - Add or restore active school members into a custom group room
 - `DELETE /chat/groups/:roomId/members/:userId` - Remove a member from a custom group room
+- `GET /chat/rooms/:roomId/read-summary` - Get per-member read receipt summary for an accessible room
 - `GET /chat/rooms/:roomId/messages` - List text messages with `limit` and `before` pagination
 - `POST /chat/rooms/:roomId/messages` - Create text-only message and return canonical message DTO
-- `PATCH /chat/rooms/:roomId/read` - Mark accessible room as read
+- `PATCH /chat/rooms/:roomId/read` - Mark accessible room as read with optional validated `lastReadMessageId`
 
 Chat MVP is REST-only and text-only. Active school admins, teachers, and
 students can participate in the school-wide room if their school membership is
@@ -197,7 +198,9 @@ active. Custom group rooms are limited to selected active school members through
 `chat_room_members.left_at IS NULL`, with admin-only rename/member management and
 automatic ownership transfer when the creator leaves. Direct message rooms are
 limited to exactly two active members in the same active school and are reused
-idempotently when the same pair opens DM again. It does not enable WebSocket,
+idempotently when the same pair opens DM again. Unread counts exclude messages
+sent by the current user and are based on `chat_read_receipts.last_read_msg_id`
+or `last_read_at`. It does not enable WebSocket,
 subject/class rooms, attachments, typing indicators, message delete, or
 notifications.
 
