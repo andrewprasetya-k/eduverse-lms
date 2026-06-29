@@ -174,7 +174,32 @@ const screenshotSlots = [
 ];
 </script>
 <template>
-  <main class="overflow-x-hidden bg-[#fbfaf8] text-[#171322]">
+  <main class="relative isolate overflow-x-hidden bg-[#fbfaf8] text-[#171322]">
+    <!-- Global decorative background -->
+    <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        class="absolute left-1/2 top-0 h-130 w-225 -translate-x-1/2 rounded-full bg-[#4f46e5]/10 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        class="absolute -right-45 top-105 h-105 w-105 rounded-full bg-[#38bdf8]/10 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        class="absolute -left-45 top-245 h-115 w-115 rounded-full bg-[#f59e0b]/8 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        class="absolute inset-0 opacity-[0.035]"
+        style="
+          background-image:
+            linear-gradient(#171322 1px, transparent 1px),
+            linear-gradient(90deg, #171322 1px, transparent 1px);
+          background-size: 44px 44px;
+        "
+        aria-hidden="true"
+      />
+    </div>
     <!-- ───────────── NAVBAR ───────────── -->
     <header
       class="fixed left-0 right-0 w-full top-0 z-50 bg-[#fbfaf8]/50 backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300"
@@ -280,7 +305,17 @@ const screenshotSlots = [
     </header>
 
     <!-- ───────────── HERO ───────────── -->
-    <section class="mx-auto max-w-7xl px-6 pb-0 pt-24 lg:px-8 lg:pt-32">
+    <section
+      class="relative mx-auto max-w-7xl px-6 pb-0 pt-24 lg:px-8 lg:pt-32"
+    >
+      <div
+        class="pointer-events-none absolute -left-30 top-16 -z-10 h-72 w-72 rounded-full bg-[#4f46e5]/12 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        class="pointer-events-none absolute -right-40 top-32 -z-10 h-80 w-80 rounded-full bg-[#38bdf8]/10 blur-3xl"
+        aria-hidden="true"
+      />
       <!-- Headline -->
       <h1
         class="mt-5 max-w-3xl text-5xl font-semibold leading-[1.1] tracking-tight text-[#171322] sm:text-6xl lg:text-[68px]"
@@ -319,7 +354,7 @@ const screenshotSlots = [
       <!-- TODO: Replace this placeholder with actual Wiyata product screenshot or demo video. -->
       <div class="mt-16">
         <div
-          class="relative overflow-hidden rounded-2xl border border-[#e7e2da] bg-white shadow-[0_4px_48px_-8px_rgba(23,19,34,0.10)]"
+          class="relative overflow-hidden rounded-2xl border border-[#e7e2da] bg-white shadow-[0_24px_80px_-32px_rgba(79,70,229,0.35)] ring-1 ring-white/70"
         >
           <!-- Browser chrome -->
           <div
@@ -369,7 +404,7 @@ const screenshotSlots = [
     <!-- ───────────── FEATURE STORY ───────────── -->
     <section
       id="fitur"
-      class="mx-auto max-w-7xl px-6 py-32 lg:px-8 scroll-mt-24"
+      class="relative mx-auto max-w-7xl px-6 py-32 lg:px-8 scroll-mt-24"
     >
       <!-- Section label -->
       <div class="max-w-2xl">
@@ -427,8 +462,12 @@ const screenshotSlots = [
     </section>
 
     <!-- ───────────── ROLE SECTION ───────────── -->
-    <section id="peran" class="border-[#e7e2da] bg-white scroll-mt-24">
-      <div class="mx-auto max-w-7xl px-6 py-32 lg:px-8">
+    <section id="peran" class="relative border-[#e7e2da] bg-white scroll-mt-24">
+      <div
+        class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(79,70,229,0.08),transparent_32%),radial-gradient(circle_at_80%_30%,rgba(56,189,248,0.08),transparent_28%)]"
+        aria-hidden="true"
+      />
+      <div class="relative mx-auto max-w-7xl px-6 py-32 lg:px-8">
         <div class="max-w-2xl">
           <p class="text-sm font-medium text-[#4f46e5]">Untuk setiap peran</p>
           <h2
@@ -480,8 +519,16 @@ const screenshotSlots = [
 
     <!-- ───────────── PRODUCT VIDEO / MEDIA PLACEHOLDER ───────────── -->
     <!-- TODO: Replace with product video or feature screenshot carousel later. -->
-    <section id="preview" class="border-[#e7e2da] bg-[#fbfaf8] scroll-mt-24">
-      <div class="mx-auto max-w-7xl px-6 py-32 lg:px-8">
+
+    <section
+      id="preview"
+      class="relative border-[#e7e2da] bg-[#fbfaf8] scroll-mt-24"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(251,250,248,1)_0%,rgba(245,243,255,0.85)_45%,rgba(251,250,248,1)_100%)]"
+        aria-hidden="true"
+      />
+      <div class="relative mx-auto max-w-7xl px-6 py-32 lg:px-8">
         <div class="mx-auto max-w-2xl text-center">
           <p class="text-sm font-medium text-[#4f46e5]">Demo produk</p>
           <h2
@@ -498,7 +545,7 @@ const screenshotSlots = [
         <!-- Video placeholder -->
         <div class="mx-auto mt-14 max-w-4xl">
           <div
-            class="relative flex aspect-video w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#e7e2da] bg-[#1a1830]"
+            class="relative flex aspect-video w-full flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#1a1830] shadow-[0_30px_90px_-40px_rgba(26,24,48,0.75)]"
           >
             <!-- Subtle dot grid -->
             <div
@@ -567,7 +614,9 @@ const screenshotSlots = [
     <!-- ───────────── FINAL CTA ───────────── -->
     <section class="border-[#e7e2da] bg-white">
       <div class="mx-auto max-w-7xl px-6 py-32 lg:px-8">
-        <div class="grid gap-12 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div
+          class="grid gap-12 rounded-4xl border border-[#e7e2da] bg-[linear-gradient(135deg,#ffffff_0%,#f5f3ff_55%,#eef2ff_100%)] px-8 py-10 shadow-[0_24px_80px_-48px_rgba(79,70,229,0.45)] lg:grid-cols-[1fr_auto] lg:items-center lg:px-12 lg:py-12"
+        >
           <div class="max-w-2xl">
             <p class="text-sm font-medium text-[#4f46e5]">
               Wiyata Academic Workspace
