@@ -29,6 +29,7 @@ type ClassPerformanceDTO struct {
 	ClassID        string  `json:"classId"`
 	ClassName      string  `json:"className"`
 	SubjectName    string  `json:"subjectName"`
+	SubjectColor   string  `json:"subjectColor,omitempty"`
 	AverageScore   float64 `json:"averageScore"`
 	SubmissionRate float64 `json:"submissionRate"`
 	TotalStudents  int     `json:"totalStudents"`

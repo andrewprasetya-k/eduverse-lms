@@ -4,11 +4,13 @@ type CreateSubjectDTO struct {
 	SchoolID string `json:"schoolId" binding:"required,uuid"`
 	Name     string `json:"subjectName" binding:"required"`
 	Code     string `json:"subjectCode" binding:"required"`
+	Color    string `json:"color,omitempty"`
 }
 
 type UpdateSubjectDTO struct {
-	Name *string `json:"subjectName"`
-	Code *string `json:"subjectCode"`
+	Name  *string `json:"subjectName"`
+	Code  *string `json:"subjectCode"`
+	Color *string `json:"color"`
 }
 
 type SubjectResponseDTO struct {
@@ -18,6 +20,7 @@ type SubjectResponseDTO struct {
 	SchoolCode string `json:"schoolCode,omitempty"`
 	Name       string `json:"subjectName"`
 	Code       string `json:"subjectCode"`
+	Color      string `json:"color,omitempty"`
 	CreatedAt  string `json:"createdAt"`
 }
 

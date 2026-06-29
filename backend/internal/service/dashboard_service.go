@@ -31,6 +31,13 @@ func safePercentage(value float64) float64 {
 	return value
 }
 
+func dashboardStringValue(value any) string {
+	if result, ok := value.(string); ok {
+		return result
+	}
+	return ""
+}
+
 func (s *dashboardService) GetStudentDashboard(userID string) (*dto.StudentDashboardDTO, error) {
 	pending, err := s.repo.GetPendingAssignmentsCount(userID)
 	if err != nil {
@@ -100,6 +107,7 @@ func (s *dashboardService) GetTeacherDashboard(schoolUserID string) (*dto.Teache
 			ClassID:        p["class_id"].(string),
 			ClassName:      p["class_name"].(string),
 			SubjectName:    p["subject_name"].(string),
+			SubjectColor:   dashboardStringValue(p["subject_color"]),
 			AverageScore:   p["average_score"].(float64),
 			SubmissionRate: safePercentage(p["submission_rate"].(float64)),
 			TotalStudents:  int(p["total_students"].(int64)),

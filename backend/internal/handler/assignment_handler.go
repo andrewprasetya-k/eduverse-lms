@@ -218,11 +218,12 @@ func (h *AssignmentHandler) GetBySubjectClass(c *gin.Context) {
 
 	response := dto.AssignmentPerSubjectClassResponseDTO{
 		SubjectClass: dto.SubjectClassHeaderDTO{
-			ID:          subjectClassHeader.ID,
-			SubjectCode: subjectClassHeader.Subject.Code,
-			SubjectName: subjectClassHeader.Subject.Name,
-			TeacherID:   subjectClassHeader.Teacher.ID,
-			TeacherName: subjectClassHeader.Teacher.User.FullName,
+			ID:           subjectClassHeader.ID,
+			SubjectCode:  subjectClassHeader.Subject.Code,
+			SubjectName:  subjectClassHeader.Subject.Name,
+			SubjectColor: subjectClassHeader.Subject.Color,
+			TeacherID:    subjectClassHeader.Teacher.ID,
+			TeacherName:  subjectClassHeader.Teacher.User.FullName,
 		},
 		Data: dto.PaginatedResponse{
 			Data:       assignments,
@@ -269,6 +270,7 @@ func (h *AssignmentHandler) GetStudentAssignmentDetail(c *gin.Context) {
 		SubjectClassID:      assignment.SubjectClassID,
 		SubjectName:         assignment.SubjectClass.Subject.Name,
 		SubjectCode:         assignment.SubjectClass.Subject.Code,
+		SubjectColor:        assignment.SubjectClass.Subject.Color,
 		Title:               assignment.Title,
 		Description:         assignment.Description,
 		CategoryName:        assignment.Category.Name,
@@ -326,11 +328,12 @@ func (h *AssignmentHandler) GetSubjectClassSubmissions(c *gin.Context) {
 
 	response := dto.SubjectClassSubmissionsResponseDTO{
 		SubjectClass: dto.SubjectClassHeaderDTO{
-			ID:          subjectClassHeader.ID,
-			SubjectCode: subjectClassHeader.Subject.Code,
-			SubjectName: subjectClassHeader.Subject.Name,
-			TeacherID:   subjectClassHeader.Teacher.ID,
-			TeacherName: subjectClassHeader.Teacher.User.FullName,
+			ID:           subjectClassHeader.ID,
+			SubjectCode:  subjectClassHeader.Subject.Code,
+			SubjectName:  subjectClassHeader.Subject.Name,
+			SubjectColor: subjectClassHeader.Subject.Color,
+			TeacherID:    subjectClassHeader.Teacher.ID,
+			TeacherName:  subjectClassHeader.Teacher.User.FullName,
 		},
 		Assignments: make([]dto.AssignmentSubmissionGroupDTO, 0, len(assignments)),
 	}

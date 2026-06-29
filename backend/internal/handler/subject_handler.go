@@ -33,6 +33,7 @@ func (h *SubjectHandler) Create(c *gin.Context) {
 		SchoolID: input.SchoolID,
 		Name:     input.Name,
 		Code:     input.Code,
+		Color:    input.Color,
 	}
 
 	if err := h.service.Create(&subject); err != nil {
@@ -152,6 +153,9 @@ func (h *SubjectHandler) Update(c *gin.Context) {
 	if input.Code != nil {
 		subject.Code = *input.Code
 	}
+	if input.Color != nil {
+		subject.Color = *input.Color
+	}
 
 	if err := h.service.Update(subject); err != nil {
 		HandleError(c, err)
@@ -178,6 +182,7 @@ func (h *SubjectHandler) mapToResponse(s *domain.Subject) dto.SubjectResponseDTO
 		SchoolCode: s.School.Code,
 		Name:       s.Name,
 		Code:       s.Code,
+		Color:      s.Color,
 		CreatedAt:  s.CreatedAt.Format("02-01-2006 15:04:05"),
 	}
 }

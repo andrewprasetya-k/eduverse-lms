@@ -149,6 +149,11 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
+	if strings.Contains(errStr, "invalid subject color format") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Warna mata pelajaran harus berupa hex color yang valid"})
+		return
+	}
+
 	if strings.Contains(errStr, "unsupported comment source") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Comments are only supported for feed posts in this MVP"})
 		return

@@ -301,11 +301,12 @@ func (h *MaterialHandler) FindAll(c *gin.Context) {
 
 		c.JSON(http.StatusOK, dto.MaterialListWithSubjectDTO{
 			SubjectClass: dto.SubjectClassHeaderDTO{
-				ID:          subjectClass.ID,
-				SubjectCode: subjectClass.Subject.Code,
-				SubjectName: subjectClass.Subject.Name,
-				TeacherID:   subjectClass.Teacher.ID,
-				TeacherName: subjectClass.Teacher.User.FullName,
+				ID:           subjectClass.ID,
+				SubjectCode:  subjectClass.Subject.Code,
+				SubjectName:  subjectClass.Subject.Name,
+				SubjectColor: subjectClass.Subject.Color,
+				TeacherID:    subjectClass.Teacher.ID,
+				TeacherName:  subjectClass.Teacher.User.FullName,
 			},
 			Data: paginatedResponse,
 		})
@@ -413,6 +414,7 @@ func (h *MaterialHandler) mapToResponse(m *domain.Material) dto.MaterialResponse
 		ID:             m.ID,
 		SubjectClassID: m.SubjectClassID,
 		SubjectName:    m.SubjectClass.Subject.Name,
+		SubjectColor:   m.SubjectClass.Subject.Color,
 		Title:          m.Title,
 		Description:    m.Description,
 		Type:           string(m.Type),

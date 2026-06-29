@@ -40,6 +40,7 @@ type TeacherSubjectClassRow struct {
 	SubjectID          string `gorm:"column:subject_id"`
 	SubjectName        string `gorm:"column:subject_name"`
 	SubjectCode        string `gorm:"column:subject_code"`
+	SubjectColor       string `gorm:"column:subject_color"`
 	StudentCount       int64  `gorm:"column:student_count"`
 	MaterialCount      int64  `gorm:"column:material_count"`
 	AssignmentCount    int64  `gorm:"column:assignment_count"`
@@ -69,10 +70,11 @@ func (r *subjectClassRepository) GetTeachingByUserAndSchool(userID string, schoo
 			c.cls_id AS class_id,
 			c.cls_title AS class_name,
 			c.cls_code AS class_code,
-			sub.sub_id AS subject_id,
-			sub.sub_name AS subject_name,
-			sub.sub_code AS subject_code,
-			COUNT(DISTINCT enr.enr_scu_id) AS student_count,
+				sub.sub_id AS subject_id,
+				sub.sub_name AS subject_name,
+				sub.sub_code AS subject_code,
+				COALESCE(sub.sub_color, '') AS subject_color,
+				COUNT(DISTINCT enr.enr_scu_id) AS student_count,
 			COUNT(DISTINCT mat.mat_id) AS material_count,
 			COUNT(DISTINCT asg.asg_id) AS assignment_count,
 			COUNT(DISTINCT CASE WHEN asm.asm_id IS NULL THEN sbm.sbm_id END) AS pending_submissions
@@ -110,7 +112,7 @@ func (r *subjectClassRepository) GetTeachingByUserAndSchool(userID string, schoo
 			AND c.cls_sch_id = ?
 			AND sub.sub_sch_id = ?
 			AND c.deleted_at IS NULL
-		GROUP BY sc.scl_id, c.cls_id, c.cls_title, c.cls_code, sub.sub_id, sub.sub_name, sub.sub_code
+			GROUP BY sc.scl_id, c.cls_id, c.cls_title, c.cls_code, sub.sub_id, sub.sub_name, sub.sub_code, sub.sub_color
 		ORDER BY c.cls_title ASC, sub.sub_name ASC
 	`, schoolID, schoolID, schoolID, schoolID, schoolID, userID, schoolID, schoolID, schoolID).Scan(&results).Error
 	return results, err

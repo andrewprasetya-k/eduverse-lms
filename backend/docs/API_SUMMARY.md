@@ -89,6 +89,8 @@ Authorization: Bearer <your-jwt-token>
 - `PATCH /subjects/:id` - Update subject
 - `DELETE /subjects/:id` - Delete subject
 
+Subject payloads support optional `color` for visual identity. Accepted values are hex colors in `#RGB`, `#RRGGBB`, or `#RRGGBBAA` format; empty color remains valid and lets the frontend use fallback colors.
+
 ## 🔐 RBAC (Roles & Permissions)
 
 ### Roles

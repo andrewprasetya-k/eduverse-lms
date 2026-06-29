@@ -29,6 +29,7 @@ type MaterialResponseDTO struct {
 	ID             string             `json:"materialId"`
 	SubjectClassID string             `json:"subjectClassId"`
 	SubjectName    string             `json:"subjectName,omitempty"`
+	SubjectColor   string             `json:"subjectColor,omitempty"`
 	Title          string             `json:"materialTitle"`
 	Description    string             `json:"materialDesc"`
 	Type           string             `json:"materialType"`

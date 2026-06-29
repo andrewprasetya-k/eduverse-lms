@@ -12,20 +12,22 @@ type UpdateSubjectClassDTO struct {
 }
 
 type SubjectClassResponseDTO struct {
-	ID          string `json:"subjectClassId"`
-	SubjectID   string `json:"subjectId"`
-	SubjectName string `json:"subjectName,omitempty"`
-	SubjectCode string `json:"subjectCode,omitempty"`
-	TeacherID   string `json:"teacherId"`
-	TeacherName string `json:"teacherName,omitempty"`
+	ID           string `json:"subjectClassId"`
+	SubjectID    string `json:"subjectId"`
+	SubjectName  string `json:"subjectName,omitempty"`
+	SubjectCode  string `json:"subjectCode,omitempty"`
+	SubjectColor string `json:"subjectColor,omitempty"`
+	TeacherID    string `json:"teacherId"`
+	TeacherName  string `json:"teacherName,omitempty"`
 }
 
 type SubjectClassHeaderDTO struct {
-	ID          string `json:"subjectClassId"`
-	SubjectCode string `json:"subjectCode"`
-	SubjectName string `json:"subjectName,omitempty"`
-	TeacherID   string `json:"teacherId"`
-	TeacherName string `json:"teacherName,omitempty"`
+	ID           string `json:"subjectClassId"`
+	SubjectCode  string `json:"subjectCode"`
+	SubjectName  string `json:"subjectName,omitempty"`
+	SubjectColor string `json:"subjectColor,omitempty"`
+	TeacherID    string `json:"teacherId"`
+	TeacherName  string `json:"teacherName,omitempty"`
 }
 
 type SubjectPerClassDTO struct {
@@ -41,6 +43,7 @@ type TeacherSubjectClassDTO struct {
 	SubjectID          string `json:"subjectId"`
 	SubjectName        string `json:"subjectName"`
 	SubjectCode        string `json:"subjectCode,omitempty"`
+	SubjectColor       string `json:"subjectColor,omitempty"`
 	StudentCount       int64  `json:"studentCount"`
 	MaterialCount      int64  `json:"materialCount"`
 	AssignmentCount    int64  `json:"assignmentCount"`

@@ -37,6 +37,7 @@ Retrieve all subjects for a specific school, including school details.
       "subjectId": "uuid",
       "subjectName": "Matematika",
       "subjectCode": "MTK",
+      "color": "#4F46E5",
       "createdAt": "13-02-2026 15:00:00"
     }
   ]
@@ -73,6 +74,7 @@ Register a new subject for a school.
   | `schoolId` | uuid | Yes | |
   | `subjectName`| string | Yes | e.g., "Matematika" |
   | `subjectCode`| string | Yes | Unique per school, e.g., "MTK" |
+  | `color` | string | No | Hex color: `#RGB`, `#RRGGBB`, or `#RRGGBBAA`. Used by calendar/timeline visual identity. |
 
 ---
 
@@ -80,7 +82,9 @@ Register a new subject for a school.
 
 - **URL:** `/:id`
 - **Method:** `PATCH`
-- **Body:** `subjectName`, `subjectCode`.
+- **Body:** `subjectName`, `subjectCode`, `color`.
+
+`color` is optional. Send an empty string to clear it and let the frontend use its deterministic fallback color.
 
 ---
 

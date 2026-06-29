@@ -59,6 +59,7 @@ type StudentAssignmentDetailDTO struct {
 	SubjectClassID      string             `json:"subjectClassId"`
 	SubjectName         string             `json:"subjectName,omitempty"`
 	SubjectCode         string             `json:"subjectCode,omitempty"`
+	SubjectColor        string             `json:"subjectColor,omitempty"`
 	Title               string             `json:"assignmentTitle"`
 	Description         string             `json:"assignmentDescription"`
 	CategoryName        string             `json:"categoryName"`
@@ -122,6 +123,7 @@ type TeacherSubmissionInboxItemDTO struct {
 	AssignmentTitle string     `json:"assignmentTitle" gorm:"column:assignment_title"`
 	SubjectName     string     `json:"subjectName" gorm:"column:subject_name"`
 	SubjectCode     string     `json:"subjectCode" gorm:"column:subject_code"`
+	SubjectColor    string     `json:"subjectColor,omitempty" gorm:"column:subject_color"`
 	ClassName       string     `json:"className" gorm:"column:class_name"`
 	ClassCode       string     `json:"classCode" gorm:"column:class_code"`
 	Deadline        *time.Time `json:"deadline" gorm:"column:deadline"`
@@ -150,6 +152,7 @@ type TeacherAssignmentInboxItemDTO struct {
 	AssignmentTitle string     `json:"assignmentTitle" gorm:"column:assignment_title"`
 	SubjectName     string     `json:"subjectName" gorm:"column:subject_name"`
 	SubjectCode     string     `json:"subjectCode" gorm:"column:subject_code"`
+	SubjectColor    string     `json:"subjectColor,omitempty" gorm:"column:subject_color"`
 	ClassName       string     `json:"className" gorm:"column:class_name"`
 	ClassCode       string     `json:"classCode" gorm:"column:class_code"`
 	CategoryName    string     `json:"categoryName" gorm:"column:category_name"`
@@ -179,6 +182,7 @@ type StudentAssignmentInboxItemDTO struct {
 	AssignmentTitle string     `json:"assignmentTitle" gorm:"column:assignment_title"`
 	SubjectName     string     `json:"subjectName" gorm:"column:subject_name"`
 	SubjectCode     string     `json:"subjectCode" gorm:"column:subject_code"`
+	SubjectColor    string     `json:"subjectColor,omitempty" gorm:"column:subject_color"`
 	ClassName       string     `json:"className" gorm:"column:class_name"`
 	ClassCode       string     `json:"classCode" gorm:"column:class_code"`
 	CategoryName    string     `json:"categoryName" gorm:"column:category_name"`
@@ -386,7 +390,8 @@ type StudentGradebookRow struct {
 }
 
 type SubjectHeaderDTO struct {
-	SubjectID   string `json:"subjectId"`
-	SubjectName string `json:"subjectName"`
-	SubjectCode string `json:"subjectCode"`
+	SubjectID    string `json:"subjectId"`
+	SubjectName  string `json:"subjectName"`
+	SubjectCode  string `json:"subjectCode"`
+	SubjectColor string `json:"subjectColor,omitempty"`
 }

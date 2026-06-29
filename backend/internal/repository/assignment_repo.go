@@ -146,6 +146,7 @@ func (r *assignmentRepository) GetTeacherSubmissionInbox(userID string, schoolID
 			a.asg_title AS assignment_title,
 			sub.sub_name AS subject_name,
 			sub.sub_code AS subject_code,
+			COALESCE(sub.sub_color, '') AS subject_color,
 			c.cls_title AS class_name,
 			c.cls_code AS class_code,
 			a.asg_deadline AS deadline,
@@ -166,7 +167,7 @@ func (r *assignmentRepository) GetTeacherSubmissionInbox(userID string, schoolID
 		Where("teacher_e.enr_sch_id = ? AND teacher_e.enr_role = ? AND teacher_e.left_at IS NULL", schoolID, "teacher").
 		Where("c.cls_sch_id = ? AND c.deleted_at IS NULL", schoolID).
 		Where("sub.sub_sch_id = ?", schoolID).
-		Group("a.asg_id, sc.scl_id, a.asg_title, sub.sub_name, sub.sub_code, c.cls_title, c.cls_code, a.asg_deadline").
+		Group("a.asg_id, sc.scl_id, a.asg_title, sub.sub_name, sub.sub_code, sub.sub_color, c.cls_title, c.cls_code, a.asg_deadline").
 		Having("COUNT(s.sbm_id) > 0").
 		Order("pending_count DESC, a.asg_deadline ASC NULLS LAST, a.asg_title ASC").
 		Scan(&rows).Error
@@ -179,10 +180,11 @@ func (r *assignmentRepository) GetTeacherAssignmentInbox(userID string, schoolID
 		Select(`
 			a.asg_id AS assignment_id,
 			sc.scl_id AS subject_class_id,
-			a.asg_title AS assignment_title,
-			sub.sub_name AS subject_name,
-			sub.sub_code AS subject_code,
-			c.cls_title AS class_name,
+				a.asg_title AS assignment_title,
+				sub.sub_name AS subject_name,
+				sub.sub_code AS subject_code,
+				COALESCE(sub.sub_color, '') AS subject_color,
+				c.cls_title AS class_name,
 			c.cls_code AS class_code,
 			COALESCE(ac.asc_name, '') AS category_name,
 			a.asg_deadline AS deadline,
@@ -204,7 +206,7 @@ func (r *assignmentRepository) GetTeacherAssignmentInbox(userID string, schoolID
 		Where("teacher_e.enr_sch_id = ? AND teacher_e.enr_role = ? AND teacher_e.left_at IS NULL", schoolID, "teacher").
 		Where("c.cls_sch_id = ? AND c.deleted_at IS NULL", schoolID).
 		Where("sub.sub_sch_id = ?", schoolID).
-		Group("a.asg_id, sc.scl_id, a.asg_title, sub.sub_name, sub.sub_code, c.cls_title, c.cls_code, ac.asc_name, a.asg_deadline").
+		Group("a.asg_id, sc.scl_id, a.asg_title, sub.sub_name, sub.sub_code, sub.sub_color, c.cls_title, c.cls_code, ac.asc_name, a.asg_deadline").
 		Order("pending_count DESC, a.asg_deadline ASC NULLS LAST, a.asg_title ASC").
 		Scan(&rows).Error
 	return rows, err
@@ -217,10 +219,11 @@ func (r *assignmentRepository) GetStudentAssignmentInbox(userID string, schoolID
 		Select(`
 			a.asg_id AS assignment_id,
 			sc.scl_id AS subject_class_id,
-			a.asg_title AS assignment_title,
-			sub.sub_name AS subject_name,
-			sub.sub_code AS subject_code,
-			c.cls_title AS class_name,
+				a.asg_title AS assignment_title,
+				sub.sub_name AS subject_name,
+				sub.sub_code AS subject_code,
+				COALESCE(sub.sub_color, '') AS subject_color,
+				c.cls_title AS class_name,
 			c.cls_code AS class_code,
 			COALESCE(ac.asc_name, '') AS category_name,
 			a.asg_deadline AS deadline,

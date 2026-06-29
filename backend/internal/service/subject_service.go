@@ -4,8 +4,11 @@ import (
 	"backend/internal/domain"
 	"backend/internal/repository"
 	"fmt"
+	"regexp"
 	"strings"
 )
+
+var subjectColorPattern = regexp.MustCompile(`^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$`)
 
 type SubjectService interface {
 	Create(subject *domain.Subject) error
@@ -32,6 +35,9 @@ func NewSubjectService(repo repository.SubjectRepository, schoolService SchoolSe
 func (s *subjectService) Create(subject *domain.Subject) error {
 	subject.Name = strings.TrimSpace(subject.Name)
 	subject.Code = strings.ToUpper(strings.TrimSpace(subject.Code))
+	if err := normalizeSubjectColor(&subject.Color); err != nil {
+		return err
+	}
 
 	// 1. Validasi Duplikasi Kode di Sekolah yang sama
 	exists, err := s.repo.CheckDuplicateCode(subject.SchoolID, subject.Code, "")
@@ -72,6 +78,9 @@ func (s *subjectService) GetByCode(schoolCode string, subjectCode string) (*doma
 func (s *subjectService) Update(subject *domain.Subject) error {
 	subject.Name = strings.TrimSpace(subject.Name)
 	subject.Code = strings.ToUpper(strings.TrimSpace(subject.Code))
+	if err := normalizeSubjectColor(&subject.Color); err != nil {
+		return err
+	}
 
 	// 1. Validasi Duplikasi Kode
 	exists, err := s.repo.CheckDuplicateCode(subject.SchoolID, subject.Code, subject.ID)
@@ -95,4 +104,17 @@ func (s *subjectService) Delete(id string) error {
 	}
 
 	return s.repo.Delete(id)
+}
+
+func normalizeSubjectColor(color *string) error {
+	trimmed := strings.TrimSpace(*color)
+	if trimmed == "" {
+		*color = ""
+		return nil
+	}
+	if !subjectColorPattern.MatchString(trimmed) {
+		return fmt.Errorf("invalid subject color format")
+	}
+	*color = strings.ToUpper(trimmed)
+	return nil
 }

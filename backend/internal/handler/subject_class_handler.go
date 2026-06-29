@@ -116,6 +116,7 @@ func (h *SubjectClassHandler) GetMyTeaching(c *gin.Context) {
 			SubjectID:          item.SubjectID,
 			SubjectName:        item.SubjectName,
 			SubjectCode:        item.SubjectCode,
+			SubjectColor:       item.SubjectColor,
 			StudentCount:       item.StudentCount,
 			MaterialCount:      item.MaterialCount,
 			AssignmentCount:    item.AssignmentCount,
@@ -202,11 +203,12 @@ func getSubjectClassActiveSchoolID(c *gin.Context) (string, bool) {
 
 func (h *SubjectClassHandler) mapToResponse(scl *domain.SubjectClass) dto.SubjectClassResponseDTO {
 	return dto.SubjectClassResponseDTO{
-		ID:          scl.ID,
-		SubjectID:   scl.SubjectID,
-		SubjectName: scl.Subject.Name,
-		SubjectCode: scl.Subject.Code,
-		TeacherID:   scl.SchoolUserID,
-		TeacherName: scl.Teacher.User.FullName,
+		ID:           scl.ID,
+		SubjectID:    scl.SubjectID,
+		SubjectName:  scl.Subject.Name,
+		SubjectCode:  scl.Subject.Code,
+		SubjectColor: scl.Subject.Color,
+		TeacherID:    scl.SchoolUserID,
+		TeacherName:  scl.Teacher.User.FullName,
 	}
 }

@@ -169,6 +169,7 @@ func (r *dashboardRepository) GetClassPerformance(schoolUserID string) ([]map[st
 			c.cls_id as class_id,
 			c.cls_title as class_name,
 			sub.sub_name as subject_name,
+			COALESCE(sub.sub_color, '') as subject_color,
 			COALESCE(AVG(asm.asm_score), 0) as average_score,
 			COUNT(DISTINCT e.enr_scu_id) as total_students,
 			COALESCE(
@@ -207,7 +208,7 @@ func (r *dashboardRepository) GetClassPerformance(schoolUserID string) ([]map[st
 			AND teacher_e.left_at IS NULL
 			AND c.cls_sch_id = teacher_e.enr_sch_id
 			AND c.deleted_at IS NULL
-		GROUP BY c.cls_id, c.cls_title, sub.sub_name
+		GROUP BY c.cls_id, c.cls_title, sub.sub_name, sub.sub_color
 	`, schoolUserID).Scan(&results).Error
 	return results, err
 }
