@@ -6,6 +6,7 @@ export interface ChatLastMessage {
   messageType?: string
   attachmentCount?: number
   attachmentMimeType?: string
+  attachmentFileName?: string
   createdAt: string
 }
 
@@ -37,7 +38,7 @@ export interface ChatMessage {
   attachments: ChatAttachment[]
   createdAt: string
   isMine: boolean
-  deliveryStatus?: 'pending' | 'sent' | 'failed'
+  deliveryStatus?: 'uploading' | 'sending' | 'sent' | 'failed'
   pendingFiles?: File[]
 }
 

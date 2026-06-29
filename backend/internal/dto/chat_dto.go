@@ -8,6 +8,7 @@ type ChatLastMessageDTO struct {
 	MessageType        string `json:"messageType"`
 	AttachmentCount    int    `json:"attachmentCount"`
 	AttachmentMimeType string `json:"attachmentMimeType,omitempty"`
+	AttachmentFileName string `json:"attachmentFileName,omitempty"`
 	CreatedAt          string `json:"createdAt"`
 }
 

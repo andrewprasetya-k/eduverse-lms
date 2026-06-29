@@ -5,10 +5,18 @@ import {
   PhChatCircleText,
   PhCheck,
   PhChecks,
+  PhDownloadSimple,
   PhFile,
+  PhFileArchive,
+  PhFileDoc,
+  PhFilePdf,
+  PhFilePpt,
+  PhFileText,
+  PhFileXls,
   PhImage,
   PhPaperclip,
   PhPaperPlaneTilt,
+  PhSpinnerGap,
   PhWarningCircle,
   PhX,
   PhPlus,
@@ -30,10 +38,11 @@ import {
   sendMessage,
 } from "../../services/chat";
 import { connectChatSocket } from "../../services/chatSocket";
-import { uploadMediaFile } from "../../services/media";
+import { deleteMedia, uploadMediaFile } from "../../services/media";
 import type { ChatSocketStatus } from "../../services/chatSocket";
 import { useAuthStore } from "../../stores/auth";
 import type {
+  ChatAttachment,
   ChatGroupInfo,
   ChatGroupMember,
   ChatMember,
@@ -50,6 +59,12 @@ defineProps<{
   audience: "student" | "teacher" | "admin";
 }>();
 
+interface PendingAttachmentItem {
+  id: string;
+  file: File;
+  previewUrl: string;
+}
+
 const rooms = ref<ChatRoom[]>([]);
 const selectedRoom = ref<ChatRoom | null>(null);
 const messages = ref<ChatMessage[]>([]);
@@ -57,17 +72,20 @@ const readSummary = ref<ChatReadSummary | null>(null);
 const nextBefore = ref<string | null>(null);
 const hasMore = ref(false);
 const draft = ref("");
-const selectedFiles = ref<File[]>([]);
+const selectedFiles = ref<PendingAttachmentItem[]>([]);
 const isBooting = ref(true);
 const isLoadingMessages = ref(false);
 const isLoadingOlder = ref(false);
 const pendingSendCount = ref(0);
 const isRefreshing = ref(false);
+const isDragActive = ref(false);
 const accessError = ref("");
 const threadError = ref("");
 const composerError = ref("");
 const messagesEl = ref<HTMLElement | null>(null);
 const fileInputEl = ref<HTMLInputElement | null>(null);
+const isLightboxOpen = ref(false);
+const lightboxImage = ref<{ url: string; name: string } | null>(null);
 const isCreateGroupOpen = ref(false);
 const groupRoomName = ref("");
 const memberSearch = ref("");
@@ -117,6 +135,13 @@ const canSend = computed(
     Boolean(selectedRoom.value?.canSend) &&
     (draft.value.trim().length > 0 || selectedFiles.value.length > 0),
 );
+const composerStatusLabel = computed(() => {
+  const message = lastMessage(messages.value);
+  if (!message?.isMine) return "";
+  if (message.deliveryStatus === "uploading") return "Mengunggah lampiran...";
+  if (message.deliveryStatus === "sending") return "Mengirim pesan...";
+  return "";
+});
 const roomInitial = computed(() => {
   const source = selectedRoomName.value || selectedSchoolName.value;
   return getInitials(source);
@@ -168,6 +193,7 @@ onMounted(async () => {
   connectRealtimeChat();
   scheduleNextPoll();
   document.addEventListener("visibilitychange", handleVisibilityChange);
+  document.addEventListener("keydown", handleGlobalKeydown);
 });
 
 onUnmounted(() => {
@@ -182,8 +208,10 @@ onUnmounted(() => {
     window.clearTimeout(readSummaryRefreshTimer);
   }
   socketConnection?.close();
-  revokeSelectedFilePreviews();
+  revokePendingAttachmentUrls();
+  revokeMessageAttachmentUrls();
   document.removeEventListener("visibilitychange", handleVisibilityChange);
+  document.removeEventListener("keydown", handleGlobalKeydown);
 });
 
 async function bootstrapChat() {
@@ -593,11 +621,15 @@ function openFilePicker() {
 function handleFileSelection(event: Event) {
   const input = event.target as HTMLInputElement;
   const files = Array.from(input.files ?? []);
+  appendSelectedFiles(files);
+  input.value = "";
+}
+
+function appendSelectedFiles(files: File[]) {
   if (files.length === 0) return;
   const availableSlots = maxChatAttachments - selectedFiles.value.length;
   if (availableSlots <= 0) {
     composerError.value = `Maksimal ${maxChatAttachments} file per pesan.`;
-    input.value = "";
     return;
   }
   if (files.length > availableSlots) {
@@ -614,31 +646,76 @@ function handleFileSelection(event: Event) {
   });
   selectedFiles.value = [
     ...selectedFiles.value,
-    ...validFiles.slice(0, availableSlots),
+    ...validFiles.slice(0, availableSlots).map((file) => ({
+      id: `pending-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`,
+      file,
+      previewUrl: isSafeImageType(file.type) ? URL.createObjectURL(file) : "",
+    })),
   ];
-  input.value = "";
+}
+
+function handleDragOver(event: DragEvent) {
+  if (!selectedRoom.value?.canSend) return;
+  if (!event.dataTransfer?.types.includes("Files")) return;
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "copy";
+  isDragActive.value = true;
+}
+
+function handleDragEnter(event: DragEvent) {
+  if (!selectedRoom.value?.canSend) return;
+  if (!event.dataTransfer?.types.includes("Files")) return;
+  event.preventDefault();
+  isDragActive.value = true;
+}
+
+function handleDragLeave(event: DragEvent) {
+  const nextTarget = event.relatedTarget as Node | null;
+  const currentTarget = event.currentTarget as HTMLElement | null;
+  if (nextTarget && currentTarget?.contains(nextTarget)) return;
+  isDragActive.value = false;
+}
+
+function handleDropFiles(event: DragEvent) {
+  if (!selectedRoom.value?.canSend) return;
+  if (!event.dataTransfer?.files?.length) return;
+  event.preventDefault();
+  isDragActive.value = false;
+  appendSelectedFiles(Array.from(event.dataTransfer.files));
 }
 
 function removeSelectedFile(index: number) {
-  selectedFiles.value = selectedFiles.value.filter((_, itemIndex) => itemIndex !== index);
+  const attachment = selectedFiles.value[index];
+  if (attachment?.previewUrl) {
+    URL.revokeObjectURL(attachment.previewUrl);
+  }
+  selectedFiles.value = selectedFiles.value.filter(
+    (_, itemIndex) => itemIndex !== index,
+  );
 }
 
 async function submitMessage() {
   if (!selectedRoom.value) return;
   const content = draft.value.trim();
-  const filesToSend = [...selectedFiles.value];
+  const attachmentsToSend = [...selectedFiles.value];
+  const filesToSend = attachmentsToSend.map((attachment) => attachment.file);
   if (!content && filesToSend.length === 0) return;
   const roomID = selectedRoom.value.roomId;
-  const optimistic = createOptimisticMessage(roomID, content, filesToSend);
+  const optimistic = createOptimisticMessage(roomID, content, attachmentsToSend);
   messages.value = dedupeMessages([...messages.value, optimistic]);
   draft.value = "";
+  revokePendingAttachmentUrls();
   selectedFiles.value = [];
   pendingSendCount.value += 1;
   composerError.value = "";
   await nextTick();
   scrollToBottom();
+  let uploadedMediaIds: string[] = [];
   try {
+    markMessageAsUploading(optimistic.messageId, filesToSend.length > 0);
     const mediaIds = await uploadChatFiles(filesToSend);
+    uploadedMediaIds = mediaIds;
+    markMessageAsSending(optimistic.messageId);
     const created = await sendMessage(roomID, {
       content,
       mediaIds,
@@ -654,6 +731,7 @@ async function submitMessage() {
     await nextTick();
     scrollToBottom();
   } catch (error) {
+    await cleanupUploadedMedia(uploadedMediaIds);
     markOptimisticFailed(optimistic.messageId);
     composerError.value = resolveChatError(error);
   } finally {
@@ -672,6 +750,31 @@ async function uploadChatFiles(files: File[]) {
     mediaIds.push(uploaded.mediaId);
   }
   return mediaIds;
+}
+
+async function cleanupUploadedMedia(mediaIds: string[]) {
+  if (mediaIds.length === 0) return;
+  await Promise.allSettled(mediaIds.map((mediaId) => deleteMedia(mediaId)));
+}
+
+function markMessageAsUploading(messageId: string, hasAttachments: boolean) {
+  if (!hasAttachments) {
+    markMessageAsSending(messageId);
+    return;
+  }
+  messages.value = messages.value.map((message) =>
+    message.messageId === messageId
+      ? { ...message, deliveryStatus: "uploading" }
+      : message,
+  );
+}
+
+function markMessageAsSending(messageId: string) {
+  messages.value = messages.value.map((message) =>
+    message.messageId === messageId
+      ? { ...message, deliveryStatus: "sending" }
+      : message,
+  );
 }
 
 async function markSelectedRoomRead(lastReadMessageId?: string) {
@@ -759,7 +862,7 @@ function handleRoomUpdatedEvent(event: RoomUpdatedEvent) {
 function createOptimisticMessage(
   roomId: string,
   content: string,
-  files: File[] = [],
+  attachments: PendingAttachmentItem[] = [],
 ): ChatMessage {
   return {
     messageId: `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -768,19 +871,19 @@ function createOptimisticMessage(
     senderName: authStore.user?.fullName || "Anda",
     senderRole: authStore.activeRoles[0] || "member",
     content,
-    messageType: files.length > 0 ? "file" : "text",
-    attachments: files.map((file, index) => ({
-      attachmentId: `temp-${index}-${file.name}`,
+    messageType: attachments.length > 0 ? "file" : "text",
+    attachments: attachments.map((attachment, index) => ({
+      attachmentId: `temp-${index}-${attachment.file.name}`,
       mediaId: "",
-      fileName: file.name,
-      mimeType: file.type || "application/octet-stream",
-      sizeBytes: file.size,
-      url: isSafeImageType(file.type) ? URL.createObjectURL(file) : "",
+      fileName: attachment.file.name,
+      mimeType: attachment.file.type || "application/octet-stream",
+      sizeBytes: attachment.file.size,
+      url: attachment.previewUrl,
     })),
     createdAt: new Date().toISOString(),
     isMine: true,
-    deliveryStatus: "pending",
-    pendingFiles: files,
+    deliveryStatus: attachments.length > 0 ? "uploading" : "sending",
+    pendingFiles: attachments.map((attachment) => attachment.file),
   };
 }
 
@@ -816,14 +919,26 @@ function retryFailedMessage(message: ChatMessage) {
 
 async function sendRetriedMessage(message: ChatMessage) {
   const files = message.pendingFiles ?? [];
-  const optimistic = createOptimisticMessage(message.roomId, message.content, files);
+  const optimistic = createOptimisticMessage(
+    message.roomId,
+    message.content,
+    files.map((file) => ({
+      id: `retry-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`,
+      file,
+      previewUrl: isSafeImageType(file.type) ? URL.createObjectURL(file) : "",
+    })),
+  );
   messages.value = dedupeMessages([...messages.value, optimistic]);
   pendingSendCount.value += 1;
   composerError.value = "";
   await nextTick();
   scrollToBottom();
+  let uploadedMediaIds: string[] = [];
   try {
+    markMessageAsUploading(optimistic.messageId, files.length > 0);
     const mediaIds = await uploadChatFiles(files);
+    uploadedMediaIds = mediaIds;
+    markMessageAsSending(optimistic.messageId);
     const created = await sendMessage(message.roomId, {
       content: message.content,
       mediaIds,
@@ -837,6 +952,7 @@ async function sendRetriedMessage(message: ChatMessage) {
     await refreshReadSummary();
     await refreshRooms();
   } catch (error) {
+    await cleanupUploadedMedia(uploadedMediaIds);
     markOptimisticFailed(optimistic.messageId);
     composerError.value = resolveChatError(error);
   } finally {
@@ -912,7 +1028,8 @@ function lastMessage(items: ChatMessage[]) {
 function readIndicatorFor(message: ChatMessage) {
   if (
     !message.isMine ||
-    message.deliveryStatus === "pending" ||
+    message.deliveryStatus === "uploading" ||
+    message.deliveryStatus === "sending" ||
     message.deliveryStatus === "failed" ||
     message.messageId !== latestOwnMessageId.value
   ) {
@@ -1018,9 +1135,10 @@ function roomPreview(room: ChatRoom) {
   }
   const content =
     room.lastMessage.content ||
-    attachmentPreviewText(
+    attachmentPreviewTextForRoom(
       room.lastMessage.attachmentCount ?? 0,
       room.lastMessage.attachmentMimeType,
+      room.lastMessage.attachmentFileName,
     );
   const senderName =
     room.lastMessage.senderId === currentUserId.value
@@ -1029,12 +1147,26 @@ function roomPreview(room: ChatRoom) {
   return `${senderName}: ${content}`;
 }
 
-function attachmentPreviewText(count: number, mimeType?: string) {
+function attachmentPreviewTextForRoom(
+  count: number,
+  mimeType?: string,
+  fileName?: string,
+) {
   if (count <= 0) return "Mengirim file";
   if (count === 1) {
-    return isSafeImageType(mimeType) ? "Mengirim gambar" : "Mengirim file";
+    if (isSafeImageType(mimeType)) return "📷 Foto";
+    if (fileName) return `📄 ${shortAttachmentName(fileName)}`;
+    return "📄 File";
   }
-  return `Mengirim ${count} file`;
+  if (isSafeImageType(mimeType)) {
+    return `📷 ${count} foto`;
+  }
+  return `📎 ${count} file`;
+}
+
+function shortAttachmentName(fileName?: string) {
+  if (!fileName) return "File";
+  return fileName.length > 18 ? `${fileName.slice(0, 15)}...` : fileName;
 }
 
 function isSafeImageType(mimeType?: string) {
@@ -1043,15 +1175,70 @@ function isSafeImageType(mimeType?: string) {
   );
 }
 
-function fileTypeLabel(mimeType?: string) {
+function fileExtension(fileName?: string) {
+  const value = fileName?.trim().toLowerCase() || "";
+  const lastDot = value.lastIndexOf(".");
+  if (lastDot < 0) return "";
+  return value.slice(lastDot + 1);
+}
+
+function fileTypeLabel(mimeType?: string, fileName?: string) {
   const value = (mimeType || "").toLowerCase();
+  const ext = fileExtension(fileName);
   if (isSafeImageType(value)) return "Gambar";
-  if (value === "application/pdf") return "PDF";
-  if (value.includes("spreadsheet") || value.includes("excel")) return "Spreadsheet";
-  if (value.includes("presentation") || value.includes("powerpoint")) return "Presentasi";
-  if (value.includes("word") || value.includes("document")) return "Dokumen";
-  if (value.includes("zip") || value.includes("compressed")) return "Arsip";
+  if (value === "application/pdf" || ext === "pdf") return "PDF";
+  if (
+    value.includes("spreadsheet") ||
+    value.includes("excel") ||
+    ["xls", "xlsx", "csv"].includes(ext)
+  ) {
+    return "Spreadsheet";
+  }
+  if (
+    value.includes("presentation") ||
+    value.includes("powerpoint") ||
+    ["ppt", "pptx"].includes(ext)
+  ) {
+    return "Presentasi";
+  }
+  if (
+    value.includes("word") ||
+    value.includes("document") ||
+    ["doc", "docx"].includes(ext)
+  ) {
+    return "Dokumen";
+  }
+  if (value.startsWith("text/") || ["txt", "md", "rtf"].includes(ext)) return "Teks";
+  if (
+    value.includes("zip") ||
+    value.includes("compressed") ||
+    ["zip", "rar", "7z"].includes(ext)
+  ) {
+    return "Arsip";
+  }
   return value || "File";
+}
+
+function filePreviewIcon(mimeType?: string, fileName?: string) {
+  const label = fileTypeLabel(mimeType, fileName);
+  switch (label) {
+    case "PDF":
+      return PhFilePdf;
+    case "Dokumen":
+      return PhFileDoc;
+    case "Spreadsheet":
+      return PhFileXls;
+    case "Presentasi":
+      return PhFilePpt;
+    case "Arsip":
+      return PhFileArchive;
+    case "Teks":
+      return PhFileText;
+    case "Gambar":
+      return PhImage;
+    default:
+      return PhFile;
+  }
 }
 
 function formatFileSize(size?: number) {
@@ -1059,6 +1246,35 @@ function formatFileSize(size?: number) {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function openImageLightbox(attachment: ChatAttachment) {
+  if (!attachment.url || !isSafeImageType(attachment.mimeType)) return;
+  lightboxImage.value = {
+    url: attachment.url,
+    name: attachment.fileName || "Gambar",
+  };
+  isLightboxOpen.value = true;
+}
+
+function openAttachment(attachment: ChatAttachment) {
+  if (isSafeImageType(attachment.mimeType)) {
+    openImageLightbox(attachment);
+    return;
+  }
+  if (!attachment.url) return;
+  window.open(attachment.url, "_blank", "noopener,noreferrer");
+}
+
+function closeImageLightbox() {
+  isLightboxOpen.value = false;
+  lightboxImage.value = null;
+}
+
+function handleGlobalKeydown(event: KeyboardEvent) {
+  if (event.key === "Escape" && isLightboxOpen.value) {
+    closeImageLightbox();
+  }
 }
 
 function revokeAttachmentObjectUrls(message: ChatMessage) {
@@ -1069,9 +1285,17 @@ function revokeAttachmentObjectUrls(message: ChatMessage) {
   }
 }
 
-function revokeSelectedFilePreviews() {
+function revokeMessageAttachmentUrls() {
   for (const message of messages.value) {
     revokeAttachmentObjectUrls(message);
+  }
+}
+
+function revokePendingAttachmentUrls() {
+  for (const attachment of selectedFiles.value) {
+    if (attachment.previewUrl) {
+      URL.revokeObjectURL(attachment.previewUrl);
+    }
   }
 }
 
@@ -1417,7 +1641,24 @@ function formatDateTime(value?: string | null) {
             </div>
           </aside>
 
-          <section class="flex min-h-0 min-w-0 flex-col bg-[#f8f7f4]">
+          <section
+            class="relative flex min-h-0 min-w-0 flex-col bg-[#f8f7f4]"
+            @dragenter="handleDragEnter"
+            @dragover="handleDragOver"
+            @dragleave="handleDragLeave"
+            @drop="handleDropFiles"
+          >
+            <div
+              v-if="isDragActive"
+              class="pointer-events-none absolute inset-4 z-20 flex items-center justify-center rounded-2xl border-2 border-dashed border-[#4f46e5] bg-[#eef2ff]/80"
+            >
+              <div class="rounded-2xl bg-white px-5 py-4 text-center shadow-sm">
+                <p class="text-sm font-semibold text-[#171322]">Lepas file di sini</p>
+                <p class="mt-1 text-xs text-[#6b7280]">
+                  Maksimal {{ maxChatAttachments }} file, masing-masing hingga {{ maxChatAttachmentSizeMb }}MB
+                </p>
+              </div>
+            </div>
             <div
               class="flex items-center gap-3 border-b border-[#ebe7df] bg-white px-4 py-3 sm:px-5"
             >
@@ -1539,7 +1780,7 @@ function formatDateTime(value?: string | null) {
                             : 'rounded-bl-md border border-[#ebe7df] bg-white text-[#171322]'
                         "
                       >
-                        <p v-if="message.content" class="whitespace-pre-wrap break-words">
+                        <p v-if="message.content" class="whitespace-pre-wrap wrap-break-word">
                           {{ message.content }}
                         </p>
                         <div
@@ -1547,37 +1788,38 @@ function formatDateTime(value?: string | null) {
                           class="mt-2 grid gap-2"
                           :class="message.attachments.length > 1 ? 'sm:grid-cols-2' : ''"
                         >
-                          <a
+                          <button
                             v-for="attachment in message.attachments"
                             :key="attachment.attachmentId || attachment.mediaId || attachment.fileName"
-                            class="group overflow-hidden rounded-xl"
+                            type="button"
+                            class="group overflow-hidden rounded-xl text-left"
                             :class="
                               message.isMine
                                 ? 'bg-white/10 text-white ring-1 ring-white/20'
                                 : 'border border-[#ebe7df] bg-[#fbfaf8] text-[#171322]'
                             "
-                            :href="attachment.url || undefined"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            @click="
+                              openAttachment(attachment)
+                            "
+                            :aria-label="
+                              isSafeImageType(attachment.mimeType)
+                                ? `Buka pratinjau ${attachment.fileName || 'gambar'}`
+                                : `Buka ${attachment.fileName || 'file'}`
+                            "
                           >
                             <img
                               v-if="isSafeImageType(attachment.mimeType) && attachment.url"
                               :src="attachment.url"
                               :alt="attachment.fileName || 'Lampiran gambar'"
-                              class="max-h-52 w-full object-cover"
+                              class="max-h-64 w-full object-cover transition duration-200 group-hover:scale-[1.01]"
                             />
                             <div class="flex min-w-0 items-center gap-3 p-3">
                               <span
                                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                                 :class="message.isMine ? 'bg-white/15' : 'bg-white text-[#4f46e5]'"
                               >
-                                <PhImage
-                                  v-if="isSafeImageType(attachment.mimeType)"
-                                  class="h-5 w-5"
-                                  weight="duotone"
-                                />
-                                <PhFile
-                                  v-else
+                                <component
+                                  :is="filePreviewIcon(attachment.mimeType, attachment.fileName)"
                                   class="h-5 w-5"
                                   weight="duotone"
                                 />
@@ -1590,17 +1832,18 @@ function formatDateTime(value?: string | null) {
                                   class="mt-0.5 block truncate text-[11px]"
                                   :class="message.isMine ? 'text-white/70' : 'text-[#8b8592]'"
                                 >
-                                  {{ fileTypeLabel(attachment.mimeType) }}
+                                  {{ fileTypeLabel(attachment.mimeType, attachment.fileName) }}
                                   <template v-if="formatFileSize(attachment.sizeBytes)">
                                     · {{ formatFileSize(attachment.sizeBytes) }}
                                   </template>
                                 </span>
                               </span>
-                              <span class="text-[11px] font-semibold">
-                                Buka
+                              <span class="inline-flex items-center gap-1 text-[11px] font-semibold">
+                                <PhDownloadSimple class="h-3.5 w-3.5" />
+                                {{ isSafeImageType(attachment.mimeType) ? "Lihat" : "Buka" }}
                               </span>
                             </div>
-                          </a>
+                          </button>
                         </div>
                       </div>
                       <p
@@ -1608,18 +1851,27 @@ function formatDateTime(value?: string | null) {
                       >
                         <span>{{ formatDateTime(message.createdAt) }}</span>
                         <span
-                          v-if="message.deliveryStatus === 'pending'"
-                          class="font-medium text-[#9ca3af]"
+                          v-if="message.deliveryStatus === 'uploading'"
+                          class="inline-flex items-center gap-1.5 font-medium text-[#9ca3af]"
                         >
+                          <PhSpinnerGap class="h-3.5 w-3.5 animate-spin" />
+                          Mengunggah...
+                        </span>
+                        <span
+                          v-else-if="message.deliveryStatus === 'sending'"
+                          class="inline-flex items-center gap-1.5 font-medium text-[#9ca3af]"
+                        >
+                          <PhSpinnerGap class="h-3.5 w-3.5 animate-spin" />
                           Mengirim...
                         </span>
                         <button
                           v-else-if="message.deliveryStatus === 'failed'"
                           type="button"
-                          class="font-medium text-[#dc2626] underline decoration-dotted underline-offset-2"
+                          class="inline-flex items-center gap-1 rounded-full bg-[#fef2f2] px-2 py-0.5 font-medium text-[#dc2626]"
                           @click="retryFailedMessage(message)"
                         >
-                          Gagal · coba lagi
+                          Gagal
+                          <span class="underline decoration-dotted underline-offset-2">Coba lagi</span>
                         </button>
                         <span
                           v-else-if="readIndicatorLabel(message)"
@@ -1662,40 +1914,47 @@ function formatDateTime(value?: string | null) {
               </p>
               <div
                 v-if="selectedFiles.length"
-                class="mb-3 grid gap-2 sm:grid-cols-2"
+                class="mb-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3"
               >
                 <div
-                  v-for="(file, index) in selectedFiles"
-                  :key="`${file.name}-${file.size}-${index}`"
-                  class="flex min-w-0 items-center gap-3 rounded-xl border border-[#ebe7df] bg-[#fbfaf8] p-3"
+                  v-for="(attachment, index) in selectedFiles"
+                  :key="attachment.id"
+                  class="min-w-0 overflow-hidden rounded-xl border border-[#ebe7df] bg-[#fbfaf8]"
                 >
-                  <span
-                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#4f46e5]"
-                  >
-                    <PhImage
-                      v-if="isSafeImageType(file.type)"
-                      class="h-5 w-5"
-                      weight="duotone"
-                    />
-                    <PhFile v-else class="h-5 w-5" weight="duotone" />
-                  </span>
-                  <span class="min-w-0 flex-1">
-                    <span class="block truncate text-xs font-semibold text-[#171322]">
-                      {{ file.name }}
+                  <img
+                    v-if="attachment.previewUrl"
+                    :src="attachment.previewUrl"
+                    :alt="attachment.file.name"
+                    class="h-28 w-full object-cover"
+                  />
+                  <div class="flex min-w-0 items-center gap-3 p-3">
+                    <span
+                      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-[#4f46e5]"
+                    >
+                      <component
+                        :is="filePreviewIcon(attachment.file.type, attachment.file.name)"
+                        class="h-5 w-5"
+                        weight="duotone"
+                      />
                     </span>
-                    <span class="mt-0.5 block truncate text-[11px] text-[#8b8592]">
-                      {{ fileTypeLabel(file.type) }} · {{ formatFileSize(file.size) }}
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate text-xs font-semibold text-[#171322]">
+                        {{ attachment.file.name }}
+                      </span>
+                      <span class="mt-0.5 block truncate text-[11px] text-[#8b8592]">
+                        {{ fileTypeLabel(attachment.file.type, attachment.file.name) }} · {{ formatFileSize(attachment.file.size) }}
+                      </span>
                     </span>
-                  </span>
-                  <button
-                    type="button"
-                    class="rounded-lg p-1.5 text-[#9ca3af] transition hover:bg-white hover:text-[#dc2626]"
-                    title="Hapus lampiran"
-                    aria-label="Hapus lampiran"
-                    @click="removeSelectedFile(index)"
-                  >
-                    <PhX class="h-4 w-4" />
-                  </button>
+                    <button
+                      type="button"
+                      class="rounded-lg p-1.5 text-[#9ca3af] transition hover:bg-white hover:text-[#dc2626]"
+                      title="Hapus lampiran"
+                      aria-label="Hapus lampiran"
+                      @click="removeSelectedFile(index)"
+                    >
+                      <PhX class="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="flex items-end gap-2">
@@ -1733,8 +1992,12 @@ function formatDateTime(value?: string | null) {
                   <PhPaperPlaneTilt class="h-5 w-5" weight="fill" />
                 </button>
               </div>
-              <p class="mt-2 text-xs text-[#9ca3af]">
-                Enter untuk kirim, Shift+Enter untuk baris baru.
+              <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#9ca3af]">
+                <span>Enter untuk kirim, Shift+Enter untuk baris baru.</span>
+                <span v-if="composerStatusLabel" class="inline-flex items-center gap-1.5 font-medium text-[#6b7280]">
+                  <PhSpinnerGap class="h-3.5 w-3.5 animate-spin" />
+                  {{ composerStatusLabel }}
+                </span>
               </p>
             </form>
           </section>
@@ -1866,6 +2129,34 @@ function formatDateTime(value?: string | null) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div
+      v-if="isLightboxOpen && lightboxImage"
+      class="fixed inset-0 z-70 flex items-center justify-center bg-black/85 px-4 py-6"
+      @click="closeImageLightbox"
+    >
+      <div
+        class="relative flex max-h-full max-w-6xl flex-col items-center gap-3"
+        @click.stop
+      >
+        <button
+          type="button"
+          class="absolute right-0 top-0 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white transition hover:bg-black/65"
+          aria-label="Tutup pratinjau gambar"
+          @click="closeImageLightbox"
+        >
+          <PhX class="h-5 w-5" />
+        </button>
+        <img
+          :src="lightboxImage.url"
+          :alt="lightboxImage.name"
+          class="max-h-[78vh] max-w-full rounded-2xl object-contain shadow-2xl"
+        />
+        <p class="max-w-full truncate px-12 text-sm text-white/85">
+          {{ lightboxImage.name }}
+        </p>
       </div>
     </div>
 

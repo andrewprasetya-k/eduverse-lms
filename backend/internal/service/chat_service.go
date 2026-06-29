@@ -673,6 +673,9 @@ func mapChatRoomRow(row repository.ChatRoomRow, unread int64) dto.ChatRoomDTO {
 		if row.LastAttachmentMimeType != nil {
 			lastMessage.AttachmentMimeType = *row.LastAttachmentMimeType
 		}
+		if row.LastAttachmentFileName != nil {
+			lastMessage.AttachmentFileName = *row.LastAttachmentFileName
+		}
 		if row.LastType != nil {
 			lastMessage.MessageType = *row.LastType
 		}

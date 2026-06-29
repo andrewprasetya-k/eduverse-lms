@@ -59,6 +59,7 @@ type ChatRoomRow struct {
 	LastType               *string    `gorm:"column:last_type"`
 	LastAttachmentCount    int        `gorm:"column:last_attachment_count"`
 	LastAttachmentMimeType *string    `gorm:"column:last_attachment_mime_type"`
+	LastAttachmentFileName *string    `gorm:"column:last_attachment_file_name"`
 	LastMessageAt          *time.Time `gorm:"column:last_message_at"`
 	DMTargetUserID         *string    `gorm:"column:dm_target_user_id"`
 	DMTargetName           *string    `gorm:"column:dm_target_name"`
@@ -1145,7 +1146,8 @@ func chatRoomListSelect() string {
 				msg.msg_type,
 				msg.created_at,
 				COUNT(ca.cat_id)::int AS attachment_count,
-				MIN(m.med_mime_type) AS attachment_mime_type
+				MIN(m.med_mime_type) AS attachment_mime_type,
+				MIN(m.med_name) AS attachment_file_name
 			FROM edv.chat_messages msg
 			LEFT JOIN edv.chat_attachments ca ON ca.cat_msg_id = msg.msg_id
 			LEFT JOIN edv.medias m
@@ -1179,6 +1181,7 @@ func chatRoomContextSelect() string {
 			lm.msg_type AS last_type,
 			COALESCE(lm.attachment_count, 0) AS last_attachment_count,
 			lm.attachment_mime_type AS last_attachment_mime_type,
+			lm.attachment_file_name AS last_attachment_file_name,
 			lm.created_at AS last_message_at,
 			dm_target.usr_id AS dm_target_user_id,
 			dm_target.usr_nama_lengkap AS dm_target_name,
