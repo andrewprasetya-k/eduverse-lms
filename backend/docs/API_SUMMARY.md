@@ -189,11 +189,11 @@ Notes are material-only for MVP. They are scoped to the JWT user and active `Sch
 - `POST /chat/groups/:roomId/members` - Add or restore active school members into a custom group room
 - `DELETE /chat/groups/:roomId/members/:userId` - Remove a member from a custom group room
 - `GET /chat/rooms/:roomId/read-summary` - Get per-member read receipt summary for an accessible room
-- `GET /chat/rooms/:roomId/messages` - List text messages with `limit` and `before` pagination
-- `POST /chat/rooms/:roomId/messages` - Create text-only message and return canonical message DTO
+- `GET /chat/rooms/:roomId/messages` - List text/file messages with `limit` and `before` pagination
+- `POST /chat/rooms/:roomId/messages` - Create message with optional upload-first `mediaIds` and return canonical message DTO
 - `PATCH /chat/rooms/:roomId/read` - Mark accessible room as read with optional validated `lastReadMessageId`
 
-Chat MVP is text-only. Active school admins, teachers, and
+Chat MVP supports text messages and upload-first file/image attachments. Active school admins, teachers, and
 students can participate in the school-wide room if their school membership is
 active. Custom group rooms are limited to selected active school members through
 `chat_room_members.left_at IS NULL`, with admin-only rename/member management and
@@ -203,9 +203,12 @@ idempotently when the same pair opens DM again. Unread counts exclude messages
 sent by the current user and are based on `chat_read_receipts.last_read_msg_id`
 or `last_read_at`. WebSocket in Sprint 18B is event transport only for
 `new_message`, `message_read`, and `room_updated`; message creation still uses
-REST and polling remains as fallback.
-It does not enable subject/class rooms, attachments, typing indicators, message
-delete, or notifications.
+REST and polling remains as fallback. Attachment messages upload files through
+`POST /api/medias/upload`, then send `mediaIds` to chat; `new_message` includes
+attachment metadata. Current storage URLs may be public depending on provider,
+with signed/protected downloads deferred.
+It does not enable subject/class rooms, typing indicators, message delete, or
+notifications.
 
 ## 📝 Assignments & Grading
 

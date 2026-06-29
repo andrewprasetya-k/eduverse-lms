@@ -12,13 +12,13 @@ message untuk warga aktif di sekolah yang sama.
 - School-wide chat selalu tersedia sebagai room utama sekolah.
 - Custom group room dapat dibuat oleh warga aktif sekolah.
 - Direct message dapat dibuka antar dua warga aktif di sekolah yang sama.
-- Text-only messages.
+- Text messages dan attachment file/gambar melalui upload-first media flow.
 - REST API remains the source of truth.
 - WebSocket tersedia hanya sebagai realtime event transport.
 - Polling tetap dipertahankan sebagai fallback.
 - Admin Sekolah, teacher, dan student boleh berpartisipasi jika masih menjadi
   member aktif sekolah tersebut.
-- Tidak ada subject/class room, attachment, typing indicator,
+- Tidak ada subject/class room, typing indicator,
   online/offline, delete/unsend, moderation UI, atau notification integration.
 
 Subject/class chat adalah ekspansi masa depan.
@@ -329,6 +329,7 @@ lebih lama.
       "senderRole": "student",
       "content": "Selamat pagi.",
       "messageType": "text",
+      "attachments": [],
       "createdAt": "2026-06-26T03:00:00Z",
       "isMine": true
     }
@@ -379,19 +380,45 @@ Rules:
 
 ```json
 {
-  "content": "Halo semua."
+  "content": "Halo semua.",
+  "mediaIds": ["media-uuid"]
 }
 ```
 
 Rules:
 
 - Content di-trim.
-- Empty content ditolak.
+- Empty content ditolak jika `mediaIds` juga kosong.
 - Maksimal 5.000 karakter.
-- `messageType` selalu `text`.
+- Maksimal 5 attachment per pesan.
+- Duplicate `mediaIds` ditolak.
+- Jika `mediaIds` dikirim, message disimpan sebagai `messageType = "file"`.
+- Setiap media harus sudah di-upload melalui `POST /api/medias/upload`, masih
+  aktif, berada di active school yang sama, dan dimiliki oleh current user untuk
+  non-admin/non-owner flow MVP.
+- Frontend memakai `ownerType = "user"` untuk upload lampiran chat karena enum
+  `owner_type` belum memiliki nilai khusus `chat`.
 
 Response adalah canonical `MessageDTO` dan dapat dipakai ulang nanti sebagai
 payload WebSocket `new_message`.
+
+Attachment DTO:
+
+```json
+{
+  "attachmentId": "uuid",
+  "mediaId": "uuid",
+  "fileName": "catatan.png",
+  "mimeType": "image/png",
+  "sizeBytes": 123456,
+  "url": "https://storage.example/schools/.../catatan.png"
+}
+```
+
+Known limitation: media provider saat ini dapat mengembalikan public URL.
+Permission room tetap diterapkan di message list/send, tetapi direct file URL
+masih bisa dibuka jika URL bocor. Private bucket, signed URL, atau protected
+download proxy disiapkan untuk hardening berikutnya.
 
 ### Mark Room Read
 
@@ -463,6 +490,7 @@ Event `new_message`:
     "senderRole": "student",
     "content": "Halo.",
     "messageType": "text",
+    "attachments": [],
     "createdAt": "2026-06-26T03:00:00Z",
     "isMine": false
   }

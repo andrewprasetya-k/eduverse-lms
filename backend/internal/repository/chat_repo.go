@@ -28,8 +28,9 @@ type ChatRepository interface {
 	AddGroupRoomMembers(roomID string, schoolID string, memberUserIDs []string) error
 	RemoveGroupRoomMember(roomID string, schoolID string, targetUserID string) error
 	ListMessages(roomID string, limit int, before *time.Time) ([]ChatMessageRow, error)
-	CreateMessage(message *domain.ChatMessage) error
+	CreateMessageWithAttachments(message *domain.ChatMessage, mediaIDs []string) error
 	GetMessageByID(messageID string, roomID string) (*ChatMessageRow, error)
+	ListMessageAttachments(messageIDs []string) (map[string][]ChatAttachmentRow, error)
 	UpsertReadReceipt(roomID string, userID string, messageID *string) error
 	GetReadReceipt(roomID string, userID string) (*ChatReadReceiptRow, error)
 	ListSchoolReadMembers(roomID string, schoolID string) ([]ChatReadMemberRow, error)
@@ -44,21 +45,24 @@ type chatRepository struct {
 }
 
 type ChatRoomRow struct {
-	RoomID         string     `gorm:"column:room_id"`
-	RoomName       string     `gorm:"column:room_name"`
-	RoomType       string     `gorm:"column:room_type"`
-	RoomRefType    *string    `gorm:"column:room_ref_type"`
-	RoomRefID      *string    `gorm:"column:room_ref_id"`
-	SchoolID       string     `gorm:"column:school_id"`
-	SchoolName     string     `gorm:"column:school_name"`
-	LastMessageID  *string    `gorm:"column:last_message_id"`
-	LastSenderID   *string    `gorm:"column:last_sender_id"`
-	LastSenderName *string    `gorm:"column:last_sender_name"`
-	LastContent    *string    `gorm:"column:last_content"`
-	LastMessageAt  *time.Time `gorm:"column:last_message_at"`
-	DMTargetUserID *string    `gorm:"column:dm_target_user_id"`
-	DMTargetName   *string    `gorm:"column:dm_target_name"`
-	DMTargetEmail  *string    `gorm:"column:dm_target_email"`
+	RoomID                 string     `gorm:"column:room_id"`
+	RoomName               string     `gorm:"column:room_name"`
+	RoomType               string     `gorm:"column:room_type"`
+	RoomRefType            *string    `gorm:"column:room_ref_type"`
+	RoomRefID              *string    `gorm:"column:room_ref_id"`
+	SchoolID               string     `gorm:"column:school_id"`
+	SchoolName             string     `gorm:"column:school_name"`
+	LastMessageID          *string    `gorm:"column:last_message_id"`
+	LastSenderID           *string    `gorm:"column:last_sender_id"`
+	LastSenderName         *string    `gorm:"column:last_sender_name"`
+	LastContent            *string    `gorm:"column:last_content"`
+	LastType               *string    `gorm:"column:last_type"`
+	LastAttachmentCount    int        `gorm:"column:last_attachment_count"`
+	LastAttachmentMimeType *string    `gorm:"column:last_attachment_mime_type"`
+	LastMessageAt          *time.Time `gorm:"column:last_message_at"`
+	DMTargetUserID         *string    `gorm:"column:dm_target_user_id"`
+	DMTargetName           *string    `gorm:"column:dm_target_name"`
+	DMTargetEmail          *string    `gorm:"column:dm_target_email"`
 }
 
 type ChatMemberRow struct {
@@ -100,6 +104,16 @@ type ChatMessageRow struct {
 	Content    string    `gorm:"column:content"`
 	Type       string    `gorm:"column:message_type"`
 	CreatedAt  time.Time `gorm:"column:created_at"`
+}
+
+type ChatAttachmentRow struct {
+	MessageID    string `gorm:"column:message_id"`
+	AttachmentID string `gorm:"column:attachment_id"`
+	MediaID      string `gorm:"column:media_id"`
+	FileName     string `gorm:"column:file_name"`
+	MimeType     string `gorm:"column:mime_type"`
+	SizeBytes    int64  `gorm:"column:size_bytes"`
+	URL          string `gorm:"column:url"`
 }
 
 type ChatReadReceiptRow struct {
@@ -828,7 +842,7 @@ func (r *chatRepository) ListMessages(roomID string, limit int, before *time.Tim
 				LIMIT 1
 			) sender_role ON true
 			WHERE msg.msg_room_id = ?
-				AND msg.msg_type = 'text'
+				AND msg.msg_type IN ('text', 'file')
 				AND msg.deleted_at IS NULL
 				AND (?::timestamp IS NULL OR msg.created_at < ?)
 			ORDER BY msg.created_at DESC
@@ -844,8 +858,22 @@ func (r *chatRepository) ListMessages(roomID string, limit int, before *time.Tim
 	return rows, err
 }
 
-func (r *chatRepository) CreateMessage(message *domain.ChatMessage) error {
-	return r.db.Create(message).Error
+func (r *chatRepository) CreateMessageWithAttachments(message *domain.ChatMessage, mediaIDs []string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(message).Error; err != nil {
+			return err
+		}
+		for _, mediaID := range mediaIDs {
+			attachment := domain.ChatAttachment{
+				MessageID: message.ID,
+				MediaID:   mediaID,
+			}
+			if err := tx.Create(&attachment).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (r *chatRepository) GetMessageByID(messageID string, roomID string) (*ChatMessageRow, error) {
@@ -875,9 +903,9 @@ func (r *chatRepository) GetMessageByID(messageID string, roomID string) (*ChatM
 			ORDER BY CASE r.rol_name WHEN 'admin' THEN 1 WHEN 'teacher' THEN 2 WHEN 'student' THEN 3 ELSE 4 END
 			LIMIT 1
 		) sender_role ON true
-		WHERE msg.msg_id = ?
+	WHERE msg.msg_id = ?
 			AND msg.msg_room_id = ?
-			AND msg.msg_type = 'text'
+			AND msg.msg_type IN ('text', 'file')
 			AND msg.deleted_at IS NULL
 		LIMIT 1
 	`, messageID, roomID).Scan(&row).Error
@@ -888,6 +916,38 @@ func (r *chatRepository) GetMessageByID(messageID string, roomID string) (*ChatM
 		return nil, gorm.ErrRecordNotFound
 	}
 	return &row, nil
+}
+
+func (r *chatRepository) ListMessageAttachments(messageIDs []string) (map[string][]ChatAttachmentRow, error) {
+	result := make(map[string][]ChatAttachmentRow, len(messageIDs))
+	if len(messageIDs) == 0 {
+		return result, nil
+	}
+
+	var rows []ChatAttachmentRow
+	err := r.db.Raw(`
+		SELECT
+			ca.cat_msg_id AS message_id,
+			ca.cat_id AS attachment_id,
+			m.med_id AS media_id,
+			m.med_name AS file_name,
+			m.med_mime_type AS mime_type,
+			m.med_file_size AS size_bytes,
+			m.med_file_url AS url
+		FROM edv.chat_attachments ca
+		JOIN edv.medias m
+			ON m.med_id = ca.cat_med_id
+			AND m.deleted_at IS NULL
+		WHERE ca.cat_msg_id IN ?
+		ORDER BY ca.created_at ASC
+	`, messageIDs).Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		result[row.MessageID] = append(result[row.MessageID], row)
+	}
+	return result, nil
 }
 
 func (r *chatRepository) UpsertReadReceipt(roomID string, userID string, messageID *string) error {
@@ -1053,7 +1113,7 @@ func (r *chatRepository) UnreadCount(roomID string, userID string) (int64, error
 			AND last_read_msg.deleted_at IS NULL
 		WHERE msg.msg_room_id = ?
 			AND msg.msg_usr_id <> ?
-			AND msg.msg_type = 'text'
+			AND msg.msg_type IN ('text', 'file')
 			AND msg.deleted_at IS NULL
 			AND (
 				CASE
@@ -1078,11 +1138,23 @@ func (r *chatRepository) UnreadCount(roomID string, userID string) (int64, error
 func chatRoomListSelect() string {
 	return chatRoomContextSelect() + `
 		LEFT JOIN LATERAL (
-			SELECT msg.msg_id, msg.msg_usr_id, msg.msg_content, msg.created_at
+			SELECT
+				msg.msg_id,
+				msg.msg_usr_id,
+				msg.msg_content,
+				msg.msg_type,
+				msg.created_at,
+				COUNT(ca.cat_id)::int AS attachment_count,
+				MIN(m.med_mime_type) AS attachment_mime_type
 			FROM edv.chat_messages msg
+			LEFT JOIN edv.chat_attachments ca ON ca.cat_msg_id = msg.msg_id
+			LEFT JOIN edv.medias m
+				ON m.med_id = ca.cat_med_id
+				AND m.deleted_at IS NULL
 			WHERE msg.msg_room_id = cr.room_id
-				AND msg.msg_type = 'text'
+				AND msg.msg_type IN ('text', 'file')
 				AND msg.deleted_at IS NULL
+			GROUP BY msg.msg_id, msg.msg_usr_id, msg.msg_content, msg.msg_type, msg.created_at
 			ORDER BY msg.created_at DESC
 			LIMIT 1
 		) lm ON true
@@ -1104,6 +1176,9 @@ func chatRoomContextSelect() string {
 			lm.msg_usr_id AS last_sender_id,
 			last_sender.usr_nama_lengkap AS last_sender_name,
 			lm.msg_content AS last_content,
+			lm.msg_type AS last_type,
+			COALESCE(lm.attachment_count, 0) AS last_attachment_count,
+			lm.attachment_mime_type AS last_attachment_mime_type,
 			lm.created_at AS last_message_at,
 			dm_target.usr_id AS dm_target_user_id,
 			dm_target.usr_nama_lengkap AS dm_target_name,

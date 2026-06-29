@@ -17,8 +17,10 @@ const (
 	chatRoomTypeDM      = "dm"
 	chatRefTypeSchool   = "school"
 	chatMessageTypeText = "text"
+	chatMessageTypeFile = "file"
 	maxChatMessageLimit = 50
 	maxChatContentLen   = 5000
+	maxChatAttachments  = 5
 	maxChatRoomNameLen  = 150
 	defaultSchoolRoom   = "Ruang sekolah"
 )
@@ -35,7 +37,7 @@ type ChatService interface {
 	AddGroupMembers(userID string, schoolID string, roomID string, memberUserIDs []string) error
 	RemoveGroupMember(userID string, schoolID string, roomID string, targetUserID string) error
 	ListMessages(userID string, schoolID string, roomID string, limit int, before *time.Time) (*dto.ChatMessagesResponseDTO, error)
-	CreateMessage(userID string, schoolID string, roomID string, content string) (*dto.ChatMessageDTO, error)
+	CreateMessage(userID string, schoolID string, roomID string, content string, mediaIDs []string) (*dto.ChatMessageDTO, error)
 	MarkRead(userID string, schoolID string, roomID string, lastReadMessageID *string) (*dto.ChatReadReceiptDTO, error)
 	GetReadSummary(userID string, schoolID string, roomID string) (*dto.ChatReadSummaryDTO, error)
 	ListRealtimeRecipients(userID string, schoolID string, roomID string) ([]string, error)
@@ -44,11 +46,12 @@ type ChatService interface {
 }
 
 type chatService struct {
-	repo repository.ChatRepository
+	repo      repository.ChatRepository
+	mediaRepo repository.MediaRepository
 }
 
-func NewChatService(repo repository.ChatRepository) ChatService {
-	return &chatService{repo: repo}
+func NewChatService(repo repository.ChatRepository, mediaRepo repository.MediaRepository) ChatService {
+	return &chatService{repo: repo, mediaRepo: mediaRepo}
 }
 
 func (s *chatService) ListMyRooms(userID string, schoolID string, search string) ([]dto.ChatRoomDTO, error) {
@@ -388,8 +391,16 @@ func (s *chatService) ListMessages(userID string, schoolID string, roomID string
 	}
 
 	messages := make([]dto.ChatMessageDTO, 0, len(rows))
+	messageIDs := make([]string, 0, len(rows))
 	for _, row := range rows {
-		messages = append(messages, mapChatMessageRow(row, userID))
+		messageIDs = append(messageIDs, row.MessageID)
+	}
+	attachmentsByMessage, err := s.repo.ListMessageAttachments(messageIDs)
+	if err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		messages = append(messages, mapChatMessageRow(row, userID, attachmentsByMessage[row.MessageID]))
 	}
 
 	var nextBefore *string
@@ -405,7 +416,7 @@ func (s *chatService) ListMessages(userID string, schoolID string, roomID string
 	}, nil
 }
 
-func (s *chatService) CreateMessage(userID string, schoolID string, roomID string, content string) (*dto.ChatMessageDTO, error) {
+func (s *chatService) CreateMessage(userID string, schoolID string, roomID string, content string, mediaIDs []string) (*dto.ChatMessageDTO, error) {
 	allowed, _, err := s.CanAccessRoom(userID, schoolID, roomID)
 	if err != nil {
 		return nil, err
@@ -415,20 +426,37 @@ func (s *chatService) CreateMessage(userID string, schoolID string, roomID strin
 	}
 
 	content = strings.TrimSpace(content)
-	if content == "" {
+	attachmentMediaIDs, err := validateChatMediaIDs(mediaIDs)
+	if err != nil {
+		return nil, err
+	}
+	if content == "" && len(attachmentMediaIDs) == 0 {
 		return nil, fmt.Errorf("chat message content is required")
 	}
 	if len([]rune(content)) > maxChatContentLen {
 		return nil, fmt.Errorf("chat message content exceeds %d characters", maxChatContentLen)
 	}
+	if len(attachmentMediaIDs) > maxChatAttachments {
+		return nil, fmt.Errorf("chat message attachments exceed %d files", maxChatAttachments)
+	}
+	if len(attachmentMediaIDs) > 0 {
+		attachmentMediaIDs, err = prepareAttachableMediaIDs(s.mediaRepo, attachmentMediaIDs, schoolID, userID, false)
+		if err != nil {
+			return nil, err
+		}
+	}
 
+	messageType := chatMessageTypeText
+	if len(attachmentMediaIDs) > 0 {
+		messageType = chatMessageTypeFile
+	}
 	message := domain.ChatMessage{
 		RoomID:  roomID,
 		UserID:  userID,
 		Content: content,
-		Type:    chatMessageTypeText,
+		Type:    messageType,
 	}
-	if err := s.repo.CreateMessage(&message); err != nil {
+	if err := s.repo.CreateMessageWithAttachments(&message, attachmentMediaIDs); err != nil {
 		return nil, err
 	}
 
@@ -436,8 +464,29 @@ func (s *chatService) CreateMessage(userID string, schoolID string, roomID strin
 	if err != nil {
 		return nil, err
 	}
-	mapped := mapChatMessageRow(*row, userID)
+	attachmentsByMessage, err := s.repo.ListMessageAttachments([]string{message.ID})
+	if err != nil {
+		return nil, err
+	}
+	mapped := mapChatMessageRow(*row, userID, attachmentsByMessage[row.MessageID])
 	return &mapped, nil
+}
+
+func validateChatMediaIDs(mediaIDs []string) ([]string, error) {
+	result := make([]string, 0, len(mediaIDs))
+	seen := make(map[string]bool, len(mediaIDs))
+	for _, mediaID := range mediaIDs {
+		mediaID = strings.TrimSpace(mediaID)
+		if mediaID == "" {
+			return nil, fmt.Errorf("invalid chat attachment")
+		}
+		if seen[mediaID] {
+			return nil, fmt.Errorf("duplicate chat attachment")
+		}
+		seen[mediaID] = true
+		result = append(result, mediaID)
+	}
+	return result, nil
 }
 
 func (s *chatService) MarkRead(userID string, schoolID string, roomID string, lastReadMessageID *string) (*dto.ChatReadReceiptDTO, error) {
@@ -616,9 +665,16 @@ func mapChatRoomRow(row repository.ChatRoomRow, unread int64) dto.ChatRoomDTO {
 		createdAt := formatChatTime(*row.LastMessageAt)
 		lastMessageAt = &createdAt
 		lastMessage = &dto.ChatLastMessageDTO{
-			MessageID: *row.LastMessageID,
-			Content:   *row.LastContent,
-			CreatedAt: createdAt,
+			MessageID:       *row.LastMessageID,
+			Content:         *row.LastContent,
+			AttachmentCount: row.LastAttachmentCount,
+			CreatedAt:       createdAt,
+		}
+		if row.LastAttachmentMimeType != nil {
+			lastMessage.AttachmentMimeType = *row.LastAttachmentMimeType
+		}
+		if row.LastType != nil {
+			lastMessage.MessageType = *row.LastType
 		}
 		if row.LastSenderID != nil {
 			lastMessage.SenderID = *row.LastSenderID
@@ -706,7 +762,7 @@ func mapChatGroupMember(row repository.ChatGroupMemberRow) dto.ChatGroupMemberDT
 	}
 }
 
-func mapChatMessageRow(row repository.ChatMessageRow, currentUserID string) dto.ChatMessageDTO {
+func mapChatMessageRow(row repository.ChatMessageRow, currentUserID string, attachments []repository.ChatAttachmentRow) dto.ChatMessageDTO {
 	return dto.ChatMessageDTO{
 		MessageID:   row.MessageID,
 		RoomID:      row.RoomID,
@@ -715,9 +771,25 @@ func mapChatMessageRow(row repository.ChatMessageRow, currentUserID string) dto.
 		SenderRole:  row.SenderRole,
 		Content:     row.Content,
 		MessageType: row.Type,
+		Attachments: mapChatAttachments(attachments),
 		CreatedAt:   formatChatTime(row.CreatedAt),
 		IsMine:      row.SenderID == currentUserID,
 	}
+}
+
+func mapChatAttachments(rows []repository.ChatAttachmentRow) []dto.ChatAttachmentDTO {
+	attachments := make([]dto.ChatAttachmentDTO, 0, len(rows))
+	for _, row := range rows {
+		attachments = append(attachments, dto.ChatAttachmentDTO{
+			AttachmentID: row.AttachmentID,
+			MediaID:      row.MediaID,
+			FileName:     row.FileName,
+			MimeType:     row.MimeType,
+			SizeBytes:    row.SizeBytes,
+			URL:          row.URL,
+		})
+	}
+	return attachments
 }
 
 func mapChatReadMembers(rows []repository.ChatReadMemberRow) []dto.ChatReadMemberDTO {

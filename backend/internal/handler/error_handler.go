@@ -68,6 +68,21 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
+	if strings.Contains(errStr, "chat message attachments exceed") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Maksimal 5 lampiran per pesan"})
+		return
+	}
+
+	if strings.Contains(errStr, "duplicate chat attachment") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Lampiran pesan tidak boleh duplikat"})
+		return
+	}
+
+	if strings.Contains(errStr, "invalid chat attachment") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Lampiran pesan tidak valid"})
+		return
+	}
+
 	if strings.Contains(errStr, "chat group room name is required") {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Nama ruang wajib diisi"})
 		return

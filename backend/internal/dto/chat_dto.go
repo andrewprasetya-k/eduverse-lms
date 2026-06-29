@@ -1,11 +1,14 @@
 package dto
 
 type ChatLastMessageDTO struct {
-	MessageID  string `json:"messageId"`
-	SenderID   string `json:"senderId"`
-	SenderName string `json:"senderName"`
-	Content    string `json:"content"`
-	CreatedAt  string `json:"createdAt"`
+	MessageID          string `json:"messageId"`
+	SenderID           string `json:"senderId"`
+	SenderName         string `json:"senderName"`
+	Content            string `json:"content"`
+	MessageType        string `json:"messageType"`
+	AttachmentCount    int    `json:"attachmentCount"`
+	AttachmentMimeType string `json:"attachmentMimeType,omitempty"`
+	CreatedAt          string `json:"createdAt"`
 }
 
 type ChatRoomDTO struct {
@@ -26,15 +29,25 @@ type ChatRoomDTO struct {
 }
 
 type ChatMessageDTO struct {
-	MessageID   string `json:"messageId"`
-	RoomID      string `json:"roomId"`
-	SenderID    string `json:"senderId"`
-	SenderName  string `json:"senderName"`
-	SenderRole  string `json:"senderRole"`
-	Content     string `json:"content"`
-	MessageType string `json:"messageType"`
-	CreatedAt   string `json:"createdAt"`
-	IsMine      bool   `json:"isMine"`
+	MessageID   string              `json:"messageId"`
+	RoomID      string              `json:"roomId"`
+	SenderID    string              `json:"senderId"`
+	SenderName  string              `json:"senderName"`
+	SenderRole  string              `json:"senderRole"`
+	Content     string              `json:"content"`
+	MessageType string              `json:"messageType"`
+	Attachments []ChatAttachmentDTO `json:"attachments"`
+	CreatedAt   string              `json:"createdAt"`
+	IsMine      bool                `json:"isMine"`
+}
+
+type ChatAttachmentDTO struct {
+	AttachmentID string `json:"attachmentId"`
+	MediaID      string `json:"mediaId"`
+	FileName     string `json:"fileName"`
+	MimeType     string `json:"mimeType"`
+	SizeBytes    int64  `json:"sizeBytes"`
+	URL          string `json:"url"`
 }
 
 type ChatRoomsResponseDTO struct {
@@ -119,7 +132,8 @@ type ChatMessagesResponseDTO struct {
 }
 
 type CreateChatMessageDTO struct {
-	Content string `json:"content" binding:"required"`
+	Content  string   `json:"content"`
+	MediaIDs []string `json:"mediaIds" binding:"omitempty,dive,uuid"`
 }
 
 type CreateChatGroupDTO struct {

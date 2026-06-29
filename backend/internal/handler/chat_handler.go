@@ -304,7 +304,7 @@ func (h *ChatHandler) CreateMessage(c *gin.Context) {
 		return
 	}
 
-	message, err := h.service.CreateMessage(userID, schoolID, c.Param("roomId"), input.Content)
+	message, err := h.service.CreateMessage(userID, schoolID, c.Param("roomId"), input.Content, input.MediaIDs)
 	if err != nil {
 		HandleError(c, err)
 		return

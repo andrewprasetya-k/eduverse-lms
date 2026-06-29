@@ -115,7 +115,7 @@ func main() {
 	commentHandler := handler.NewCommentHandler(commentService)
 
 	chatRepo := repository.NewChatRepository(db)
-	chatService := service.NewChatService(chatRepo)
+	chatService := service.NewChatService(chatRepo, mediaRepo)
 	chatHub := realtime.NewHub()
 	go chatHub.Run()
 	chatHandler := handler.NewChatHandler(chatService, chatHub)
