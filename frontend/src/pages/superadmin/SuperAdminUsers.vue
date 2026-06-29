@@ -88,7 +88,7 @@ onMounted(() => {
             Akun Global
           </h1>
           <p class="mt-2 max-w-3xl text-sm leading-6 text-[#6b7280]">
-            Lihat akun login EduVerse lintas sekolah. Akses sekolah dan peran
+            Lihat akun login Wiyata lintas sekolah. Akses sekolah dan peran
             tidak dikelola dari halaman ini.
           </p>
         </div>
@@ -109,19 +109,25 @@ onMounted(() => {
     >
       <div class="flex min-w-0 flex-col gap-6">
         <section class="grid gap-3 sm:grid-cols-3">
-          <article class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm">
+          <article
+            class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm"
+          >
             <p class="text-xs font-medium text-[#6b7280]">Total akun</p>
             <p class="mt-2 text-2xl font-semibold text-[#171322]">
               {{ users.length }}
             </p>
           </article>
-          <article class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm">
+          <article
+            class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm"
+          >
             <p class="text-xs font-medium text-[#6b7280]">Aktif</p>
             <p class="mt-2 text-2xl font-semibold text-[#027a48]">
               {{ activeCount }}
             </p>
           </article>
-          <article class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm">
+          <article
+            class="rounded-xl border border-[#ebe7df] bg-white p-4 shadow-sm"
+          >
             <p class="text-xs font-medium text-[#6b7280]">Nonaktif</p>
             <p class="mt-2 text-2xl font-semibold text-[#b45309]">
               {{ inactiveCount }}
@@ -142,7 +148,7 @@ onMounted(() => {
                 Daftar akun login
               </p>
               <h2 class="mt-2 text-xl font-semibold text-[#171322]">
-                Pengguna EduVerse
+                Pengguna Wiyata
               </h2>
               <p class="mt-2 text-sm leading-6 text-[#6b7280]">
                 Akun Global adalah identitas login. Keanggotaan sekolah dan
@@ -210,7 +216,9 @@ onMounted(() => {
                 >
                   <div class="min-w-0">
                     <div class="flex min-w-0 flex-wrap items-center gap-2">
-                      <h3 class="truncate text-base font-semibold text-[#171322]">
+                      <h3
+                        class="truncate text-base font-semibold text-[#171322]"
+                      >
                         {{ user.fullName }}
                       </h3>
                       <span
@@ -257,7 +265,7 @@ onMounted(() => {
                 Identitas global saja
               </h2>
               <p class="mt-2 text-sm leading-6 text-[#6b7280]">
-                Halaman ini hanya menampilkan akun login EduVerse.
+                Halaman ini hanya menampilkan akun login Wiyata.
               </p>
             </div>
             <span
@@ -268,7 +276,9 @@ onMounted(() => {
           </div>
 
           <div class="mt-5 space-y-3">
-            <article class="rounded-lg border border-[#ebe7df] bg-[#fcfbf8] p-4">
+            <article
+              class="rounded-lg border border-[#ebe7df] bg-[#fcfbf8] p-4"
+            >
               <div class="flex gap-3">
                 <PhIdentificationBadge
                   :size="20"
@@ -280,13 +290,15 @@ onMounted(() => {
                     Akun Global
                   </p>
                   <p class="mt-1 text-xs leading-5 text-[#6b7280]">
-                    Identitas login pengguna EduVerse lintas sekolah.
+                    Identitas login pengguna Wiyata lintas sekolah.
                   </p>
                 </div>
               </div>
             </article>
 
-            <article class="rounded-lg border border-[#ebe7df] bg-[#fcfbf8] p-4">
+            <article
+              class="rounded-lg border border-[#ebe7df] bg-[#fcfbf8] p-4"
+            >
               <div class="flex gap-3">
                 <PhShieldCheck
                   :size="20"
@@ -305,7 +317,9 @@ onMounted(() => {
               </div>
             </article>
 
-            <article class="rounded-lg border border-[#fed7aa] bg-[#fff7ed] p-4">
+            <article
+              class="rounded-lg border border-[#fed7aa] bg-[#fff7ed] p-4"
+            >
               <p class="text-xs leading-5 text-[#9a3412]">
                 Operasional akademik setiap sekolah tetap dikelola oleh Admin
                 Sekolah.

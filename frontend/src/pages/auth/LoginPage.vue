@@ -43,17 +43,15 @@ async function submit() {
       class="hidden flex-col justify-between bg-[#eef2ff] px-8 py-8 sm:px-12 md:flex md:px-16 lg:px-20"
     >
       <div class="flex items-center gap-3">
-        <div
-          class="flex h-14 w-14 items-center justify-center rounded-2xl"
-        >
+        <div class="flex h-14 w-14 items-center justify-center rounded-2xl">
           <img
             src="/logo_fix.svg"
-            alt="EduVerse"
+            alt="Wiyata"
             class="h-14 w-14 rounded-2xl object-contain"
           />
         </div>
         <div>
-          <p class="text-sm font-medium text-[#4f46e5]">Eduverse</p>
+          <p class="text-sm font-medium text-[#4f46e5]">Wiyata</p>
           <p class="text-xs text-[#6b7280]">Academic workspace</p>
         </div>
       </div>
@@ -68,13 +66,13 @@ async function submit() {
           Masuk ke ruang belajar yang lebih tenang.
         </h1>
         <p class="mt-6 text-base leading-7 text-[#6b6475]">
-          Satu login untuk siswa, guru, admin sekolah, dan super admin. Eduverse
+          Satu login untuk siswa, guru, admin sekolah, dan super admin. Wiyata
           akan memilih ruang kerja berdasarkan role dan konteks sekolah.
         </p>
       </div>
 
       <div class="text-xs text-[#9ca3af]">
-        &copy; 2026 Eduverse. All rights reserved.
+        &copy; 2026 Wiyata. All rights reserved.
       </div>
     </section>
 
@@ -85,24 +83,22 @@ async function submit() {
       <div class="w-full max-w-md">
         <div class="mb-8">
           <div class="mb-8 flex items-center gap-3 md:hidden">
-            <div
-              class="flex h-12 w-12 items-center justify-center rounded-2xl"
-            >
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl">
               <img
                 src="/logo_fix.svg"
-                alt="EduVerse"
+                alt="Wiyata"
                 class="h-12 w-12 rounded-2xl object-contain"
               />
             </div>
             <div>
-              <p class="text-sm font-medium text-[#4f46e5]">Eduverse</p>
+              <p class="text-sm font-medium text-[#4f46e5]">Wiyata</p>
               <p class="text-xs text-[#6b7280]">Academic workspace</p>
             </div>
           </div>
 
           <h2 class="text-3xl font-medium text-[#171322]">Login</h2>
           <p class="mt-3 text-sm text-[#7a7385]">
-            Gunakan akun Eduverse yang sudah terdaftar.
+            Gunakan akun Wiyata yang sudah terdaftar.
           </p>
         </div>
 

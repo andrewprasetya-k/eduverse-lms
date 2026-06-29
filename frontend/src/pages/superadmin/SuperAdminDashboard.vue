@@ -12,7 +12,7 @@ const overviewCards = [
   {
     title: "Sekolah",
     description:
-      "Kelola tenant sekolah EduVerse dari tingkat platform tanpa mengambil alih operasional akademik harian.",
+      "Kelola tenant sekolah Wiyata dari tingkat platform tanpa mengambil alih operasional akademik harian.",
     icon: PhBuildings,
     tone: "bg-[#fff4ee] text-[#ea580c]",
   },
@@ -82,12 +82,11 @@ const quickActions = [
             Super Admin
           </p>
           <h1 class="mt-2 text-2xl font-semibold text-[#171322] sm:text-3xl">
-            Pusat Platform EduVerse
+            Pusat Platform Wiyata
           </h1>
           <p class="mt-2 max-w-3xl text-sm leading-6 text-[#6b7280]">
-            Kelola kesiapan tenant sekolah dan akun global. Pengaturan
-            akademik, kelas, konten, dan penilaian tetap berada di area Admin
-            Sekolah.
+            Kelola kesiapan tenant sekolah dan akun global. Pengaturan akademik,
+            kelas, konten, dan penilaian tetap berada di area Admin Sekolah.
           </p>
         </div>
         <RouterLink
@@ -142,7 +141,9 @@ const quickActions = [
           </article>
         </section>
 
-        <section class="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <section
+          class="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]"
+        >
           <article
             class="rounded-xl border border-[#ebe7df] bg-white p-5 shadow-sm"
           >
@@ -156,7 +157,11 @@ const quickActions = [
                   akademik.
                 </p>
               </div>
-              <PhCompass :size="20" class="shrink-0 text-[#ea580c]" weight="duotone" />
+              <PhCompass
+                :size="20"
+                class="shrink-0 text-[#ea580c]"
+                weight="duotone"
+              />
             </div>
 
             <div class="mt-4 divide-y divide-[#f3f4f6]">
@@ -185,10 +190,12 @@ const quickActions = [
             </p>
             <p class="mt-2 text-sm leading-6 text-[#6b7280]">
               Super Admin mengatur platform, tenant sekolah, dan akun global.
-              Pengaturan dan operasional akademik setiap sekolah tetap berada
-              di area Admin Sekolah.
+              Pengaturan dan operasional akademik setiap sekolah tetap berada di
+              area Admin Sekolah.
             </p>
-            <div class="mt-4 rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-4 py-3">
+            <div
+              class="mt-4 rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-4 py-3"
+            >
               <p class="text-xs leading-5 text-[#9a3412]">
                 Halaman sekolah dan akun global masih menggunakan navigasi yang
                 sudah ada. Implementasi operasionalnya akan dilakukan terpisah.
