@@ -1,4 +1,4 @@
-# 🎓 Eduverse LMS - Development Progress
+# 🎓 Wiyata LMS - Development Progress
 
 ## ✅ Completed Features
 
@@ -31,7 +31,6 @@
   - Files needed: Update `internal/domain/assignment.go` (add extension fields to Submission), update DTOs, service, handler
   - Endpoints: `POST /assignments/submit/:submissionId/request-extension`, `PATCH /assignments/submit/:submissionId/review-extension`
   - Database: Add extension fields to submissions table
-  
 - [x] **Notification Triggers Integration**: Auto-create notifications untuk:
   - New assignment created → notify students in class ✅
   - Assignment graded → notify student who submitted ✅
@@ -136,7 +135,8 @@
 - [ ] **Notification Preferences**:
   - User settings for notification types
   - Email vs in-app preferences
-<!-- 
+  <!--
+
 ## 🔮 Future Enhancements
 
 - [ ] **Attendance System**: Track student attendance per session

@@ -5,12 +5,14 @@ Base URL: `http://localhost:8080/api`
 ## 🔐 Authentication
 
 **Public Endpoints (No Auth Required):**
+
 - `POST /login` - User login
 - `POST /register` - Public user self-registration (plain global account only)
 
 **All other endpoints require JWT authentication.**
 
 **Authentication Header:**
+
 ```
 Authorization: Bearer <your-jwt-token>
 ```
@@ -18,6 +20,7 @@ Authorization: Bearer <your-jwt-token>
 ---
 
 ## 🏫 Schools
+
 - `POST /schools` - Create school
 - `POST /super-admin/school-bootstrap` - Atomically create school tenant and assign initial school admin (system super_admin only)
 - `GET /schools` - List all schools (with pagination)
@@ -30,6 +33,7 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /schools/permanent/:schoolCode` - Hard delete school
 
 ## 📅 Academic Years
+
 - `POST /academic-years` - Create academic year
 - `GET /academic-years` - List all academic years
 - `GET /academic-years/:id` - Get by ID
@@ -40,6 +44,7 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /academic-years/:id` - Delete academic year
 
 ## 📆 Terms (Semester)
+
 - `POST /terms` - Create term
 - `GET /terms` - List all terms
 - `GET /terms/:id` - Get by ID
@@ -50,6 +55,7 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /terms/:id` - Delete term
 
 ## 👤 Users
+
 - `POST /users` - Create global user (system super_admin only)
 - `GET /users` - List/search global users (admin/super_admin)
 - `GET /users/:id` - Get user by ID (system super_admin only)
@@ -58,6 +64,7 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /users/:id` - Delete user (system super_admin only)
 
 ## 👥 Admin School Members
+
 - `GET /admin/school-members` - List active-school members only (admin only)
 - `POST /admin/school-members` - Add/reuse/restore one active-school member (admin only)
 - `DELETE /admin/school-members/:schoolUserId` - Soft-delete membership from active school (admin only)
@@ -66,12 +73,14 @@ Authorization: Bearer <your-jwt-token>
 - `POST /admin/school-members/import/commit` - Import active-school members from validated rows (admin only)
 
 ## 🏢 School Users (User-School Relationship)
+
 - `POST /school-users/enroll` - Enroll user to school
 - `GET /school-users/school/:schoolCode` - Get members by school
 - `GET /school-users/user/:userId` - Get schools by user
 - `DELETE /school-users/:userId` - Unenroll user from school
 
 ## 📚 Subjects
+
 - `POST /subjects` - Create subject
 - `GET /subjects` - List all subjects
 - `GET /subjects/:id` - Get by ID
@@ -81,7 +90,9 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /subjects/:id` - Delete subject
 
 ## 🔐 RBAC (Roles & Permissions)
+
 ### Roles
+
 - `POST /rbac/roles` - Create role
 - `GET /rbac/roles` - List all roles
 - `GET /rbac/roles/:id` - Get role by ID
@@ -89,12 +100,14 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /rbac/roles/:id` - Delete role
 
 ### User Roles
+
 - `POST /rbac/user-roles` - Assign role to user
 - `DELETE /rbac/user-roles` - Remove role from user
 - `GET /rbac/user-roles/:schoolUserId` - Get user roles
 - `PATCH /rbac/user-roles/:schoolUserId` - Update user roles
 
 ## 🎓 Classes
+
 - `POST /classes` - Create class
 - `GET /classes` - List all classes (with pagination & search)
 - `GET /classes/:id` - Get class by ID
@@ -102,6 +115,7 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /classes/:id` - Delete class
 
 ## 📖 Subject Classes (Teacher Assignment)
+
 - `POST /subject-classes/assign` - Assign active-school subject and eligible teacher school_user to active-school class (admin)
 - `GET /subject-classes/my-teaching` - Get active subject classes taught by current teacher with active teacher class enrollment
 - `GET /subject-classes/class/:classId` - Get subject classes by active-school class
@@ -110,6 +124,7 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /subject-classes/:id` - Unassign empty subject class within active school (admin; blocked if materials or assignments exist)
 
 ## 👥 Enrollments (Class Members)
+
 - `POST /enrollments` - Enroll or reactivate active-school members to an active-school class (admin, bulk; reactivation preserves original joined_at)
 - `GET /enrollments/class/:classId` - Get active class members by class
 - `GET /enrollments/member/:schoolUserId` - Get active classes by member
@@ -118,6 +133,7 @@ Authorization: Bearer <your-jwt-token>
 - `DELETE /enrollments/:id` - Soft-unenroll member within active school by setting `left_at` (admin; blocks teacher if still assigned to subject_class)
 
 ## 📁 Media & Files
+
 - `POST /medias/upload` - Upload active-school file (multipart form; owner from JWT)
 - `POST /medias/metadata` - Record active-school media metadata
 - `GET /medias/:id` - Get media by ID
@@ -125,6 +141,7 @@ Authorization: Bearer <your-jwt-token>
 - Media attached through `mediaIds` must exist, belong to the active school, and be attachable by the current actor
 
 ## 📖 Materials (Learning Content)
+
 - `POST /materials` - Create material for current teacher-owned subject class (JSON or multipart form)
 - `GET /materials` - List materials for accessible `subjectClassId`
 - `GET /materials/:id` - Get accessible material by ID
@@ -133,6 +150,7 @@ Authorization: Bearer <your-jwt-token>
 - `POST /materials/progress` - Update material progress
 
 ## 🗒️ Student Material Notes
+
 - `GET /notes` - List the current student's accessible material notes across active enrolled classes
 - `GET /notes/material/:materialId` - Get the current student's private note, or `{ "note": null }`
 - `PUT /notes/material/:materialId` - Create or update one plain-text note for the accessible material
@@ -142,6 +160,7 @@ Authorization: Bearer <your-jwt-token>
 Notes are material-only for MVP. They are scoped to the JWT user and active `SchoolId`, require active student enrollment in the material's class, and are not accessible to teacher/admin roles.
 
 ## 📰 Feeds (Announcements)
+
 - `POST /feeds` - Create active-school class feed (admin or teacher who teaches the class)
 - `GET /feeds/class/:classId` - Get active-school class feed (admin, teacher who teaches the class, or active enrolled student)
 - `GET /feeds/:id` - Get accessible active-school feed by ID
@@ -149,6 +168,7 @@ Notes are material-only for MVP. They are scoped to the JWT user and active `Sch
 - `DELETE /feeds/:id` - Soft-delete active-school feed (admin or owning teacher who teaches the class)
 
 ## 💬 Comments
+
 - `POST /comments` - Create feed-only comment in active school
 - `GET /comments?type=feed&id=` - Get accessible feed comments
 - `GET /comments/:id` - Get accessible active-school feed comment by ID
@@ -175,16 +195,21 @@ Chat MVP is REST-only and text-only. Active school admins, teachers, and
 students can participate in the school-wide room if their school membership is
 active. Custom group rooms are limited to selected active school members through
 `chat_room_members.left_at IS NULL`, with admin-only rename/member management and
-automatic ownership transfer when the creator leaves. It does not enable
-WebSocket, subject/class rooms, DM, attachments, typing indicators, message
-delete, or notifications.
+automatic ownership transfer when the creator leaves. Direct message rooms are
+limited to exactly two active members in the same active school and are reused
+idempotently when the same pair opens DM again. It does not enable WebSocket,
+subject/class rooms, attachments, typing indicators, message delete, or
+notifications.
 
 ## 📝 Assignments & Grading
+
 ### Categories
+
 - `POST /assignments/categories` - Create active-school category
 - `GET /assignments/categories/school/:schoolCode` - Get categories by school
 
 ### Assignments
+
 - `POST /assignments` - Create assignment for current teacher-owned subject class with active-school category
 - `GET /assignments/subject-class/:subjectClassId` - Get assignments for accessible subject class
 - `GET /assignments/subject-class/submissions/:subjectClassId` - Get submissions grouped by assignment for current teacher subject class
@@ -199,26 +224,31 @@ delete, or notifications.
 - `DELETE /assignments/:id` - Delete active-school assignment (admin or owning teacher)
 
 ### Submissions
+
 - `POST /assignments/submit/:assignmentId` - Submit assignment as current enrolled student
 - `GET /assignments/submit/:submissionId` - Get submission by ID for current teacher-owned subject class
 - `PATCH /assignments/submit/:submissionId` - Update current student's own submission
 - `DELETE /assignments/submit/:submissionId` - Delete current student's own submission
 
 ### Assessments (Grading)
+
 - `POST /assignments/assess/:submissionId` - Grade submission for current teacher-owned subject class
 - `PATCH /assignments/assess/:submissionId` - Update assessment for current teacher-owned subject class
 - `DELETE /assignments/assess/:submissionId` - Delete assessment for current teacher-owned subject class
 
 ## 📊 Logs
+
 - `GET /logs/school/:schoolId` - Get logs by school
 
 ## 📊 Grade Book
+
 - `GET /grades/my-grades/:classId` - Get current student's gradebook by active class, including provisional weighted grade when weights and graded assignments exist
 - `POST /grades/weights` - Admin-only configure active-school subject-level assessment weights
 - `GET /grades/weights/subject/:subjectId` - Get active-school subject weights
 - `GET /grades/class/:classId/subject/:subjectId` - Get class grade report
 
 ## 🔔 Notifications
+
 - `GET /notifications` - Get current user's notifications (with pagination)
 - `GET /notifications/unread-count` - Get current user's unread count
 - `PATCH /notifications/read/:id` - Mark current user's notification as read
@@ -226,6 +256,7 @@ delete, or notifications.
 - `DELETE /notifications/:id` - Delete current user's notification
 
 ## 📈 Dashboard
+
 - `GET /dashboard/student/:userId` - Get student dashboard (userId = usr_id)
 - `GET /dashboard/teacher/:schoolUserId` - Get teacher dashboard (schoolUserId = scu_id)
 - `GET /dashboard/admin/:schoolId` - Get admin dashboard
@@ -235,29 +266,35 @@ delete, or notifications.
 ## 🔑 Key Features
 
 ### Authentication
+
 - JWT-based authentication
 - Token expiry: 24 hours
 - Public endpoints: login, register
 - All other endpoints protected
 
 ### Pagination
+
 Most list endpoints support:
+
 - `?page=1` - Page number (default: 1)
 - `?limit=20` - Items per page (default: varies)
 - `?search=keyword` - Search filter
 
 ### Response Patterns
+
 - **Header Pattern**: List responses include parent context (School, Class, SubjectClass)
 - **Soft Delete**: Most delete operations are soft deletes (can be restored)
 - **Student Material Notes**: Note deletion is an intentional hard delete for the material-only MVP
 - **Upsert Logic**: Submissions and assessments auto-update if already exist
 
 ### File Handling
+
 - **Multipart Upload**: Direct file upload with auto-detection
 - **Metadata Only**: Record already-uploaded files (Supabase/S3)
 - **Inline Media**: Create media records within material/assignment creation
 
 ### Error Handling
+
 - Standardized error responses (no raw DB errors exposed)
 - Validation errors with field-specific messages
 - Proper HTTP status codes
