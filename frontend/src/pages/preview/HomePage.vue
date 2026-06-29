@@ -202,7 +202,7 @@ const screenshotSlots = [
     </div>
     <!-- ───────────── NAVBAR ───────────── -->
     <header
-      class="fixed left-0 right-0 w-full top-0 z-50 bg-[#fbfaf8]/50 backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300"
+      class="fixed left-0 right-0 w-full top-0 z-50 backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300"
     >
       <div
         class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8"
