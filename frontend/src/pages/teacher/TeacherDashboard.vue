@@ -8,7 +8,6 @@ import {
   PhChalkboardTeacher,
   PhClipboardText,
   PhMegaphone,
-  PhPlusCircle,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import { useAuthStore } from "../../stores/auth";
@@ -121,13 +120,6 @@ onMounted(loadDashboard);
               {{ activeSchoolName }}
             </span>
           </div>
-          <RouterLink
-            to="/teacher/subjects"
-            class="inline-flex items-center justify-center gap-2 rounded-lg bg-[#4f46e5] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#4338ca]"
-          >
-            <PhPlusCircle :size="17" weight="duotone" />
-            Pilih mata pelajaran
-          </RouterLink>
         </div>
       </div>
     </header>
