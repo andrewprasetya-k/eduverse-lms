@@ -34,6 +34,8 @@ type ChatRepository interface {
 	GetReadReceipt(roomID string, userID string) (*ChatReadReceiptRow, error)
 	ListSchoolReadMembers(roomID string, schoolID string) ([]ChatReadMemberRow, error)
 	ListRoomReadMembers(roomID string, schoolID string) ([]ChatReadMemberRow, error)
+	ListSchoolRecipientUserIDs(schoolID string) ([]string, error)
+	ListRoomRecipientUserIDs(roomID string, schoolID string) ([]string, error)
 	UnreadCount(roomID string, userID string) (int64, error)
 }
 
@@ -981,6 +983,60 @@ func (r *chatRepository) ListRoomReadMembers(roomID string, schoolID string) ([]
 		ORDER BY crm.joined_at ASC, u.usr_nama_lengkap ASC, u.usr_email ASC
 	`, schoolID, roomID).Scan(&rows).Error
 	return rows, err
+}
+
+func (r *chatRepository) ListSchoolRecipientUserIDs(schoolID string) ([]string, error) {
+	var rows []struct {
+		UserID string `gorm:"column:user_id"`
+	}
+	err := r.db.Raw(`
+		SELECT DISTINCT u.usr_id AS user_id
+		FROM edv.school_users scu
+		JOIN edv.users u
+			ON u.usr_id = scu.scu_usr_id
+			AND u.deleted_at IS NULL
+		WHERE scu.scu_sch_id = ?
+			AND scu.deleted_at IS NULL
+	`, schoolID).Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	userIDs := make([]string, 0, len(rows))
+	for _, row := range rows {
+		userIDs = append(userIDs, row.UserID)
+	}
+	return userIDs, nil
+}
+
+func (r *chatRepository) ListRoomRecipientUserIDs(roomID string, schoolID string) ([]string, error) {
+	var rows []struct {
+		UserID string `gorm:"column:user_id"`
+	}
+	err := r.db.Raw(`
+		SELECT DISTINCT u.usr_id AS user_id
+		FROM edv.chat_room_members crm
+		JOIN edv.chat_rooms cr
+			ON cr.room_id = crm.crm_room_id
+			AND cr.room_sch_id = ?
+			AND cr.deleted_at IS NULL
+		JOIN edv.school_users scu
+			ON scu.scu_usr_id = crm.crm_usr_id
+			AND scu.scu_sch_id = cr.room_sch_id
+			AND scu.deleted_at IS NULL
+		JOIN edv.users u
+			ON u.usr_id = crm.crm_usr_id
+			AND u.deleted_at IS NULL
+		WHERE crm.crm_room_id = ?
+			AND crm.left_at IS NULL
+	`, schoolID, roomID).Scan(&rows).Error
+	if err != nil {
+		return nil, err
+	}
+	userIDs := make([]string, 0, len(rows))
+	for _, row := range rows {
+		userIDs = append(userIDs, row.UserID)
+	}
+	return userIDs, nil
 }
 
 func (r *chatRepository) UnreadCount(roomID string, userID string) (int64, error) {

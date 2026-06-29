@@ -3,6 +3,7 @@ package main
 import (
 	"backend/internal/handler"
 	"backend/internal/middleware"
+	"backend/internal/realtime"
 	"backend/internal/repository"
 	"backend/internal/service"
 	"backend/internal/storage"
@@ -115,7 +116,10 @@ func main() {
 
 	chatRepo := repository.NewChatRepository(db)
 	chatService := service.NewChatService(chatRepo)
-	chatHandler := handler.NewChatHandler(chatService)
+	chatHub := realtime.NewHub()
+	go chatHub.Run()
+	chatHandler := handler.NewChatHandler(chatService, chatHub)
+	chatWebSocketHandler := realtime.NewWebSocketHandler(chatHub, chatService)
 
 	assignmentRepo := repository.NewAssignmentRepository(db)
 	assignmentService := service.NewAssignmentService(assignmentRepo, attachmentService, mediaRepo, notificationService, enrollmentRepo)
@@ -155,6 +159,7 @@ func main() {
 		//public routes
 		api.POST("/login", authHandler.Login)
 		api.POST("/register", authHandler.Register)
+		api.GET("/ws/chat", chatWebSocketHandler.Chat)
 
 		//protected routes
 		api.Use(middleware.AuthRequired())

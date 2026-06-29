@@ -177,6 +177,7 @@ Notes are material-only for MVP. They are scoped to the JWT user and active `Sch
 
 ## 💬 Chat
 
+- `GET /ws/chat?token=&schoolId=` - Connect WebSocket realtime transport for chat `new_message` events
 - `GET /chat/rooms?search=` - List room sekolah, grup kustom yang bisa diakses, dan direct message aktif; `search` juga mencocokkan nama/email target DM
 - `GET /chat/members?search=&excludeRoomId=` - Search active school members for chat picker grup/DM, optionally excluding active members of a room
 - `POST /chat/school/open` - Open or create the active school's main chat room
@@ -192,7 +193,7 @@ Notes are material-only for MVP. They are scoped to the JWT user and active `Sch
 - `POST /chat/rooms/:roomId/messages` - Create text-only message and return canonical message DTO
 - `PATCH /chat/rooms/:roomId/read` - Mark accessible room as read with optional validated `lastReadMessageId`
 
-Chat MVP is REST-only and text-only. Active school admins, teachers, and
+Chat MVP is text-only. Active school admins, teachers, and
 students can participate in the school-wide room if their school membership is
 active. Custom group rooms are limited to selected active school members through
 `chat_room_members.left_at IS NULL`, with admin-only rename/member management and
@@ -200,9 +201,10 @@ automatic ownership transfer when the creator leaves. Direct message rooms are
 limited to exactly two active members in the same active school and are reused
 idempotently when the same pair opens DM again. Unread counts exclude messages
 sent by the current user and are based on `chat_read_receipts.last_read_msg_id`
-or `last_read_at`. It does not enable WebSocket,
-subject/class rooms, attachments, typing indicators, message delete, or
-notifications.
+or `last_read_at`. WebSocket in Sprint 18A is event transport only for
+`new_message`; message creation still uses REST and polling remains as fallback.
+It does not enable subject/class rooms, attachments, typing indicators, message
+delete, or notifications.
 
 ## 📝 Assignments & Grading
 

@@ -38,6 +38,7 @@ type ChatService interface {
 	CreateMessage(userID string, schoolID string, roomID string, content string) (*dto.ChatMessageDTO, error)
 	MarkRead(userID string, schoolID string, roomID string, lastReadMessageID *string) error
 	GetReadSummary(userID string, schoolID string, roomID string) (*dto.ChatReadSummaryDTO, error)
+	ListRealtimeRecipients(userID string, schoolID string, roomID string) ([]string, error)
 	CanAccessSchoolChat(userID string, schoolID string) (bool, error)
 	CanAccessRoom(userID string, schoolID string, roomID string) (bool, *repository.ChatRoomRow, error)
 }
@@ -495,6 +496,23 @@ func (s *chatService) GetReadSummary(userID string, schoolID string, roomID stri
 		}
 	}
 	return &summary, nil
+}
+
+func (s *chatService) ListRealtimeRecipients(userID string, schoolID string, roomID string) ([]string, error) {
+	allowed, room, err := s.CanAccessRoom(userID, schoolID, roomID)
+	if err != nil {
+		return nil, err
+	}
+	if !allowed {
+		return nil, fmt.Errorf("forbidden: chat room access denied")
+	}
+	if isSchoolChatRoom(room, schoolID) {
+		return s.repo.ListSchoolRecipientUserIDs(schoolID)
+	}
+	if isCustomGroupRoom(room) || isDirectMessageRoom(room) {
+		return s.repo.ListRoomRecipientUserIDs(roomID, schoolID)
+	}
+	return nil, fmt.Errorf("forbidden: chat room access denied")
 }
 
 func (s *chatService) CanAccessSchoolChat(userID string, schoolID string) (bool, error) {

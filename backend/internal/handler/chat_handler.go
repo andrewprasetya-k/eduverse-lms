@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/dto"
 	"backend/internal/middleware"
+	"backend/internal/realtime"
 	"backend/internal/service"
 	"net/http"
 	"strconv"
@@ -13,10 +14,11 @@ import (
 
 type ChatHandler struct {
 	service service.ChatService
+	hub     *realtime.Hub
 }
 
-func NewChatHandler(service service.ChatService) *ChatHandler {
-	return &ChatHandler{service: service}
+func NewChatHandler(service service.ChatService, hub *realtime.Hub) *ChatHandler {
+	return &ChatHandler{service: service, hub: hub}
 }
 
 func (h *ChatHandler) ListRooms(c *gin.Context) {
@@ -307,7 +309,28 @@ func (h *ChatHandler) CreateMessage(c *gin.Context) {
 		HandleError(c, err)
 		return
 	}
+	h.broadcastNewMessage(userID, schoolID, c.Param("roomId"), *message)
 	c.JSON(http.StatusCreated, message)
+}
+
+func (h *ChatHandler) broadcastNewMessage(userID string, schoolID string, roomID string, message dto.ChatMessageDTO) {
+	if h.hub == nil {
+		return
+	}
+	recipients, err := h.service.ListRealtimeRecipients(userID, schoolID, roomID)
+	if err != nil {
+		return
+	}
+	for _, recipientID := range recipients {
+		payload := message
+		payload.IsMine = recipientID == message.SenderID
+		h.hub.BroadcastToUser(schoolID, recipientID, realtime.Event{
+			Type:     realtime.EventTypeNewMessage,
+			RoomID:   roomID,
+			SchoolID: schoolID,
+			Payload:  payload,
+		})
+	}
 }
 
 func (h *ChatHandler) GetReadSummary(c *gin.Context) {

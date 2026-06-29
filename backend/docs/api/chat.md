@@ -2,6 +2,8 @@
 
 Base URL: `/api/chat`
 
+WebSocket URL: `/api/ws/chat`
+
 REST chat mendukung satu room sekolah aktif, custom group room, dan direct
 message untuk warga aktif di sekolah yang sama.
 
@@ -11,10 +13,11 @@ message untuk warga aktif di sekolah yang sama.
 - Custom group room dapat dibuat oleh warga aktif sekolah.
 - Direct message dapat dibuka antar dua warga aktif di sekolah yang sama.
 - Text-only messages.
-- REST API only.
+- REST API remains the source of truth.
+- WebSocket tersedia hanya sebagai realtime event transport.
+- Polling tetap dipertahankan sebagai fallback.
 - Admin Sekolah, teacher, dan student boleh berpartisipasi jika masih menjadi
   member aktif sekolah tersebut.
-- Tidak ada WebSocket/realtime.
 - Tidak ada subject/class room, attachment, typing indicator,
   online/offline, delete/unsend, moderation UI, atau notification integration.
 
@@ -411,3 +414,57 @@ kosong, endpoint hanya memperbarui `last_read_at` tanpa menghapus
 Unread count pada `GET /rooms` dihitung dari read receipt current user,
 menggunakan `last_read_msg_id` jika tersedia atau `last_read_at` sebagai
 fallback, dan tidak menghitung pesan yang dikirim oleh current user.
+
+## WebSocket Realtime Transport
+
+### Connect Chat WebSocket
+
+`GET /api/ws/chat?token=<jwt>&schoolId=<school-uuid>`
+
+Endpoint ini membuat koneksi WebSocket untuk event realtime chat. REST tetap
+menjadi source of truth; message tetap dibuat melalui
+`POST /api/chat/rooms/:roomId/messages`.
+
+Handshake:
+
+- JWT wajib valid.
+- Browser client dapat mengirim token melalui query param `token` karena
+  WebSocket tidak mudah mengirim `Authorization` header.
+- `schoolId` wajib berisi active school context.
+- Token tidak boleh dilog.
+- User harus active school member (`school_users.deleted_at IS NULL`).
+- Super admin hanya dapat terkoneksi jika juga memiliki membership aktif di
+  school tersebut.
+
+Event shape:
+
+```json
+{
+  "type": "new_message",
+  "roomId": "uuid",
+  "schoolId": "school-uuid",
+  "payload": {
+    "messageId": "uuid",
+    "roomId": "uuid",
+    "senderId": "uuid",
+    "senderName": "Budi",
+    "senderRole": "student",
+    "content": "Halo.",
+    "messageType": "text",
+    "createdAt": "2026-06-26T03:00:00Z",
+    "isMine": false
+  }
+}
+```
+
+Broadcast eligibility:
+
+- School room dikirim hanya ke active school members di school yang sama.
+- Group room dan DM dikirim hanya ke active `chat_room_members` yang masih
+  memiliki active school membership.
+- Removed school member tidak menerima event.
+- Event tidak pernah dibroadcast lintas sekolah.
+
+Sprint 18A hanya mengirim event `new_message`. Read receipt, room management,
+typing indicator, presence, notifications, dan message creation via WebSocket
+belum diimplementasikan.
