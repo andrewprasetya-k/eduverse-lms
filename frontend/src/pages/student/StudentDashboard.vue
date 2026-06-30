@@ -778,11 +778,10 @@ onMounted(() => {
     </section>
 
     <aside
-      class="min-w-0 border-t border-[#ebe7df] bg-white lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:max-h-180 lg:self-start lg:border-l lg:border-t-0"
+      class="min-w-0 border-t border-[#ebe7df] bg-white lg:border-l lg:border-t-0"
     >
-      <div class="flex min-h-0 flex-col gap-4 p-4 lg:h-full">
+      <div class="flex flex-col gap-4 p-4">
         <DashboardUpdatesPanel
-          class="min-h-65 lg:min-h-0 lg:flex-[1_1_0]"
           :notification-badge="unreadCount"
           :chat-badge="chatPanelUnreadCount"
           :feed-badge="feedPanelUnreadCount"
@@ -1018,7 +1017,7 @@ onMounted(() => {
 
             <div
               v-else-if="selectedDatePreview.length === 0"
-              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-3 text-xs leading-5 text-[#7a7385]"
+              class="border-b border-[#ebe7df] bg-[#fbfaf8] p-3 text-xs leading-5 text-[#7a7385]"
             >
               Tidak ada deadline tugas pada tanggal ini.
             </div>

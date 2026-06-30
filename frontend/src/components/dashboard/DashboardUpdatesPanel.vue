@@ -52,7 +52,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number) {
 
 <template>
   <section
-    class="flex min-h-0 flex-col bg-white"
+    class="bg-white"
     aria-labelledby="updates-panel-title"
   >
     <div class="px-2">
@@ -94,7 +94,7 @@ function handleTabKeydown(event: KeyboardEvent, index: number) {
       </div>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-y-auto p-4">
+    <div class="p-4">
       <div
         v-show="activeTab === 'notifications'"
         id="updates-panel-notifications"
