@@ -87,16 +87,19 @@ func (s *activityService) normalizeRange(from *time.Time, to *time.Time) (time.T
 
 func (s *activityService) studentActivity(userID string, schoolID string, from time.Time, to time.Time) ([]repository.ActivityRow, error) {
 	var rows []repository.ActivityRow
-	queries := []func(string, string, time.Time, time.Time) ([]repository.ActivityRow, error){
-		s.repo.GetStudentAssignmentDue,
-		s.repo.GetStudentMaterialCreated,
-		s.repo.GetStudentFeedPosted,
-		s.repo.GetStudentAssignmentGraded,
+	queries := []struct {
+		name string
+		run  func(string, string, time.Time, time.Time) ([]repository.ActivityRow, error)
+	}{
+		{name: "student assignment_due", run: s.repo.GetStudentAssignmentDue},
+		{name: "student material_created", run: s.repo.GetStudentMaterialCreated},
+		{name: "student feed_posted", run: s.repo.GetStudentFeedPosted},
+		{name: "student assignment_graded", run: s.repo.GetStudentAssignmentGraded},
 	}
 	for _, query := range queries {
-		result, err := query(userID, schoolID, from, to)
+		result, err := query.run(userID, schoolID, from, to)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("academic activity query failed: %s: %w", query.name, err)
 		}
 		rows = append(rows, result...)
 	}
@@ -105,16 +108,19 @@ func (s *activityService) studentActivity(userID string, schoolID string, from t
 
 func (s *activityService) teacherActivity(userID string, schoolID string, from time.Time, to time.Time) ([]repository.ActivityRow, error) {
 	var rows []repository.ActivityRow
-	queries := []func(string, string, time.Time, time.Time) ([]repository.ActivityRow, error){
-		s.repo.GetTeacherSubmissionPendingReview,
-		s.repo.GetTeacherSubmissionReceived,
-		s.repo.GetTeacherAssignmentDue,
-		s.repo.GetTeacherFeedComments,
+	queries := []struct {
+		name string
+		run  func(string, string, time.Time, time.Time) ([]repository.ActivityRow, error)
+	}{
+		{name: "teacher submission_pending_review", run: s.repo.GetTeacherSubmissionPendingReview},
+		{name: "teacher submission_received", run: s.repo.GetTeacherSubmissionReceived},
+		{name: "teacher assignment_due", run: s.repo.GetTeacherAssignmentDue},
+		{name: "teacher feed_comment", run: s.repo.GetTeacherFeedComments},
 	}
 	for _, query := range queries {
-		result, err := query(userID, schoolID, from, to)
+		result, err := query.run(userID, schoolID, from, to)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("academic activity query failed: %s: %w", query.name, err)
 		}
 		rows = append(rows, result...)
 	}
