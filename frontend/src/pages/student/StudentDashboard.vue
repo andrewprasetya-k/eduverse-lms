@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import {
   PhArrowRight,
-  PhBell,
   PhBookOpen,
   PhCaretLeft,
   PhCaretRight,
@@ -15,6 +14,7 @@ import { useActiveClassStore } from "../../stores/activeClass";
 import { getSubjectClassesByClass } from "../../services/classWorkspace";
 import { getClassFeed } from "../../services/feed";
 import { getStudentAssignmentInbox } from "../../services/assignment";
+import { useFeedUnreadCount } from "../../composables/useFeedUnreadCount";
 import {
   getRecentNotifications,
   getUnreadNotificationCount,
@@ -32,11 +32,21 @@ import { getSubjectColor, resolveSubjectColor } from "../../utils/color";
 import { useToastStore } from "../../stores/toast";
 import LatestChatCard from "../../components/chat/LatestChatCard.vue";
 import AcademicActivityCard from "../../components/activity/AcademicActivityCard.vue";
+import DashboardUpdatesPanel from "../../components/dashboard/DashboardUpdatesPanel.vue";
+import {
+  activitySubjectColor,
+  activityTypeLabel,
+  compareActivities,
+  formatApiDate,
+  isInternalActivityLink,
+  parseActivityDate,
+} from "../../components/activity/activityView";
 
 const auth = useAuthStore();
 const activeClassStore = useActiveClassStore();
 const toast = useToastStore();
 const router = useRouter();
+const { unreadCount: feedPanelUnreadCount } = useFeedUnreadCount();
 
 const subjects = ref<SubjectClassItem[]>([]);
 const feedPosts = ref<FeedPost[]>([]);
@@ -49,6 +59,11 @@ const assignmentsError = ref("");
 const activities = ref<AcademicActivityItem[]>([]);
 const activitiesLoading = ref(false);
 const activitiesError = ref("");
+const calendarActivityCache = ref<Record<string, AcademicActivityItem[]>>({});
+const calendarActivitiesLoading = ref(false);
+const calendarActivitiesError = ref("");
+const selectedDate = ref(formatApiDate(new Date()));
+const chatPanelUnreadCount = ref(0);
 const markingNotificationIds = ref<Set<string>>(new Set());
 const markingAllNotifications = ref(false);
 const errorMessage = ref("");
@@ -72,14 +87,31 @@ const currentMonth = computed(() =>
   ),
 );
 const calendarDays = computed(() => buildCalendarDays(viewDate.value));
+const currentMonthKey = computed(() => monthKey(viewDate.value));
+const calendarActivities = computed(
+  () => calendarActivityCache.value[currentMonthKey.value] ?? [],
+);
+const selectedDateActivities = computed(() =>
+  calendarActivities.value
+    .filter((item) => item.date === selectedDate.value)
+    .sort(compareActivities),
+);
+const selectedDateDeadlineActivities = computed(() =>
+  selectedDateActivities.value.filter((item) => item.type === "assignment_due"),
+);
+const selectedDatePreview = computed(() =>
+  selectedDateDeadlineActivities.value.slice(0, 3),
+);
 const assignmentPreview = computed(() =>
-  [...assignmentPreviewItems.value].sort(compareAssignments).slice(0, 4),
+  [...assignmentPreviewItems.value].sort(compareAssignments),
 );
 
 function changeMonth(step: number) {
   const newDate = new Date(viewDate.value);
   newDate.setMonth(newDate.getMonth() + step);
   viewDate.value = newDate;
+  selectedDate.value = defaultSelectedDateForMonth(newDate);
+  loadCalendarActivities();
 }
 
 async function loadDashboard(selectedClassId?: string) {
@@ -163,6 +195,43 @@ async function loadActivities() {
   }
 }
 
+async function loadCalendarActivities() {
+  const key = currentMonthKey.value;
+  if (calendarActivityCache.value[key]) {
+    calendarActivitiesError.value = "";
+    return;
+  }
+
+  calendarActivitiesLoading.value = true;
+  calendarActivitiesError.value = "";
+
+  const from = new Date(
+    viewDate.value.getFullYear(),
+    viewDate.value.getMonth(),
+    1,
+  );
+  const to = new Date(
+    viewDate.value.getFullYear(),
+    viewDate.value.getMonth() + 1,
+    0,
+  );
+
+  try {
+    const response = await getAcademicActivities({
+      from: formatApiDate(from),
+      to: formatApiDate(to),
+    });
+    calendarActivityCache.value = {
+      ...calendarActivityCache.value,
+      [key]: response.items ?? [],
+    };
+  } catch {
+    calendarActivitiesError.value = "Tidak dapat memuat deadline tugas.";
+  } finally {
+    calendarActivitiesLoading.value = false;
+  }
+}
+
 function initials(value: string) {
   return value
     .split(" ")
@@ -190,18 +259,79 @@ function buildCalendarDays(date: Date) {
       key: `empty-${i}`,
       label: "",
       isToday: false,
+      dateKey: "",
+      activities: [] as AcademicActivityItem[],
+      extraCount: 0,
     });
   }
 
   for (let day = 1; day <= daysInMonth; day += 1) {
+    const dateKey = formatApiDate(new Date(year, month, day));
+    const dayActivities = activitiesForDate(dateKey);
     days.push({
       key: String(day),
       label: String(day),
       isToday: isCurrentMonth && day === realToday.getDate(),
+      dateKey,
+      activities: dayActivities.slice(0, 3),
+      extraCount: Math.max(0, dayActivities.length - 3),
     });
   }
 
   return days;
+}
+
+function activitiesForDate(dateKey: string) {
+  return calendarActivities.value
+    .filter((item) => item.date === dateKey)
+    .sort(compareActivities);
+}
+
+function monthKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function defaultSelectedDateForMonth(date: Date) {
+  const today = new Date();
+  if (
+    today.getFullYear() === date.getFullYear() &&
+    today.getMonth() === date.getMonth()
+  ) {
+    return formatApiDate(today);
+  }
+  return formatApiDate(new Date(date.getFullYear(), date.getMonth(), 1));
+}
+
+function selectCalendarDate(dateKey: string) {
+  if (!dateKey) return;
+  selectedDate.value = dateKey;
+}
+
+function calendarDateAriaLabel(day: {
+  label: string;
+  dateKey: string;
+  activities: AcademicActivityItem[];
+  extraCount: number;
+}) {
+  if (!day.dateKey) return "Tanggal kosong";
+  const date = parseActivityDate(day.dateKey);
+  const label = date
+    ? new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(date)
+    : day.label;
+  const count = day.activities.length + day.extraCount;
+  return `${label}, ${count} aktivitas`;
+}
+
+function calendarActivityTime(activity: AcademicActivityItem) {
+  return activity.time || "Sepanjang hari";
+}
+
+function updateChatPanelUnreadCount(count: number) {
+  chatPanelUnreadCount.value = Math.max(0, count);
 }
 
 function compareAssignments(
@@ -354,6 +484,7 @@ async function markAllNotificationsRead() {
 onMounted(() => {
   loadDashboard();
   loadActivities();
+  loadCalendarActivities();
 });
 </script>
 
@@ -549,9 +680,9 @@ onMounted(() => {
           </article>
 
           <article
-            class="min-w-0 rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
+            class="flex min-h-90 min-w-0 flex-col rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5 lg:max-h-130"
           >
-            <div class="mb-4 flex items-center justify-between gap-3">
+            <div class="mb-4 flex shrink-0 items-center justify-between gap-3">
               <div class="flex min-w-0 items-start gap-3">
                 <div
                   class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eef2ff] text-[#4f46e5]"
@@ -573,7 +704,7 @@ onMounted(() => {
               </RouterLink>
             </div>
 
-            <div v-if="assignmentsLoading" class="space-y-2">
+            <div v-if="assignmentsLoading" class="shrink-0 space-y-2">
               <div
                 v-for="item in 3"
                 :key="item"
@@ -583,14 +714,14 @@ onMounted(() => {
 
             <div
               v-else-if="assignmentsError"
-              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
+              class="shrink-0 rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
             >
               {{ assignmentsError }}
             </div>
 
             <div
               v-else-if="assignmentPreview.length === 0"
-              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4"
+              class="shrink-0 rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4"
             >
               <p class="text-sm font-medium text-[#171322]">Belum ada tugas</p>
               <p class="mt-2 text-sm leading-6 text-[#7a7385]">
@@ -599,7 +730,10 @@ onMounted(() => {
               </p>
             </div>
 
-            <div v-else class="divide-y divide-[#ebe7df]">
+            <div
+              v-else
+              class="min-h-0 flex-1 divide-y divide-[#ebe7df] overflow-y-auto pr-1"
+            >
               <RouterLink
                 v-for="assignment in assignmentPreview"
                 :key="`${assignment.subjectClassId}-${assignment.assignmentId}`"
@@ -640,184 +774,347 @@ onMounted(() => {
             </div>
           </article>
         </section>
+      </div>
+    </section>
 
-        <section class="grid min-w-0 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-          <article
-            class="min-w-0 rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
-          >
-            <div class="mb-4 flex items-center justify-between gap-3">
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-[#171322]">Feed kelas</p>
-                <p class="mt-1 text-xs text-[#8b8592]">
-                  Pengumuman terbaru dari kelas aktif.
-                </p>
-              </div>
+    <aside
+      class="min-w-0 border-t border-[#ebe7df] bg-white lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:max-h-180 lg:self-start lg:border-l lg:border-t-0"
+    >
+      <div class="flex min-h-0 flex-col gap-4 p-4 lg:h-full">
+        <DashboardUpdatesPanel
+          class="min-h-65 lg:min-h-0 lg:flex-[1_1_0]"
+          :notification-badge="unreadCount"
+          :chat-badge="chatPanelUnreadCount"
+          :feed-badge="feedPanelUnreadCount"
+        >
+          <template #notifications>
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <p class="text-xs text-[#a09aa8]">
+                {{ unreadCount }} belum dibaca
+              </p>
+              <button
+                v-if="unreadCount > 0"
+                class="rounded-lg bg-[#eef2ff] px-3 py-1 text-xs font-medium text-[#4f46e5] transition hover:bg-[#e0e7ff] disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                :disabled="markingAllNotifications"
+                @click="markAllNotificationsRead"
+              >
+                {{
+                  markingAllNotifications
+                    ? "Menyimpan..."
+                    : "Tandai semua dibaca"
+                }}
+              </button>
+            </div>
+
+            <div v-if="isLoading" class="space-y-2">
+              <div
+                v-for="item in 3"
+                :key="item"
+                class="h-16 animate-pulse rounded-lg bg-[#f0ede8]"
+              />
+            </div>
+            <div v-else-if="notifications.length > 0" class="space-y-1">
+              <button
+                v-for="item in notifications"
+                :key="item.notificationId"
+                class="flex min-w-0 w-full gap-3 p-3 text-left transition hover:bg-[#f8f7f4] disabled:cursor-wait disabled:opacity-75 border-b border-[#ebe7df]"
+                :class="!item.isRead ? 'bg-[#f5f7ff]' : ''"
+                type="button"
+                :disabled="markingNotificationIds.has(item.notificationId)"
+                :aria-label="notificationAriaLabel(item)"
+                @click="handleNotificationClick(item)"
+              >
+                <div
+                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-medium text-white"
+                  :style="{
+                    backgroundColor: getSubjectColor(
+                      item.type || item.notificationId,
+                    ),
+                  }"
+                >
+                  {{ notificationBadge(item) }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-baseline justify-between gap-2">
+                    <p class="line-clamp-1 text-sm font-medium text-[#171322]">
+                      {{ notificationTitle(item) }}
+                    </p>
+                    <span class="shrink-0 text-[10px] text-[#a09aa8]">{{
+                      formatDateTime(item.createdAt)
+                    }}</span>
+                  </div>
+                  <p class="line-clamp-2 text-xs leading-5 text-[#7a7385]">
+                    {{ notificationMessage(item) }}
+                  </p>
+                  <span
+                    v-if="!item.isRead"
+                    class="mt-1 inline-flex rounded-full bg-[#4f46e5] px-2 py-0.5 text-[10px] font-medium text-white"
+                  >
+                    baru
+                  </span>
+                </div>
+              </button>
+            </div>
+            <div
+              v-else
+              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm text-[#7a7385]"
+            >
+              Belum ada notifikasi terbaru.
+            </div>
+          </template>
+
+          <template #chat>
+            <LatestChatCard
+              to="/student/chat"
+              :limit="4"
+              embedded
+              @unread-change="updateChatPanelUnreadCount"
+            />
+          </template>
+
+          <template #feed>
+            <div class="mb-3 flex items-center justify-between gap-3">
               <RouterLink
-                class="shrink-0 text-xs font-medium text-[#4f46e5] transition hover:text-[#4338ca] sm:text-sm"
+                class="shrink-0 text-xs font-medium text-[#4f46e5] transition hover:text-[#4338ca] inline-flex gap-1 pt-1"
                 to="/student/feed"
               >
                 Buka feed
+                <PhArrowRight :size="14" />
               </RouterLink>
             </div>
 
-            <div v-if="feedPosts.length > 0" class="divide-y divide-[#ebe7df]">
+            <div v-if="isLoading" class="space-y-2">
+              <div
+                v-for="item in 3"
+                :key="item"
+                class="h-16 animate-pulse rounded-lg bg-[#f0ede8]"
+              />
+            </div>
+            <div
+              v-else-if="feedPosts.length > 0"
+              class="divide-y divide-[#ebe7df]"
+            >
               <article
-                v-for="post in feedPosts.slice(0, 3)"
+                v-for="post in feedPosts.slice(0, 5)"
                 :key="post.feedId"
                 class="min-w-0 py-3 first:pt-0 last:pb-0"
               >
-                <p
-                  class="line-clamp-3 wrap-break-word text-sm leading-6 text-[#3f3a4a]"
-                >
+                <p class="line-clamp-2 text-sm leading-6 text-[#3f3a4a]">
                   {{ post.content }}
                 </p>
-                <p class="mt-2 text-xs text-[#a09aa8]">
+                <p class="mt-1 text-xs text-[#a09aa8]">
                   {{ post.creatorName || "Pengirim tidak tersedia" }} ·
                   {{ formatDateTime(post.createdAt) }}
                 </p>
               </article>
             </div>
-
-            <p
+            <div
               v-else
-              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-5 text-sm leading-6 text-[#7a7385]"
+              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
             >
               Belum ada pengumuman untuk kelas aktif.
-            </p>
-          </article>
-
-          <LatestChatCard to="/student/chat" :limit="4" />
-        </section>
-      </div>
-    </section>
-
-    <aside
-      class="min-w-0 border-t border-[#ebe7df] bg-white lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:border-l lg:border-t-0"
-    >
-      <div
-        class="flex min-w-0 flex-wrap items-center justify-between gap-3 px-5 py-4"
-      >
-        <button
-          class="flex items-center gap-2 border-b-2 border-[#4f46e5] px-1 py-4 text-sm font-medium text-[#4f46e5]"
-          type="button"
-        >
-          <PhBell :size="18" />
-          Notifikasi
-        </button>
-        <div class="flex min-w-0 flex-wrap items-center justify-end gap-2">
-          <span class="whitespace-nowrap text-xs text-[#a09aa8]">
-            {{ unreadCount }} belum dibaca
-          </span>
-          <button
-            v-if="unreadCount > 0"
-            class="rounded-lg bg-[#eef2ff] px-3 py-1 text-xs font-medium text-[#4f46e5] transition hover:bg-[#e0e7ff] disabled:cursor-not-allowed disabled:opacity-60"
-            type="button"
-            :disabled="markingAllNotifications"
-            @click="markAllNotificationsRead"
-          >
-            {{
-              markingAllNotifications ? "Menyimpan..." : "Tandai semua dibaca"
-            }}
-          </button>
-        </div>
-      </div>
-
-      <div v-if="isLoading" class="space-y-2 p-4">
-        <div
-          v-for="item in 3"
-          :key="item"
-          class="h-16 animate-pulse rounded-lg bg-[#f0ede8]"
-        />
-      </div>
-      <div v-else-if="notifications.length > 0" class="space-y-1 p-4">
-        <button
-          v-for="item in notifications"
-          :key="item.notificationId"
-          class="flex min-w-0 w-full gap-3 rounded-lg p-3 text-left transition hover:bg-[#f8f7f4] disabled:cursor-wait disabled:opacity-75"
-          :class="!item.isRead ? 'bg-[#f5f7ff]' : ''"
-          type="button"
-          :disabled="markingNotificationIds.has(item.notificationId)"
-          :aria-label="notificationAriaLabel(item)"
-          @click="handleNotificationClick(item)"
-        >
-          <div
-            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-medium text-white"
-            :style="{
-              backgroundColor: getSubjectColor(
-                item.type || item.notificationId,
-              ),
-            }"
-          >
-            {{ notificationBadge(item) }}
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="flex items-baseline justify-between gap-2">
-              <p class="line-clamp-1 text-sm font-medium text-[#171322]">
-                {{ notificationTitle(item) }}
-              </p>
-              <span class="shrink-0 text-[10px] text-[#a09aa8]">{{
-                formatDateTime(item.createdAt)
-              }}</span>
             </div>
-            <p class="line-clamp-2 text-xs leading-5 text-[#7a7385]">
-              {{ notificationMessage(item) }}
-            </p>
+          </template>
+        </DashboardUpdatesPanel>
+
+        <section class="shrink-0 rounded-xl bg-white p-4">
+          <div class="mb-4 flex items-center justify-between">
+            <p class="text-sm font-medium text-[#171322]">{{ currentMonth }}</p>
+            <div class="flex gap-1">
+              <button
+                class="rounded-lg border border-[#ebe7df] p-1.5 text-[#7a7385] transition hover:bg-[#fbfaf8]"
+                type="button"
+                @click="changeMonth(-1)"
+              >
+                <PhCaretLeft :size="14" />
+              </button>
+              <button
+                class="rounded-lg border border-[#ebe7df] p-1.5 text-[#7a7385] transition hover:bg-[#fbfaf8]"
+                type="button"
+                @click="changeMonth(1)"
+              >
+                <PhCaretRight :size="14" />
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-7 gap-1 text-center">
             <span
-              v-if="!item.isRead"
-              class="mt-1 inline-flex rounded-full bg-[#4f46e5] px-2 py-0.5 text-[10px] font-medium text-white"
+              v-for="day in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']"
+              :key="day"
+              class="py-1 text-[10px] text-[#a09aa8]"
             >
-              baru
+              {{ day }}
+            </span>
+            <span v-for="day in calendarDays" :key="day.key" class="min-h-10.5">
+              <button
+                v-if="day.dateKey"
+                type="button"
+                class="flex h-full min-h-10.5 w-full flex-col items-center justify-center rounded-lg px-1 py-1 text-xs transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4f46e5] focus-visible:ring-offset-2"
+                :class="[
+                  day.isToday
+                    ? 'bg-[#4f46e5] font-medium text-white'
+                    : 'text-[#4a4356] hover:bg-[#fbfaf8]',
+                  selectedDate === day.dateKey
+                    ? 'ring-2 ring-[#4f46e5] ring-offset-1'
+                    : '',
+                ]"
+                :aria-label="calendarDateAriaLabel(day)"
+                :aria-pressed="selectedDate === day.dateKey"
+                @click="selectCalendarDate(day.dateKey)"
+              >
+                <span>{{ day.label }}</span>
+                <span
+                  v-if="day.activities.length || day.extraCount"
+                  class="mt-1 flex h-2 items-center justify-center gap-0.5"
+                  aria-hidden="true"
+                >
+                  <span
+                    v-for="activity in day.activities"
+                    :key="activity.id"
+                    class="h-1.5 w-1.5 rounded-full"
+                    :style="{
+                      backgroundColor: activity.subject
+                        ? activitySubjectColor(activity)
+                        : '#a09aa8',
+                    }"
+                  />
+                  <span
+                    v-if="day.extraCount"
+                    class="ml-0.5 text-[9px] font-medium"
+                    :class="day.isToday ? 'text-white' : 'text-[#7a7385]'"
+                  >
+                    +{{ day.extraCount }}
+                  </span>
+                </span>
+              </button>
+              <span v-else class="block min-h-10.5" />
             </span>
           </div>
-        </button>
-      </div>
-      <div v-else class="p-4">
-        <div
-          class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm text-[#7a7385]"
-        >
-          Belum ada notifikasi terbaru.
-        </div>
-      </div>
 
-      <section class="border-t border-[#ebe7df] p-5">
-        <div class="mb-4 flex items-center justify-between">
-          <p class="text-sm font-medium text-[#171322]">{{ currentMonth }}</p>
-          <div class="flex gap-1">
-            <button
-              class="rounded-lg border border-[#ebe7df] p-1.5 text-[#7a7385] transition hover:bg-[#fbfaf8]"
-              type="button"
-              @click="changeMonth(-1)"
+          <div class="mt-5 border-t border-[#ebe7df] pt-4">
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <p class="text-sm font-medium text-[#171322]">Deadline Tugas</p>
+              <p class="shrink-0 text-xs text-[#8b8592]">
+                {{ formatDate(selectedDate) }}
+              </p>
+            </div>
+
+            <div v-if="calendarActivitiesLoading" class="space-y-2">
+              <div
+                v-for="item in 3"
+                :key="item"
+                class="h-12 animate-pulse rounded-lg bg-[#fbfaf8]"
+              />
+            </div>
+
+            <div
+              v-else-if="calendarActivitiesError"
+              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-3 text-xs leading-5 text-[#7a7385]"
             >
-              <PhCaretLeft :size="14" />
-            </button>
-            <button
-              class="rounded-lg border border-[#ebe7df] p-1.5 text-[#7a7385] transition hover:bg-[#fbfaf8]"
-              type="button"
-              @click="changeMonth(1)"
+              {{ calendarActivitiesError }}
+            </div>
+
+            <div
+              v-else-if="selectedDatePreview.length === 0"
+              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-3 text-xs leading-5 text-[#7a7385]"
             >
-              <PhCaretRight :size="14" />
-            </button>
+              Tidak ada deadline tugas pada tanggal ini.
+            </div>
+
+            <ul
+              v-else
+              class="space-y-2"
+              aria-label="Deadline tugas pada tanggal ini"
+            >
+              <li
+                v-for="activity in selectedDatePreview"
+                :key="activity.id"
+                class="min-w-0"
+              >
+                <RouterLink
+                  v-if="isInternalActivityLink(activity.link)"
+                  :to="activity.link || ''"
+                  class="group flex min-w-0 items-start gap-2 border-b border-[#ebe7df] bg-[#fbfaf8] p-3 transition hover:border-[#c7d2fe] hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4f46e5] focus-visible:ring-offset-2"
+                  :aria-label="`${activityTypeLabel(activity.type, 'student')}: ${activity.title}`"
+                >
+                  <span
+                    class="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                    :style="{
+                      backgroundColor: activity.subject
+                        ? activitySubjectColor(activity)
+                        : '#a09aa8',
+                    }"
+                    aria-hidden="true"
+                  />
+                  <span class="min-w-0 flex-1">
+                    <span
+                      class="flex min-w-0 items-center justify-between gap-2"
+                    >
+                      <span class="text-[11px] font-medium text-[#4f46e5]">
+                        {{ activityTypeLabel(activity.type, "student") }}
+                      </span>
+                      <span class="shrink-0 text-[10px] text-[#9ca3af]">
+                        {{ calendarActivityTime(activity) }}
+                      </span>
+                    </span>
+                    <span
+                      class="mt-1 block truncate text-xs font-medium text-[#171322] transition group-hover:text-[#4f46e5]"
+                    >
+                      {{ activity.title }}
+                    </span>
+                  </span>
+                </RouterLink>
+
+                <article
+                  v-else
+                  class="flex min-w-0 items-start gap-2 rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-3"
+                >
+                  <span
+                    class="mt-1.5 h-2 w-2 shrink-0 rounded-full"
+                    :style="{
+                      backgroundColor: activity.subject
+                        ? activitySubjectColor(activity)
+                        : '#a09aa8',
+                    }"
+                    aria-hidden="true"
+                  />
+                  <div class="min-w-0 flex-1">
+                    <div
+                      class="flex min-w-0 items-center justify-between gap-2"
+                    >
+                      <span class="text-[11px] font-medium text-[#4f46e5]">
+                        {{ activityTypeLabel(activity.type, "student") }}
+                      </span>
+                      <span class="shrink-0 text-[10px] text-[#9ca3af]">
+                        {{ calendarActivityTime(activity) }}
+                      </span>
+                    </div>
+                    <p class="mt-1 truncate text-xs font-medium text-[#171322]">
+                      {{ activity.title }}
+                    </p>
+                  </div>
+                </article>
+              </li>
+            </ul>
+
+            <p
+              v-if="
+                selectedDateDeadlineActivities.length >
+                selectedDatePreview.length
+              "
+              class="mt-3 text-xs text-[#8b8592]"
+            >
+              +{{
+                selectedDateDeadlineActivities.length -
+                selectedDatePreview.length
+              }}
+              deadline lainnya
+            </p>
           </div>
-        </div>
-
-        <div class="grid grid-cols-7 gap-1 text-center">
-          <span
-            v-for="day in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']"
-            :key="day"
-            class="py-1 text-[10px] text-[#a09aa8]"
-          >
-            {{ day }}
-          </span>
-          <span
-            v-for="day in calendarDays"
-            :key="day.key"
-            class="rounded-lg py-1.5 text-xs text-[#4a4356]"
-            :class="day.isToday ? 'bg-[#4f46e5] font-medium text-white' : ''"
-          >
-            {{ day.label }}
-          </span>
-        </div>
-      </section>
+        </section>
+      </div>
     </aside>
   </main>
 </template>

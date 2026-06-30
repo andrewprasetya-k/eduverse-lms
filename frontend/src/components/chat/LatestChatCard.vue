@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
-import {
-  PhArrowRight,
-  PhChatCircleText,
-  PhWarningCircle,
-} from "@phosphor-icons/vue";
+import { PhArrowRight, PhWarningCircle } from "@phosphor-icons/vue";
 import { useAuthStore } from "../../stores/auth";
 import { getChatRooms } from "../../services/chat";
 import type { ChatRoom } from "../../types/chat";
@@ -14,11 +10,17 @@ const props = withDefaults(
   defineProps<{
     to: string;
     limit?: number;
+    embedded?: boolean;
   }>(),
   {
     limit: 4,
+    embedded: false,
   },
 );
+
+const emit = defineEmits<{
+  unreadChange: [count: number];
+}>();
 
 const rooms = ref<ChatRoom[]>([]);
 const isLoading = ref(false);
@@ -36,6 +38,13 @@ const unreadRooms = computed(() =>
     }),
 );
 
+const totalUnreadCount = computed(() =>
+  rooms.value.reduce(
+    (total, room) => total + Math.max(0, room.unreadCount || 0),
+    0,
+  ),
+);
+
 const visibleRooms = computed(() => unreadRooms.value.slice(0, props.limit));
 
 onMounted(loadLatestChats);
@@ -45,9 +54,11 @@ async function loadLatestChats() {
   hasError.value = false;
   try {
     rooms.value = await getChatRooms();
+    emit("unreadChange", totalUnreadCount.value);
   } catch {
     rooms.value = [];
     hasError.value = true;
+    emit("unreadChange", 0);
   } finally {
     isLoading.value = false;
   }
@@ -117,18 +128,17 @@ function formatTime(value?: string | null) {
 
 <template>
   <article
-    class="min-w-0 max-w-full overflow-hidden rounded-xl border border-[#ebe7df] bg-white p-4 sm:p-5"
+    class="min-w-0 max-w-full overflow-hidden rounded-xl"
+    :class="
+      embedded
+        ? 'bg-transparent'
+        : 'border border-[#ebe7df] bg-white p-4 sm:p-5'
+    "
   >
     <div class="mb-4 flex items-center justify-between gap-3">
-      <div class="min-w-0">
-        <p class="text-sm font-semibold text-[#171322]">Chat terbaru</p>
-        <p class="mt-1 text-xs leading-5 text-[#8b8592]">
-          Percakapan yang belum kamu baca.
-        </p>
-      </div>
       <RouterLink
         :to="to"
-        class="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#4f46e5] transition hover:text-[#4338ca]"
+        class="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#4f46e5] transition hover:text-[#4338ca] pt-1"
       >
         Buka chat
         <PhArrowRight :size="14" />
@@ -139,7 +149,7 @@ function formatTime(value?: string | null) {
       <div
         v-for="item in 3"
         :key="item"
-        class="h-14 animate-pulse rounded-lg bg-[#f3f4f6]"
+        class="h-14 animate-pulse bg-[#f3f4f6]"
       />
     </div>
 
@@ -158,13 +168,8 @@ function formatTime(value?: string | null) {
         v-for="room in visibleRooms"
         :key="room.roomId"
         :to="to"
-        class="flex h-16 min-w-0 max-w-full overflow-hidden items-center gap-3 rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-3 transition hover:border-[#c7d2fe] hover:bg-white"
+        class="flex h-16 min-w-0 max-w-full overflow-hidden items-center gap-1 border-b border-[#ebe7df] bg-[#fbfaf8] transition hover:border-[#c7d2fe] hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4f46e5] focus-visible:ring-offset-2"
       >
-        <span
-          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#eef2ff] text-[#4f46e5]"
-        >
-          <PhChatCircleText :size="18" weight="duotone" />
-        </span>
         <span class="min-w-0 flex-1 overflow-hidden">
           <span
             class="block w-full overflow-hidden text-ellipsis whitespace-nowrap text-sm text-[#171322]"
@@ -183,7 +188,9 @@ function formatTime(value?: string | null) {
             {{ roomPreview(room) }}
           </span>
         </span>
-        <span class="flex w-12 shrink-0 flex-col items-end gap-1 overflow-hidden">
+        <span
+          class="flex w-12 shrink-0 flex-col items-end gap-1 overflow-hidden"
+        >
           <span class="w-full truncate text-right text-[11px] text-[#9ca3af]">
             {{ formatTime(room.lastMessageAt) }}
           </span>
@@ -199,9 +206,9 @@ function formatTime(value?: string | null) {
 
     <p
       v-else
-      class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
+      class="rounded-lg bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
     >
-      Semua percakapan telah dibaca.
+      Tidak ada percakapan yang belum dibaca.
     </p>
   </article>
 </template>
