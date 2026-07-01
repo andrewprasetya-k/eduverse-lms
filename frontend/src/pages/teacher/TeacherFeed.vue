@@ -188,7 +188,7 @@ async function submitFeed() {
     });
     toast.success("Pengumuman kelas berhasil dikirim.");
     content.value = "";
-    await loadFeed();
+    void refreshFeedAfterCreate();
   } catch (error) {
     if (isForbiddenError(error)) {
       feedAccessMessage.value =
@@ -198,6 +198,14 @@ async function submitFeed() {
     }
   } finally {
     submitting.value = false;
+  }
+}
+
+async function refreshFeedAfterCreate() {
+  try {
+    await loadFeed();
+  } catch {
+    // loadFeed owns visible feed error state; create already succeeded.
   }
 }
 
