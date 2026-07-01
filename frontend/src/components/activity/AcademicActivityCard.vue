@@ -186,7 +186,7 @@ function isInternalLink(link?: string | null) {
 
     <div
       v-else-if="error"
-      class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
+      class="rounded-lg bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
     >
       Aktivitas belum bisa dimuat. Dashboard lain tetap dapat digunakan.
     </div>

@@ -148,7 +148,9 @@ async function loadDashboard(selectedClassId?: string) {
   ]);
 }
 
-async function loadClassContext(selectedClassId?: string): Promise<ClassContextLoadResult> {
+async function loadClassContext(
+  selectedClassId?: string,
+): Promise<ClassContextLoadResult> {
   if (!auth.user?.id) {
     errorMessage.value = "Sesi login belum lengkap. Silakan login ulang.";
     isLoading.value = false;
@@ -231,14 +233,25 @@ async function loadSubjectPreview(activeClassId: string) {
 
   try {
     const subjectData = await getSubjectClassesByClass(activeClassId);
-    if (requestId !== subjectPreviewRequestId || activeClassId !== activeClassStore.activeClassId) return;
+    if (
+      requestId !== subjectPreviewRequestId ||
+      activeClassId !== activeClassStore.activeClassId
+    )
+      return;
     subjects.value = subjectData.subjects ?? [];
   } catch {
-    if (requestId !== subjectPreviewRequestId || activeClassId !== activeClassStore.activeClassId) return;
+    if (
+      requestId !== subjectPreviewRequestId ||
+      activeClassId !== activeClassStore.activeClassId
+    )
+      return;
     subjects.value = [];
     subjectPreviewError.value = "Mata pelajaran belum bisa dimuat.";
   } finally {
-    if (requestId === subjectPreviewRequestId && activeClassId === activeClassStore.activeClassId) {
+    if (
+      requestId === subjectPreviewRequestId &&
+      activeClassId === activeClassStore.activeClassId
+    ) {
       subjectPreviewLoading.value = false;
     }
   }
@@ -251,14 +264,25 @@ async function loadFeedPreview(activeClassId: string) {
 
   try {
     const feedData = await getClassFeed(activeClassId);
-    if (requestId !== feedPreviewRequestId || activeClassId !== activeClassStore.activeClassId) return;
+    if (
+      requestId !== feedPreviewRequestId ||
+      activeClassId !== activeClassStore.activeClassId
+    )
+      return;
     feedPosts.value = feedData.data.data ?? [];
   } catch {
-    if (requestId !== feedPreviewRequestId || activeClassId !== activeClassStore.activeClassId) return;
+    if (
+      requestId !== feedPreviewRequestId ||
+      activeClassId !== activeClassStore.activeClassId
+    )
+      return;
     feedPosts.value = [];
     feedPreviewError.value = "Feed kelas belum bisa dimuat.";
   } finally {
-    if (requestId === feedPreviewRequestId && activeClassId === activeClassStore.activeClassId) {
+    if (
+      requestId === feedPreviewRequestId &&
+      activeClassId === activeClassStore.activeClassId
+    ) {
       feedPreviewLoading.value = false;
     }
   }
@@ -612,7 +636,7 @@ onMounted(() => {
             </p>
           </div>
           <div
-            class="inline-flex min-w-0 max-w-full items-center self-start rounded-lg border border-[#ebe7df] bg-[#f9fafb] px-3 py-2 text-xs text-[#6b7280] lg:self-auto"
+            class="inline-flex min-w-0 max-w-full items-center self-start rounded-lgbg-[#f9fafb] px-3 py-2 text-xs text-[#6b7280] lg:self-auto"
           >
             <span class="min-w-0 truncate font-medium text-[#171322]">
               {{ schoolName }}
@@ -736,17 +760,17 @@ onMounted(() => {
 
             <div
               v-else-if="subjectPreviewError"
-              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-5"
+              class="rounded-lg bg-[#fbfaf8] p-5"
             >
-              <p class="text-sm font-medium text-[#171322]">
-                Mata pelajaran tidak dapat dimuat
-              </p>
               <p class="mt-2 text-sm leading-6 text-[#7a7385]">
                 {{ subjectPreviewError }}
               </p>
             </div>
 
-            <div v-else-if="subjects.length > 0" class="grid gap-3 sm:grid-cols-2">
+            <div
+              v-else-if="subjects.length > 0"
+              class="grid gap-3 sm:grid-cols-2"
+            >
               <RouterLink
                 v-for="subject in subjects.slice(0, 4)"
                 :key="subject.subjectClassId"
@@ -838,7 +862,7 @@ onMounted(() => {
 
             <div
               v-else-if="assignmentsError"
-              class="shrink-0 rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
+              class="shrink-0 rounded-lg bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
             >
               {{ assignmentsError }}
             </div>
@@ -904,7 +928,9 @@ onMounted(() => {
     <aside
       class="min-w-0 border-t border-[#ebe7df] bg-white lg:sticky lg:top-0 lg:h-screen lg:min-h-0 lg:overflow-hidden lg:border-l lg:border-t-0"
     >
-      <div class="flex flex-col gap-4 p-4 lg:h-full lg:min-h-0 lg:overflow-hidden">
+      <div
+        class="flex flex-col gap-4 p-4 lg:h-full lg:min-h-0 lg:overflow-hidden"
+      >
         <DashboardUpdatesPanel
           class="lg:min-h-0 lg:flex-1 lg:overflow-hidden"
           :notification-badge="unreadCount"
@@ -997,7 +1023,7 @@ onMounted(() => {
             </div>
             <div
               v-else
-              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm text-[#7a7385]"
+              class="rounded-lg bg-[#fbfaf8] p-4 text-sm text-[#7a7385]"
             >
               Belum ada notifikasi terbaru.
             </div>
@@ -1166,7 +1192,7 @@ onMounted(() => {
 
             <div
               v-else-if="calendarActivitiesError"
-              class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-3 text-xs leading-5 text-[#7a7385]"
+              class="rounded-lg bg-[#fbfaf8] p-3 text-xs leading-5 text-[#7a7385]"
             >
               {{ calendarActivitiesError }}
             </div>
