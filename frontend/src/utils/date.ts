@@ -170,7 +170,8 @@ export function parseBackendTimestamp(value?: string | Date | null) {
     return parseNativeDate(trimmed);
   }
 
-  // Format backend lama: DD-MM-YYYY HH:mm:ss
+  // Compatibility only: older API examples used DD-MM-YYYY HH:mm:ss.
+  // Current backend timestamp responses are RFC3339 from timestamptz columns.
   const backendDateTime = trimmed.match(
     /^(\d{2})-(\d{2})-(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/,
   );
@@ -189,8 +190,9 @@ export function parseBackendTimestamp(value?: string | Date | null) {
     });
   }
 
-  // Format backend umum: YYYY-MM-DD atau YYYY-MM-DDTHH:mm:ss tanpa timezone.
-  // Kolom timestamp tanpa timezone dari backend diperlakukan sebagai jam lokal Jakarta.
+  // Compatibility only: keep accepting timezone-less timestamp strings as
+  // Jakarta wall-clock values. New API timestamp fields should be RFC3339.
+  // Date-only values for Academic Activity/calendar should use date-only helpers.
   const isoWithoutTimezone = trimmed.match(
     /^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,6}))?)?)?$/,
   );
