@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import { RouterLink, useRouter } from "vue-router";
 import {
+  PhArrowClockwise,
   PhArrowRight,
   PhBookOpen,
   PhCaretLeft,
@@ -416,6 +417,12 @@ function calendarActivityTime(activity: AcademicActivityItem) {
 
 function updateChatPanelUnreadCount(count: number) {
   chatPanelUnreadCount.value = Math.max(0, count);
+}
+
+function retryFeedPreview() {
+  const activeClassId = activeClassStore.activeClassId;
+  if (!activeClassId) return;
+  void loadFeedPreview(activeClassId);
 }
 
 function compareAssignments(
@@ -935,7 +942,16 @@ onMounted(() => {
               v-else-if="notificationsError"
               class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
             >
-              {{ notificationsError }}
+              <p>{{ notificationsError }}</p>
+              <button
+                type="button"
+                class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-[#ebe7df] bg-white px-3 py-1.5 text-xs font-medium text-[#4f46e5] transition hover:border-[#4f46e5] hover:bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-60"
+                :disabled="notificationsLoading"
+                @click="loadNotifications"
+              >
+                <PhArrowClockwise :size="14" />
+                Coba lagi
+              </button>
             </div>
             <div v-else-if="notifications.length > 0" class="space-y-1">
               <button
@@ -1018,7 +1034,17 @@ onMounted(() => {
               v-else-if="feedPreviewError"
               class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#7a7385]"
             >
-              {{ feedPreviewError }}
+              <p>{{ feedPreviewError }}</p>
+              <button
+                v-if="activeClassStore.activeClassId"
+                type="button"
+                class="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-[#ebe7df] bg-white px-3 py-1.5 text-xs font-medium text-[#4f46e5] transition hover:border-[#4f46e5] hover:bg-[#eef2ff] disabled:cursor-not-allowed disabled:opacity-60"
+                :disabled="feedPreviewLoading"
+                @click="retryFeedPreview"
+              >
+                <PhArrowClockwise :size="14" />
+                Coba lagi
+              </button>
             </div>
             <div
               v-else-if="feedPosts.length > 0"
