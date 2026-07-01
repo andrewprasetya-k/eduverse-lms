@@ -9,6 +9,7 @@ import {
   PhWarningCircle,
 } from "@phosphor-icons/vue";
 import AttachmentPreviewList from "../../components/common/AttachmentPreviewList.vue";
+import DiscussionComments from "../../components/discussion/DiscussionComments.vue";
 import StudentNoteCard from "../../components/student/StudentNoteCard.vue";
 import { getMaterialById } from "../../services/classWorkspace";
 import type { MaterialItem } from "../../types/classWorkspace";
@@ -236,6 +237,14 @@ onMounted(loadMaterial);
             belum menandai progres selesai.
           </p>
         </article>
+
+        <DiscussionComments
+          source-type="material"
+          :source-id="material.materialId"
+          title="Diskusi materi"
+          placeholder="Tulis pertanyaan atau komentar tentang materi ini..."
+          empty-text="Belum ada diskusi untuk materi ini."
+        />
       </div>
 
       <aside class="min-w-0 lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)]">

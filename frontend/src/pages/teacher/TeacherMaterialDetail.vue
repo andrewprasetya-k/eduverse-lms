@@ -12,6 +12,7 @@ import {
   PhPaperclip,
 } from '@phosphor-icons/vue'
 import AttachmentPreviewList from '../../components/common/AttachmentPreviewList.vue'
+import DiscussionComments from '../../components/discussion/DiscussionComments.vue'
 import { getMaterialById } from '../../services/classWorkspace'
 import { deleteMaterial } from '../../services/teacherMaterial'
 import type { MaterialItem } from '../../types/classWorkspace'
@@ -225,6 +226,14 @@ onMounted(loadMaterial)
               empty-text="Materi ini tidak memiliki lampiran."
             />
           </article>
+
+          <DiscussionComments
+            source-type="material"
+            :source-id="material.materialId"
+            title="Diskusi materi"
+            placeholder="Tulis tanggapan atau jawab pertanyaan tentang materi ini..."
+            empty-text="Belum ada diskusi untuk materi ini."
+          />
         </div>
 
         <aside class="min-w-0">
