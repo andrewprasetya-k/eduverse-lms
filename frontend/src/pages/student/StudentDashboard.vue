@@ -17,10 +17,10 @@ import { getClassFeed } from "../../services/feed";
 import { getStudentAssignmentInbox } from "../../services/assignment";
 import { useFeedUnreadCount } from "../../composables/useFeedUnreadCount";
 import {
-  getRecentNotifications,
+  getNotifications,
   markAllNotificationsAsRead,
   markNotificationAsRead,
-} from "../../services/studentDashboard";
+} from "../../services/notifications";
 import { getAcademicActivities } from "../../services/activity";
 import type { SubjectClassItem } from "../../types/classWorkspace";
 import type { FeedPost } from "../../types/feed";
@@ -199,7 +199,7 @@ async function loadNotifications() {
   notificationsError.value = "";
 
   try {
-    const notificationData = await getRecentNotifications();
+    const notificationData = await getNotifications({ page: 1, limit: 5 });
     notifications.value = notificationData.data ?? [];
     unreadCount.value = notificationData.unreadCount ?? 0;
   } catch {
