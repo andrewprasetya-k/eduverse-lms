@@ -17,7 +17,6 @@ import { getStudentAssignmentInbox } from "../../services/assignment";
 import { useFeedUnreadCount } from "../../composables/useFeedUnreadCount";
 import {
   getRecentNotifications,
-  getUnreadNotificationCount,
   markAllNotificationsAsRead,
   markNotificationAsRead,
 } from "../../services/studentDashboard";
@@ -139,14 +138,10 @@ async function loadDashboard(selectedClassId?: string) {
     await activeClassStore.loadClasses(schoolUserId.value);
 
     const activeClassId = selectedClassId ?? activeClassStore.activeClassId;
-    const [notificationData, unreadData] = await Promise.all([
-      getRecentNotifications(),
-      getUnreadNotificationCount(),
-    ]);
+    const notificationData = await getRecentNotifications();
 
     notifications.value = notificationData.data ?? [];
-    unreadCount.value =
-      unreadData.unreadCount ?? notificationData.unreadCount ?? 0;
+    unreadCount.value = notificationData.unreadCount ?? 0;
     await loadAssignmentPreview();
 
     if (!activeClassId) {
