@@ -1330,10 +1330,10 @@ function roomPreviewReadPrefix(room: ChatRoom) {
 
 function roomPreviewReadCount(room: ChatRoom) {
   if (selectedRoom.value?.roomId !== room.roomId) return 0;
-  if (!room.lastMessage?.messageId || !readSummary.value?.members?.length) return 0;
+  if (!room.lastMessage?.messageId || !readSummary.value?.members?.length)
+    return 0;
   const createdAt =
-    parseBackendTimestamp(room.lastMessage.createdAt)?.getTime() ??
-    Number.NaN;
+    parseBackendTimestamp(room.lastMessage.createdAt)?.getTime() ?? Number.NaN;
   return readSummary.value.members.filter((member) => {
     if (member.userId === currentUserId.value) return false;
     if (member.lastReadMessageId === room.lastMessage?.messageId) return true;
@@ -1616,8 +1616,8 @@ function formatDateTime(value?: string | null) {
               >
                 Sekolah
               </p>
-                <button
-                  v-for="room in schoolRooms"
+              <button
+                v-for="room in schoolRooms"
                 :key="room.roomId"
                 type="button"
                 class="flex w-full min-w-0 items-center gap-3 rounded-lg border px-3 py-3 text-left transition hover:bg-white"
@@ -1817,7 +1817,8 @@ function formatDateTime(value?: string | null) {
                   Belum ada percakapan.
                 </p>
                 <p class="mt-1 text-xs text-[#6b7280]">
-                  Mulai percakapan melalui ruang sekolah, grup, atau pesan langsung.
+                  Mulai percakapan melalui ruang sekolah, grup, atau pesan
+                  langsung.
                 </p>
               </div>
             </div>
@@ -1951,7 +1952,9 @@ function formatDateTime(value?: string | null) {
                       class="flex items-center gap-3 py-2"
                     >
                       <div class="h-px flex-1 bg-[#e7e1d7]" />
-                      <span class="shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-medium text-[#8b8592]">
+                      <span
+                        class="shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-medium text-[#8b8592]"
+                      >
                         {{ formatDateDivider(message.createdAt) }}
                       </span>
                       <div class="h-px flex-1 bg-[#e7e1d7]" />
@@ -1964,195 +1967,209 @@ function formatDateTime(value?: string | null) {
                         isGroupedWithPrevious(message, index) ? 'mt-1' : 'mt-3',
                       ]"
                     >
-                    <div
-                      class="flex max-w-[88%] flex-col gap-1 sm:max-w-[72%]"
-                      :class="message.isMine ? 'items-end' : 'items-start'"
-                    >
-                      <p
-                        v-if="shouldShowSender(message, index)"
-                        class="px-2 text-xs font-medium text-[#6b7280]"
-                      >
-                        {{ message.senderName }}
-                      </p>
                       <div
-                        class="rounded-2xl px-4 py-2 text-sm leading-relaxed"
-                        :class="
-                          message.isMine
-                            ? [
-                                isGroupedWithPrevious(message, index) ? 'rounded-tr-lg' : 'rounded-tr-2xl',
-                                isGroupedWithNext(message, index) ? 'rounded-br-lg' : 'rounded-br-md',
-                                'bg-[#4f46e5] text-white'
-                              ]
-                            : [
-                                isGroupedWithPrevious(message, index) ? 'rounded-tl-lg' : 'rounded-tl-2xl',
-                                isGroupedWithNext(message, index) ? 'rounded-bl-lg' : 'rounded-bl-md',
-                                'border border-[#ebe7df] bg-white text-[#171322]'
-                              ]
-                        "
+                        class="flex max-w-[88%] flex-col gap-1 sm:max-w-[72%]"
+                        :class="message.isMine ? 'items-end' : 'items-start'"
                       >
                         <p
-                          v-if="message.content"
-                          class="whitespace-pre-wrap wrap-break-word"
+                          v-if="shouldShowSender(message, index)"
+                          class="px-2 text-xs font-medium text-[#6b7280]"
                         >
-                          {{ message.content }}
+                          {{ message.senderName }}
                         </p>
                         <div
-                          v-if="message.attachments?.length"
-                          class="mt-2 grid gap-2"
+                          class="rounded-2xl px-4 py-2 text-sm leading-relaxed"
                           :class="
-                            message.attachments.length > 1
-                              ? 'sm:grid-cols-2'
-                              : ''
+                            message.isMine
+                              ? [
+                                  isGroupedWithPrevious(message, index)
+                                    ? 'rounded-tr-lg'
+                                    : 'rounded-tr-2xl',
+                                  isGroupedWithNext(message, index)
+                                    ? 'rounded-br-lg'
+                                    : 'rounded-br-md',
+                                  'bg-[#4f46e5] text-white',
+                                ]
+                              : [
+                                  isGroupedWithPrevious(message, index)
+                                    ? 'rounded-tl-lg'
+                                    : 'rounded-tl-2xl',
+                                  isGroupedWithNext(message, index)
+                                    ? 'rounded-bl-lg'
+                                    : 'rounded-bl-md',
+                                  'border border-[#ebe7df] bg-white text-[#171322]',
+                                ]
                           "
                         >
-                          <button
-                            v-for="attachment in message.attachments"
-                            :key="
-                              attachment.attachmentId ||
-                              attachment.mediaId ||
-                              attachment.fileName
-                            "
-                            type="button"
-                            class="group overflow-hidden rounded-xl text-left"
+                          <p
+                            v-if="message.content"
+                            class="whitespace-pre-wrap wrap-break-word"
+                          >
+                            {{ message.content }}
+                          </p>
+                          <div
+                            v-if="message.attachments?.length"
+                            class="mt-2 grid gap-2"
                             :class="
-                              message.isMine
-                                ? 'bg-white/10 text-white ring-1 ring-white/20'
-                                : 'border border-[#ebe7df] bg-[#fbfaf8] text-[#171322]'
-                            "
-                            @click="openAttachment(attachment)"
-                            :aria-label="
-                              isSafeImageType(attachment.mimeType)
-                                ? `Buka pratinjau ${attachment.fileName || 'gambar'}`
-                                : `Buka ${attachment.fileName || 'file'}`
+                              message.attachments.length > 1
+                                ? 'sm:grid-cols-2'
+                                : ''
                             "
                           >
-                            <img
-                              v-if="
-                                isSafeImageType(attachment.mimeType) &&
-                                attachment.url
+                            <button
+                              v-for="attachment in message.attachments"
+                              :key="
+                                attachment.attachmentId ||
+                                attachment.mediaId ||
+                                attachment.fileName
                               "
-                              :src="attachment.url"
-                              :alt="attachment.fileName || 'Lampiran gambar'"
-                              class="max-h-64 w-full object-cover transition duration-200 group-hover:scale-[1.01]"
-                            />
-                            <div class="flex min-w-0 items-center gap-3 p-3">
-                              <span
-                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                                :class="
-                                  message.isMine
-                                    ? 'bg-white/15'
-                                    : 'bg-white text-[#4f46e5]'
+                              type="button"
+                              class="group overflow-hidden rounded-xl text-left"
+                              :class="
+                                message.isMine
+                                  ? 'bg-white/10 text-white ring-1 ring-white/20'
+                                  : 'border border-[#ebe7df] bg-[#fbfaf8] text-[#171322]'
+                              "
+                              @click="openAttachment(attachment)"
+                              :aria-label="
+                                isSafeImageType(attachment.mimeType)
+                                  ? `Buka pratinjau ${attachment.fileName || 'gambar'}`
+                                  : `Buka ${attachment.fileName || 'file'}`
+                              "
+                            >
+                              <img
+                                v-if="
+                                  isSafeImageType(attachment.mimeType) &&
+                                  attachment.url
                                 "
-                              >
-                                <component
-                                  :is="
-                                    filePreviewIcon(
-                                      attachment.mimeType,
-                                      attachment.fileName,
-                                    )
-                                  "
-                                  class="h-5 w-5"
-                                  weight="duotone"
-                                />
-                              </span>
-                              <span class="min-w-0 flex-1">
+                                :src="attachment.url"
+                                :alt="attachment.fileName || 'Lampiran gambar'"
+                                class="max-h-64 w-full object-cover transition duration-200 group-hover:scale-[1.01]"
+                              />
+                              <div class="flex min-w-0 items-center gap-3 p-3">
                                 <span
-                                  class="block truncate text-xs font-semibold"
-                                >
-                                  {{ attachment.fileName || "Lampiran" }}
-                                </span>
-                                <span
-                                  class="mt-0.5 block truncate text-[11px]"
+                                  class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                                   :class="
                                     message.isMine
-                                      ? 'text-white/70'
-                                      : 'text-[#8b8592]'
+                                      ? 'bg-white/15'
+                                      : 'bg-white text-[#4f46e5]'
                                   "
                                 >
-                                  {{
-                                    fileTypeLabel(
-                                      attachment.mimeType,
-                                      attachment.fileName,
-                                    )
-                                  }}
-                                  <template
-                                    v-if="formatFileSize(attachment.sizeBytes)"
-                                  >
-                                    · {{ formatFileSize(attachment.sizeBytes) }}
-                                  </template>
+                                  <component
+                                    :is="
+                                      filePreviewIcon(
+                                        attachment.mimeType,
+                                        attachment.fileName,
+                                      )
+                                    "
+                                    class="h-5 w-5"
+                                    weight="duotone"
+                                  />
                                 </span>
-                              </span>
-                              <span
-                                class="inline-flex items-center gap-1 text-[11px] font-semibold"
-                              >
-                                <PhDownloadSimple class="h-3.5 w-3.5" />
-                                {{
-                                  isSafeImageType(attachment.mimeType)
-                                    ? "Lihat"
-                                    : "Buka"
-                                }}
-                              </span>
-                            </div>
-                          </button>
+                                <span class="min-w-0 flex-1">
+                                  <span
+                                    class="block truncate text-xs font-semibold"
+                                  >
+                                    {{ attachment.fileName || "Lampiran" }}
+                                  </span>
+                                  <span
+                                    class="mt-0.5 block truncate text-[11px]"
+                                    :class="
+                                      message.isMine
+                                        ? 'text-white/70'
+                                        : 'text-[#8b8592]'
+                                    "
+                                  >
+                                    {{
+                                      fileTypeLabel(
+                                        attachment.mimeType,
+                                        attachment.fileName,
+                                      )
+                                    }}
+                                    <template
+                                      v-if="
+                                        formatFileSize(attachment.sizeBytes)
+                                      "
+                                    >
+                                      ·
+                                      {{ formatFileSize(attachment.sizeBytes) }}
+                                    </template>
+                                  </span>
+                                </span>
+                                <span
+                                  class="inline-flex items-center gap-1 text-[11px] font-semibold"
+                                >
+                                  <PhDownloadSimple class="h-3.5 w-3.5" />
+                                  {{
+                                    isSafeImageType(attachment.mimeType)
+                                      ? "Lihat"
+                                      : "Buka"
+                                  }}
+                                </span>
+                              </div>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <p
-                        class="flex items-center gap-2 px-2 text-[11px] text-[#9ca3af]"
-                      >
-                        <span>{{ formatDateTime(message.createdAt) }}</span>
-                        <span
-                          v-if="message.deliveryStatus === 'uploading'"
-                          class="inline-flex items-center gap-1.5 font-medium text-[#9ca3af]"
+                        <p
+                          class="flex items-center gap-2 px-2 text-[11px] text-[#9ca3af]"
                         >
-                          <PhSpinnerGap class="h-3.5 w-3.5 animate-spin" />
-                          Mengunggah...
-                        </span>
-                        <span
-                          v-else-if="message.deliveryStatus === 'sending'"
-                          class="inline-flex items-center gap-1.5 font-medium text-[#9ca3af]"
-                        >
-                          <PhSpinnerGap class="h-3.5 w-3.5 animate-spin" />
-                          Mengirim...
-                        </span>
-                        <button
-                          v-else-if="message.deliveryStatus === 'failed'"
-                          type="button"
-                          class="inline-flex items-center gap-1 rounded-full bg-[#fef2f2] px-2 py-0.5 font-medium text-[#dc2626]"
-                          @click="retryFailedMessage(message)"
-                        >
-                          Gagal
+                          <span>{{ formatDateTime(message.createdAt) }}</span>
                           <span
-                            class="underline decoration-dotted underline-offset-2"
-                            >Coba lagi</span
+                            v-if="message.deliveryStatus === 'uploading'"
+                            class="inline-flex items-center gap-1.5 font-medium text-[#9ca3af]"
                           >
-                        </button>
-                        <span
-                          v-else-if="readIndicatorLabel(message)"
-                          class="inline-flex items-center gap-1 text-[#6b7280]"
-                          :title="readIndicatorLabel(message)"
-                          :aria-label="readIndicatorLabel(message)"
-                        >
-                          <PhChecks
-                            v-if="isReadByOthers(message)"
-                            :size="13"
-                            weight="bold"
-                            class="text-[#4f46e5]"
-                          />
-                          <PhCheck
-                            v-else
-                            :size="13"
-                            weight="bold"
-                            class="text-[#9ca3af]"
-                          />
-                          <span
-                            v-if="readIndicatorCount(message)"
-                            class="text-[10px] font-medium"
-                          >
-                            {{ readIndicatorCount(message) }}
+                            <PhSpinnerGap class="h-3.5 w-3.5 animate-spin" />
+                            Mengunggah...
                           </span>
-                        </span>
-                      </p>
-                    </div>
+                          <span
+                            v-else-if="message.deliveryStatus === 'sending'"
+                            class="inline-flex items-center gap-1.5 font-medium text-[#9ca3af]"
+                          >
+                            <PhCheck
+                              :size="13"
+                              weight="bold"
+                              class="text-[#9ca3af]"
+                            />
+                          </span>
+                          <button
+                            v-else-if="message.deliveryStatus === 'failed'"
+                            type="button"
+                            class="inline-flex items-center gap-1 rounded-full bg-[#fef2f2] px-2 py-0.5 font-medium text-[#dc2626]"
+                            @click="retryFailedMessage(message)"
+                          >
+                            Gagal
+                            <span
+                              class="underline decoration-dotted underline-offset-2"
+                              >Coba lagi</span
+                            >
+                          </button>
+                          <span
+                            v-else-if="readIndicatorLabel(message)"
+                            class="inline-flex items-center gap-1 text-[#6b7280]"
+                            :title="readIndicatorLabel(message)"
+                            :aria-label="readIndicatorLabel(message)"
+                          >
+                            <PhChecks
+                              v-if="isReadByOthers(message)"
+                              :size="13"
+                              weight="bold"
+                              class="text-[#4f46e5]"
+                            />
+                            <PhCheck
+                              v-else
+                              :size="13"
+                              weight="bold"
+                              class="text-[#9ca3af]"
+                            />
+                            <span
+                              v-if="readIndicatorCount(message)"
+                              class="text-[10px] font-medium"
+                            >
+                              {{ readIndicatorCount(message) }}
+                            </span>
+                          </span>
+                        </p>
+                      </div>
                     </article>
                   </template>
                 </template>
