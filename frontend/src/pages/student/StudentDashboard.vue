@@ -289,6 +289,7 @@ function buildCalendarDays(date: Date) {
 function activitiesForDate(dateKey: string) {
   return calendarActivities.value
     .filter((item) => item.date === dateKey)
+    .filter((item) => item.type === "assignment_due")
     .sort(compareActivities);
 }
 
