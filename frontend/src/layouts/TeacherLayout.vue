@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import {
   PhBookOpen,
+  PhBell,
   PhCalendarBlank,
   PhCalendarCheck,
   PhChatCircle,
@@ -13,11 +14,16 @@ import { useRoute } from "vue-router";
 import SlimSidebar from "../components/layout/Sidebar.vue";
 import { useChatUnreadCount } from "../composables/useChatUnreadCount";
 import { useFeedUnreadCount } from "../composables/useFeedUnreadCount";
+import { useNotificationUnreadCount } from "../composables/useNotificationUnreadCount";
 
 const route = useRoute();
 const { unreadCount, badgeLabel } = useChatUnreadCount();
 const { unreadCount: feedUnreadCount, badgeLabel: feedBadgeLabel } =
   useFeedUnreadCount();
+const {
+  unreadCount: notificationUnreadCount,
+  badgeLabel: notificationBadgeLabel,
+} = useNotificationUnreadCount();
 
 const items = computed(() => [
   { label: "Dashboard", icon: PhHouse, to: "/teacher/dashboard" },
@@ -25,6 +31,17 @@ const items = computed(() => [
   { label: "Tugas", icon: PhCalendarBlank, to: "/teacher/assignments" },
   { label: "Pengumpulan", icon: PhTray, to: "/teacher/submissions" },
   { label: "Aktivitas", icon: PhCalendarCheck, to: "/teacher/activity" },
+  {
+    label: "Notifikasi",
+    icon: PhBell,
+    to: "/teacher/notifications",
+    badgeCount: notificationUnreadCount.value,
+    badgeLabel: notificationBadgeLabel.value,
+    badgeAriaLabel: `${notificationUnreadCount.value} notifikasi belum dibaca`,
+    emphasized:
+      notificationUnreadCount.value > 0 &&
+      !route.path.startsWith("/teacher/notifications"),
+  },
   {
     label: "Feed",
     icon: PhMegaphone,

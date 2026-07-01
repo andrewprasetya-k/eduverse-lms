@@ -4,24 +4,52 @@ import { getNotificationUnreadCount } from '../services/notifications'
 const unreadCount = ref(0)
 const loading = ref(false)
 const error = ref('')
+let initialized = false
+let lifecycleStarted = false
+let refreshPromise: Promise<void> | null = null
 
 function normalizeCount(value: number) {
   return Math.max(0, Number.isFinite(value) ? value : 0)
 }
 
-export function useNotificationUnreadCount() {
-  async function refresh() {
-    loading.value = true
-    error.value = ''
+async function refreshUnreadCount() {
+  if (refreshPromise) return refreshPromise
 
-    try {
-      const response = await getNotificationUnreadCount()
+  loading.value = true
+  error.value = ''
+
+  refreshPromise = getNotificationUnreadCount()
+    .then((response) => {
       unreadCount.value = normalizeCount(response.unreadCount)
-    } catch {
+    })
+    .catch(() => {
       error.value = 'Jumlah notifikasi belum bisa dimuat.'
-    } finally {
+    })
+    .finally(() => {
       loading.value = false
+      refreshPromise = null
+    })
+
+  return refreshPromise
+}
+
+function startLifecycleRefresh() {
+  if (lifecycleStarted || typeof document === 'undefined') return
+  lifecycleStarted = true
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      void refreshUnreadCount()
     }
+  })
+}
+
+export function useNotificationUnreadCount() {
+  startLifecycleRefresh()
+
+  if (!initialized) {
+    initialized = true
+    void refreshUnreadCount()
   }
 
   function set(value: number) {
@@ -46,7 +74,7 @@ export function useNotificationUnreadCount() {
     loading,
     error,
     badgeLabel,
-    refresh,
+    refresh: refreshUnreadCount,
     set,
     decrement,
     clear,

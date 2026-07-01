@@ -16,6 +16,7 @@ import { getSubjectClassesByClass } from "../../services/classWorkspace";
 import { getClassFeed } from "../../services/feed";
 import { getStudentAssignmentInbox } from "../../services/assignment";
 import { useFeedUnreadCount } from "../../composables/useFeedUnreadCount";
+import { useNotificationUnreadCount } from "../../composables/useNotificationUnreadCount";
 import {
   getNotifications,
   markAllNotificationsAsRead,
@@ -52,12 +53,12 @@ const activeClassStore = useActiveClassStore();
 const toast = useToastStore();
 const router = useRouter();
 const { unreadCount: feedPanelUnreadCount } = useFeedUnreadCount();
+const notificationUnread = useNotificationUnreadCount();
 
 const subjects = ref<SubjectClassItem[]>([]);
 const feedPosts = ref<FeedPost[]>([]);
 const assignmentPreviewItems = ref<StudentAssignmentInboxItem[]>([]);
 const notifications = ref<NotificationItem[]>([]);
-const unreadCount = ref(0);
 const isLoading = ref(true);
 const notificationsLoading = ref(false);
 const notificationsError = ref("");
@@ -201,10 +202,9 @@ async function loadNotifications() {
   try {
     const notificationData = await getNotifications({ page: 1, limit: 5 });
     notifications.value = notificationData.data ?? [];
-    unreadCount.value = notificationData.unreadCount ?? 0;
+    notificationUnread.set(notificationData.unreadCount ?? 0);
   } catch {
     notifications.value = [];
-    unreadCount.value = 0;
     notificationsError.value = "Notifikasi belum bisa dimuat.";
   } finally {
     notificationsLoading.value = false;
@@ -541,7 +541,7 @@ function markNotificationRead(item: NotificationItem) {
     return;
   }
 
-  const previousUnreadCount = unreadCount.value;
+  const previousUnreadCount = notificationUnread.unreadCount.value;
   const previousNotification = notifications.value.find(
     (notification) => notification.notificationId === item.notificationId,
   );
@@ -551,7 +551,7 @@ function markNotificationRead(item: NotificationItem) {
       ? { ...notification, isRead: true }
       : notification,
   );
-  unreadCount.value = Math.max(0, unreadCount.value - 1);
+  notificationUnread.decrement();
   markingNotificationIds.value = new Set([
     ...markingNotificationIds.value,
     item.notificationId,
@@ -565,7 +565,7 @@ function markNotificationRead(item: NotificationItem) {
             ? { ...notification, isRead: false }
             : notification,
         );
-        unreadCount.value = previousUnreadCount;
+        notificationUnread.set(previousUnreadCount);
       }
       toast.error(notificationErrorMessage(error));
     })
@@ -584,16 +584,21 @@ async function handleNotificationClick(item: NotificationItem) {
 }
 
 function markAllNotificationsRead() {
-  if (unreadCount.value <= 0 || markingAllNotifications.value) return;
+  if (
+    notificationUnread.unreadCount.value <= 0 ||
+    markingAllNotifications.value
+  ) {
+    return;
+  }
 
   const previousNotifications = notifications.value;
-  const previousUnreadCount = unreadCount.value;
+  const previousUnreadCount = notificationUnread.unreadCount.value;
   markingAllNotifications.value = true;
   notifications.value = notifications.value.map((notification) => ({
     ...notification,
     isRead: true,
   }));
-  unreadCount.value = 0;
+  notificationUnread.clear();
 
   void markAllNotificationsAsRead()
     .then(() => {
@@ -601,7 +606,7 @@ function markAllNotificationsRead() {
     })
     .catch((error) => {
       notifications.value = previousNotifications;
-      unreadCount.value = previousUnreadCount;
+      notificationUnread.set(previousUnreadCount);
       toast.error(notificationErrorMessage(error));
     })
     .finally(() => {
@@ -933,28 +938,36 @@ onMounted(() => {
       >
         <DashboardUpdatesPanel
           class="lg:min-h-0 lg:flex-1 lg:overflow-hidden"
-          :notification-badge="unreadCount"
+          :notification-badge="notificationUnread.unreadCount.value"
           :chat-badge="chatPanelUnreadCount"
           :feed-badge="feedPanelUnreadCount"
         >
           <template #notifications>
             <div class="mb-3 flex items-center justify-between gap-3">
               <p class="text-xs text-[#a09aa8]">
-                {{ unreadCount }} belum dibaca
+                {{ notificationUnread.unreadCount.value }} belum dibaca
               </p>
-              <button
-                v-if="unreadCount > 0"
-                class="rounded-lg bg-[#eef2ff] px-3 py-1 text-xs font-medium text-[#4f46e5] transition hover:bg-[#e0e7ff] disabled:cursor-not-allowed disabled:opacity-60"
-                type="button"
-                :disabled="markingAllNotifications"
-                @click="markAllNotificationsRead"
-              >
-                {{
-                  markingAllNotifications
-                    ? "Menyimpan..."
-                    : "Tandai semua dibaca"
-                }}
-              </button>
+              <div class="flex items-center gap-2">
+                <RouterLink
+                  class="rounded-lg border border-[#ebe7df] bg-white px-3 py-1 text-xs font-medium text-[#4f46e5] transition hover:border-[#4f46e5] hover:bg-[#eef2ff]"
+                  to="/student/notifications"
+                >
+                  Lihat semua
+                </RouterLink>
+                <button
+                  v-if="notificationUnread.unreadCount.value > 0"
+                  class="rounded-lg bg-[#eef2ff] px-3 py-1 text-xs font-medium text-[#4f46e5] transition hover:bg-[#e0e7ff] disabled:cursor-not-allowed disabled:opacity-60"
+                  type="button"
+                  :disabled="markingAllNotifications"
+                  @click="markAllNotificationsRead"
+                >
+                  {{
+                    markingAllNotifications
+                      ? "Menyimpan..."
+                      : "Tandai semua dibaca"
+                  }}
+                </button>
+              </div>
             </div>
 
             <div v-if="notificationsLoading" class="space-y-2">
