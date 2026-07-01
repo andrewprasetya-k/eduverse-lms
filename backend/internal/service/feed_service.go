@@ -4,7 +4,6 @@ import (
 	"backend/internal/domain"
 	"backend/internal/dto"
 	"backend/internal/repository"
-	"backend/internal/utils"
 	"errors"
 	"fmt"
 	"slices"
@@ -66,10 +65,6 @@ func (s *feedService) Create(feed *domain.Feed, userID string, roles []string) e
 		if err := s.ensureTeacherCanAccessClass(userID, feed.SchoolID, feed.ClassID); err != nil {
 			return err
 		}
-	}
-
-	if feed.CreatedAt.IsZero() {
-		feed.CreatedAt = utils.NowJakarta()
 	}
 
 	if err := s.repo.Create(feed); err != nil {
