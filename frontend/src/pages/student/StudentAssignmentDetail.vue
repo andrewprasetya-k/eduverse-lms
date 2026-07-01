@@ -22,6 +22,7 @@ import type {
   AssignmentItem,
   MySubmissionResponse,
 } from "../../types/assignment";
+import type { MediaUploadResponse } from "../../types/media";
 import { formatDateTime } from "../../utils/date";
 
 const route = useRoute();
@@ -118,6 +119,29 @@ function getErrorMessage(error: unknown) {
   return undefined;
 }
 
+function patchSubmittedStatus(uploaded: MediaUploadResponse[]) {
+  if (!assignment.value) return;
+
+  submissionStatus.value = {
+    status: "submitted",
+    submission: {
+      submissionId: submissionStatus.value?.submission?.submissionId ?? "",
+      assignmentId: assignment.value.assignmentId,
+      submittedAt: submissionStatus.value?.submission?.submittedAt ?? "",
+      assessment: null,
+      attachments: uploaded.map((media) => ({
+        mediaId: media.mediaId,
+        mediaName: media.fileName,
+        fileSize: media.fileSize,
+        mimeType: media.mimeType,
+        fileUrl: media.fileUrl,
+      })),
+    },
+  };
+  submissionError.value = "";
+  isSubmissionLoading.value = false;
+}
+
 async function handleSubmit() {
   if (!assignment.value) return;
   if (!schoolId.value) {
@@ -147,9 +171,9 @@ async function handleSubmit() {
       mediaIds: uploaded.map((item) => item.mediaId),
     });
 
+    patchSubmittedStatus(uploaded);
     selectedFiles.value = [];
     submitSuccess.value = "Tugas berhasil dikumpulkan.";
-    await loadMySubmissionStatus();
   } catch (error) {
     if (uploadedMediaIds.length > 0) {
       await Promise.allSettled(
@@ -472,10 +496,15 @@ async function handleSubmit() {
                     }}
                   </p>
                   <p class="mt-1 text-xs leading-5 text-[#667085]">
-                    Dikumpulkan
-                    {{
-                      formatDateTime(submissionStatus.submission?.submittedAt)
-                    }}
+                    <template v-if="submissionStatus.submission?.submittedAt">
+                      Dikumpulkan
+                      {{
+                        formatDateTime(submissionStatus.submission.submittedAt)
+                      }}
+                    </template>
+                    <template v-else>
+                      Status pengumpulan tersimpan.
+                    </template>
                   </p>
                 </div>
               </div>
