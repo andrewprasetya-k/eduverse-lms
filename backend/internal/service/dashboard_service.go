@@ -38,6 +38,37 @@ func dashboardStringValue(value any) string {
 	return ""
 }
 
+func dashboardTimestampValue(value any) string {
+	timestamp, ok := dashboardTimeValue(value)
+	if !ok {
+		return ""
+	}
+	return formatAPITime(timestamp)
+}
+
+func dashboardTimeValue(value any) (time.Time, bool) {
+	switch typed := value.(type) {
+	case time.Time:
+		if typed.IsZero() {
+			return time.Time{}, false
+		}
+		return typed, true
+	case string:
+		for _, layout := range []string{
+			time.RFC3339Nano,
+			time.RFC3339,
+			"02-01-2006 15:04:05",
+			"02-01-2006 15:04",
+		} {
+			parsed, err := time.Parse(layout, typed)
+			if err == nil && !parsed.IsZero() {
+				return parsed, true
+			}
+		}
+	}
+	return time.Time{}, false
+}
+
 func (s *dashboardService) GetStudentDashboard(userID string) (*dto.StudentDashboardDTO, error) {
 	pending, err := s.repo.GetPendingAssignmentsCount(userID)
 	if err != nil {
@@ -61,12 +92,11 @@ func (s *dashboardService) GetStudentDashboard(userID string) (*dto.StudentDashb
 
 	var upcomingDeadlines []dto.AssignmentDeadlineDTO
 	for _, d := range deadlines {
-		deadline, _ := time.Parse(time.RFC3339, d["deadline"].(string))
 		upcomingDeadlines = append(upcomingDeadlines, dto.AssignmentDeadlineDTO{
 			AssignmentID:    d["assignment_id"].(string),
 			AssignmentTitle: d["assignment_title"].(string),
 			SubjectName:     d["subject_name"].(string),
-			Deadline:        formatAPITime(deadline),
+			Deadline:        dashboardTimestampValue(d["deadline"]),
 			IsSubmitted:     d["is_submitted"].(bool),
 		})
 	}
@@ -150,11 +180,10 @@ func (s *dashboardService) GetAdminDashboard(schoolID string) (*dto.AdminDashboa
 
 	var recentActivities []dto.ActivityLogDTO
 	for _, a := range activities {
-		timestamp, _ := time.Parse(time.RFC3339, a["timestamp"].(string))
 		recentActivities = append(recentActivities, dto.ActivityLogDTO{
 			UserName:  a["user_name"].(string),
 			Action:    a["action"].(string),
-			Timestamp: formatAPITime(timestamp),
+			Timestamp: dashboardTimestampValue(a["timestamp"]),
 		})
 	}
 
