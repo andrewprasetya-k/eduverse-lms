@@ -4,7 +4,6 @@ import (
 	"backend/internal/middleware"
 	"backend/internal/service"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -32,8 +31,8 @@ func (h *ActivityHandler) GetAcademicActivity(c *gin.Context) {
 		middleware.GetUserID(c),
 		getActivityActiveSchoolID(c),
 		getActivityActiveRoles(c),
-		from,
-		to,
+		stringPtr(from),
+		stringPtr(to),
 	)
 	if err != nil {
 		HandleError(c, err)
@@ -43,19 +42,43 @@ func (h *ActivityHandler) GetAcademicActivity(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func parseActivityDate(c *gin.Context, key string) (*time.Time, bool) {
+func parseActivityDate(c *gin.Context, key string) (string, bool) {
 	value := c.Query(key)
 	if value == "" {
-		return nil, true
+		return "", true
 	}
 
-	parsed, err := time.Parse("2006-01-02", value)
-	if err != nil {
+	if !isActivityDateOnly(value) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": key + " must use YYYY-MM-DD format"})
-		return nil, false
+		return "", false
 	}
 
-	return &parsed, true
+	return value, true
+}
+
+func isActivityDateOnly(value string) bool {
+	if len(value) != len("2006-01-02") {
+		return false
+	}
+	for index, char := range value {
+		if index == 4 || index == 7 {
+			if char != '-' {
+				return false
+			}
+			continue
+		}
+		if char < '0' || char > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+func stringPtr(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }
 
 func getActivityActiveSchoolID(c *gin.Context) string {

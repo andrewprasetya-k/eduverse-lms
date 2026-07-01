@@ -9,9 +9,10 @@ import (
 )
 
 const maxActivityRangeDays = 60
+const activityDisplayTimezone = "Asia/Jakarta"
 
 type ActivityService interface {
-	GetAcademicActivity(userID string, schoolID string, roles []string, from *time.Time, to *time.Time) (*dto.AcademicActivityResponseDTO, error)
+	GetAcademicActivity(userID string, schoolID string, roles []string, from *string, to *string) (*dto.AcademicActivityResponseDTO, error)
 }
 
 type activityService struct {
@@ -26,7 +27,7 @@ func NewActivityService(repo repository.ActivityRepository) ActivityService {
 	}
 }
 
-func (s *activityService) GetAcademicActivity(userID string, schoolID string, roles []string, from *time.Time, to *time.Time) (*dto.AcademicActivityResponseDTO, error) {
+func (s *activityService) GetAcademicActivity(userID string, schoolID string, roles []string, from *string, to *string) (*dto.AcademicActivityResponseDTO, error) {
 	fromTime, toTime, err := s.normalizeRange(from, to)
 	if err != nil {
 		return nil, err
@@ -64,16 +65,25 @@ func (s *activityService) GetAcademicActivity(userID string, schoolID string, ro
 	return &dto.AcademicActivityResponseDTO{Items: items}, nil
 }
 
-func (s *activityService) normalizeRange(from *time.Time, to *time.Time) (time.Time, time.Time, error) {
-	today := startOfDay(s.now())
+func (s *activityService) normalizeRange(from *string, to *string) (time.Time, time.Time, error) {
+	location := activityLocation()
+	today := startOfDayInLocation(s.now(), location)
 	fromTime := today
 	toDate := today.AddDate(0, 0, 7)
 
 	if from != nil {
-		fromTime = startOfDay(*from)
+		parsed, err := parseActivityDateInLocation(*from, location)
+		if err != nil {
+			return time.Time{}, time.Time{}, err
+		}
+		fromTime = parsed
 	}
 	if to != nil {
-		toDate = startOfDay(*to)
+		parsed, err := parseActivityDateInLocation(*to, location)
+		if err != nil {
+			return time.Time{}, time.Time{}, err
+		}
+		toDate = parsed
 	}
 	if toDate.Before(fromTime) {
 		return time.Time{}, time.Time{}, fmt.Errorf("activity date range is invalid")
@@ -128,13 +138,14 @@ func (s *activityService) teacherActivity(userID string, schoolID string, from t
 }
 
 func mapActivityRow(row repository.ActivityRow) dto.AcademicActivityItemDTO {
+	eventAt := row.EventAt.In(activityLocation())
 	item := dto.AcademicActivityItemDTO{
 		ID:          fmt.Sprintf("%s:%s", row.ActivityType, row.SourceID),
 		Type:        row.ActivityType,
 		Title:       row.Title,
 		Description: row.Description,
-		Date:        row.EventAt.Format("2006-01-02"),
-		Time:        row.EventAt.Format("15:04"),
+		Date:        eventAt.Format("2006-01-02"),
+		Time:        eventAt.Format("15:04"),
 		Priority:    row.Priority,
 		Link:        row.Link,
 		Metadata:    mapActivityMetadata(row),
@@ -179,9 +190,25 @@ func addMetadata(metadata map[string]interface{}, key string, value string) {
 	}
 }
 
-func startOfDay(value time.Time) time.Time {
-	local := value.Local()
-	return time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, local.Location())
+func activityLocation() *time.Location {
+	location, err := time.LoadLocation(activityDisplayTimezone)
+	if err != nil {
+		return time.Local
+	}
+	return location
+}
+
+func parseActivityDateInLocation(value string, location *time.Location) (time.Time, error) {
+	parsed, err := time.ParseInLocation("2006-01-02", value, location)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("activity date range is invalid")
+	}
+	return startOfDayInLocation(parsed, location), nil
+}
+
+func startOfDayInLocation(value time.Time, location *time.Location) time.Time {
+	local := value.In(location)
+	return time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, location)
 }
 
 func hasRole(roles []string, expected string) bool {
