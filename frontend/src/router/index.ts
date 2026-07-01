@@ -43,6 +43,7 @@ import TeacherSubmissions from "../pages/teacher/TeacherSubmissions.vue";
 import TeacherAssignments from "../pages/teacher/TeacherAssignments.vue";
 import TeacherFeed from "../pages/teacher/TeacherFeed.vue";
 import TeacherChat from "../pages/teacher/TeacherChat.vue";
+import NotificationCenter from "../components/notifications/NotificationCenter.vue";
 import HomePage from "../pages/preview/HomePage.vue";
 import NotFoundPage from "../pages/common/NotFoundPage.vue";
 
@@ -144,6 +145,12 @@ const router = createRouter({
           name: "student-activity",
           component: StudentActivity,
           meta: { title: "Aktivitas Akademik" },
+        },
+        {
+          path: "notifications",
+          name: "student-notifications",
+          component: NotificationCenter,
+          meta: { title: "Notifikasi" },
         },
         {
           path: "assignments",
@@ -269,6 +276,12 @@ const router = createRouter({
           name: "teacher-activity",
           component: TeacherActivity,
           meta: { title: "Aktivitas Akademik" },
+        },
+        {
+          path: "notifications",
+          name: "teacher-notifications",
+          component: NotificationCenter,
+          meta: { title: "Notifikasi" },
         },
         {
           path: "chat",
