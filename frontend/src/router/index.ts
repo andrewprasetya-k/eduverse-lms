@@ -38,6 +38,7 @@ import ReadProfile from "../pages/profile/ReadProfile.vue";
 import TeacherCreate from "../pages/teacher/TeacherCreate.vue";
 import TeacherContentCreate from "../pages/teacher/TeacherContentCreate.vue";
 import TeacherAssignmentReview from "../pages/teacher/TeacherAssignmentReview.vue";
+import TeacherAssignmentDetail from "../pages/teacher/TeacherAssignmentDetail.vue";
 import TeacherMaterialDetail from "../pages/teacher/TeacherMaterialDetail.vue";
 import TeacherSubmissions from "../pages/teacher/TeacherSubmissions.vue";
 import TeacherAssignments from "../pages/teacher/TeacherAssignments.vue";
@@ -228,6 +229,12 @@ const router = createRouter({
           name: "teacher-material-edit",
           component: TeacherContentCreate,
           meta: { title: "Edit Materi" },
+        },
+        {
+          path: "subjects/:subjectClassId/assignments/:assignmentId",
+          name: "teacher-assignment-detail",
+          component: TeacherAssignmentDetail,
+          meta: { title: "Detail Tugas" },
         },
         {
           path: "subjects/:subjectClassId/assignments/:asgId/edit",

@@ -481,11 +481,18 @@ onMounted(loadWorkspace);
                     >
                       {{ assignment.categoryName || "Tanpa kategori" }}
                     </p>
-                    <h2
-                      class="mt-1 line-clamp-2 wrap-break-word text-base font-medium text-[#171322]"
+                    <RouterLink
+                      :to="{
+                        name: 'teacher-assignment-detail',
+                        params: {
+                          subjectClassId: subjectClassId,
+                          assignmentId: assignment.assignmentId,
+                        },
+                      }"
+                      class="mt-1 block line-clamp-2 wrap-break-word text-base font-medium text-[#171322] transition hover:text-[#4f46e5]"
                     >
                       {{ assignment.assignmentTitle }}
-                    </h2>
+                    </RouterLink>
                     <p
                       v-if="assignment.assignmentDescription"
                       class="mt-2 line-clamp-2 text-sm leading-6 text-[#7a7385]"
