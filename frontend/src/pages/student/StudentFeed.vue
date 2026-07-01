@@ -11,7 +11,10 @@ import {
 import AttachmentPreviewList from "../../components/common/AttachmentPreviewList.vue";
 import FeedComments from "../../components/feed/FeedComments.vue";
 import { getClassFeed, markFeedNotificationsRead } from "../../services/feed";
-import { emitFeedUnreadRefresh } from "../../composables/useFeedUnreadCount";
+import {
+  clearFeedUnreadOptimistically,
+  restoreFeedUnreadCount,
+} from "../../composables/useFeedUnreadCount";
 import { useActiveClassStore } from "../../stores/activeClass";
 import { useAuthStore } from "../../stores/auth";
 import type { FeedClassHeader, FeedPost } from "../../types/feed";
@@ -73,10 +76,12 @@ async function loadContext() {
 onMounted(loadContext);
 
 async function markCurrentFeedRead() {
+  const previousUnreadCount = clearFeedUnreadOptimistically();
+
   try {
     await markFeedNotificationsRead();
-    emitFeedUnreadRefresh();
   } catch {
+    restoreFeedUnreadCount(previousUnreadCount);
     // Feed read marker should not block the feed page.
   }
 }

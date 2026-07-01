@@ -5,6 +5,7 @@ const unreadCount = ref(0);
 let pollTimer: number | undefined;
 let refreshTimer: number | undefined;
 let consumerCount = 0;
+let optimisticClearVersion = 0;
 
 function schedulePolling() {
   if (pollTimer) {
@@ -47,6 +48,21 @@ function handleFeedUnreadRefresh() {
 
 export function emitFeedUnreadRefresh() {
   window.dispatchEvent(new Event("wiyata:feed-unread-refresh"));
+}
+
+export function clearFeedUnreadOptimistically() {
+  optimisticClearVersion += 1;
+  const snapshot = {
+    previousCount: unreadCount.value,
+    version: optimisticClearVersion,
+  };
+  unreadCount.value = 0;
+  return snapshot;
+}
+
+export function restoreFeedUnreadCount(snapshot: { previousCount: number; version: number }) {
+  if (snapshot.version !== optimisticClearVersion) return;
+  unreadCount.value = Math.max(0, snapshot.previousCount);
 }
 
 export function useFeedUnreadCount() {

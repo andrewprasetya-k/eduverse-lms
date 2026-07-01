@@ -14,7 +14,10 @@ import {
   getClassFeed,
   markFeedNotificationsRead,
 } from "../../services/feed";
-import { emitFeedUnreadRefresh } from "../../composables/useFeedUnreadCount";
+import {
+  clearFeedUnreadOptimistically,
+  restoreFeedUnreadCount,
+} from "../../composables/useFeedUnreadCount";
 import type { TeacherSubjectClass } from "../../types/teacherSubjects";
 import type { FeedClassHeader, FeedPost } from "../../types/feed";
 import { useAuthStore } from "../../stores/auth";
@@ -208,10 +211,12 @@ onMounted(async () => {
 });
 
 async function markCurrentFeedRead() {
+  const previousUnreadCount = clearFeedUnreadOptimistically();
+
   try {
     await markFeedNotificationsRead();
-    emitFeedUnreadRefresh();
   } catch {
+    restoreFeedUnreadCount(previousUnreadCount);
     // Feed read marker should not block the feed page.
   }
 }
