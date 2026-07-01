@@ -147,35 +147,35 @@ function formatSize(bytes: number) {
 
 <template>
   <div class="media-uploader">
-    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#EBEBEB] rounded-2xl cursor-pointer hover:bg-[#F9FAFB] transition">
-      <div class="flex flex-col items-center justify-center pt-5 pb-6">
-        <PhUploadSimple :size="32" class="text-[#9CA3AF] mb-2" />
-        <p class="mb-2 text-sm text-[#374151] font-medium">Klik untuk unggah atau seret file</p>
-        <p class="text-xs text-[#9CA3AF]">PDF, Video, atau Dokumen (Maks. {{ maxSizeMb }}MB)</p>
+    <label class="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#ebe7df] bg-[#fbfaf8] transition hover:border-[#c7d2fe] hover:bg-white focus-within:border-[#4f46e5] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#4f46e5]/15">
+      <div class="flex flex-col items-center justify-center px-4 py-5 text-center">
+        <PhUploadSimple :size="30" class="mb-2 text-[#8b8592]" />
+        <p class="mb-1 text-sm font-medium text-[#171322]">Klik untuk unggah atau seret file</p>
+        <p class="text-xs text-[#7a7385]">PDF, video, atau dokumen (maks. {{ maxSizeMb }}MB)</p>
       </div>
       <input type="file" class="hidden" multiple @change="handleFileChange" />
     </label>
 
     <div v-if="files.length > 0" class="mt-4 space-y-2">
-      <div v-for="(file, index) in files" :key="index" class="flex max-w-full items-center justify-between gap-3 overflow-hidden p-3 bg-white border border-[#EBEBEB] rounded-xl">
+      <div v-for="(file, index) in files" :key="index" class="flex max-w-full items-center justify-between gap-3 overflow-hidden rounded-xl border border-[#ebe7df] bg-white p-3">
         <div class="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
-          <div class="shrink-0 w-10 h-10 flex items-center justify-center bg-[#F3F4F6] rounded-lg">
-            <PhFile :size="20" class="text-[#6B7280]" />
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f3f0ea]">
+            <PhFile :size="20" class="text-[#6b6475]" />
           </div>
           <div class="min-w-0 flex-1 overflow-hidden">
-            <p class="text-sm font-medium text-[#111827] truncate">{{ file.name }}</p>
-            <p class="text-xs text-[#6B7280]">{{ formatSize(file.size) }}</p>
+            <p class="truncate text-sm font-medium text-[#171322]">{{ file.name }}</p>
+            <p class="text-xs text-[#7a7385]">{{ formatSize(file.size) }}</p>
           </div>
         </div>
 
         <div class="flex shrink-0 items-center gap-3">
-          <span v-if="file.status === 'uploading'" class="max-w-28 truncate text-xs text-[#4F46E5] animate-pulse">Mengunggah...</span>
-          <span v-else-if="file.status === 'error'" class="max-w-36 truncate text-xs text-[#DC2626]">{{ file.errorMessage }}</span>
+          <span v-if="file.status === 'uploading'" class="max-w-28 animate-pulse truncate text-xs text-[#4f46e5]">Mengunggah...</span>
+          <span v-else-if="file.status === 'error'" class="max-w-36 truncate text-xs text-[#dc2626]">{{ file.errorMessage }}</span>
           
           <button 
             type="button" 
             @click="removeFile(index)" 
-            class="p-1.5 text-[#9CA3AF] hover:text-[#DC2626] transition"
+            class="rounded-lg p-1.5 text-[#8b8592] transition hover:bg-[#fff1f0] hover:text-[#dc2626] focus:outline-none focus:ring-2 focus:ring-[#dc2626]/15"
             title="Hapus"
           >
             <PhTrash :size="18" />
