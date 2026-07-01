@@ -57,7 +57,18 @@ func (s *commentService) Create(comment *domain.Comment, schoolID string, userID
 		return err
 	}
 
-	// Best-effort: notify content owner, skip if self-comment
+	s.notifyCommentRecipients(comment, schoolID, roles)
+
+	return nil
+}
+
+func (s *commentService) notifyCommentRecipients(comment *domain.Comment, schoolID string, roles []string) {
+	if comment.SourceType == domain.SourceMaterial || comment.SourceType == domain.SourceAssignment {
+		s.notifyAcademicDiscussionRecipients(comment, schoolID, roles)
+		return
+	}
+
+	// Best-effort: preserve existing feed behavior, notify content owner only and skip self-comment.
 	if ownerID, err := s.contentOwnerRepo.GetOwnerUserID(comment.SourceType, comment.SourceID); err == nil && ownerID != "" && ownerID != comment.UserID {
 		_ = s.notifService.Create(&dto.CreateNotificationDTO{
 			UserID:    ownerID,
@@ -68,8 +79,66 @@ func (s *commentService) Create(comment *domain.Comment, schoolID string, userID
 			RelatedID: comment.SourceID,
 		})
 	}
+}
 
-	return nil
+func (s *commentService) notifyAcademicDiscussionRecipients(comment *domain.Comment, schoolID string, roles []string) {
+	source, err := s.loadCommentSource(comment.SourceType, comment.SourceID, schoolID)
+	if err != nil || source.SubjectClassID == "" {
+		return
+	}
+
+	if hasCommentRole(roles, "teacher") || hasCommentRole(roles, "admin") {
+		s.notifyActiveStudentsForDiscussion(comment, source.SubjectClassID)
+		return
+	}
+
+	if hasCommentRole(roles, "student") {
+		s.notifyContentOwnerForDiscussion(comment, source.SubjectClassID)
+	}
+}
+
+func (s *commentService) notifyActiveStudentsForDiscussion(comment *domain.Comment, subjectClassID string) {
+	classID, err := s.subjectClassRepo.GetClassIDBySubjectClass(subjectClassID)
+	if err != nil || classID == "" {
+		return
+	}
+
+	userIDs, err := s.enrRepo.GetStudentUserIDsByClass(classID)
+	if err != nil {
+		return
+	}
+
+	link := s.commentNotificationLinkForAudience(comment.SourceType, comment.SourceID, subjectClassID, "student")
+	s.notifyUsers(userIDs, comment.UserID, comment.SourceID, link)
+}
+
+func (s *commentService) notifyContentOwnerForDiscussion(comment *domain.Comment, subjectClassID string) {
+	ownerID, err := s.contentOwnerRepo.GetOwnerUserID(comment.SourceType, comment.SourceID)
+	if err != nil || ownerID == "" || ownerID == comment.UserID {
+		return
+	}
+
+	link := s.commentNotificationLinkForAudience(comment.SourceType, comment.SourceID, subjectClassID, "teacher")
+	s.notifyUsers([]string{ownerID}, comment.UserID, comment.SourceID, link)
+}
+
+func (s *commentService) notifyUsers(userIDs []string, actorUserID string, relatedID string, link string) {
+	seen := make(map[string]bool, len(userIDs))
+	for _, userID := range userIDs {
+		userID = strings.TrimSpace(userID)
+		if userID == "" || userID == actorUserID || seen[userID] {
+			continue
+		}
+		seen[userID] = true
+		_ = s.notifService.Create(&dto.CreateNotificationDTO{
+			UserID:    userID,
+			Type:      domain.NotifCommentAdded,
+			Title:     "Komentar baru",
+			Message:   "Ada komentar baru di diskusi.",
+			Link:      link,
+			RelatedID: relatedID,
+		})
+	}
 }
 
 func (s *commentService) GetBySource(sourceType string, sourceID string, schoolID string, userID string, roles []string) ([]*domain.Comment, error) {
@@ -261,13 +330,30 @@ func (s *commentService) commentNotificationLink(sourceType domain.SourceType, s
 		if err != nil || material.SchoolID != schoolID {
 			return ""
 		}
-		return fmt.Sprintf("/teacher/subjects/%s/materials/%s", material.SubjectClassID, material.ID)
+		return s.commentNotificationLinkForAudience(sourceType, material.ID, material.SubjectClassID, "teacher")
 	case domain.SourceAssignment:
 		assignment, err := s.assignmentRepo.GetAssignmentByID(sourceID)
 		if err != nil || assignment.SchoolID != schoolID {
 			return ""
 		}
-		return fmt.Sprintf("/teacher/subjects/%s", assignment.SubjectClassID)
+		return s.commentNotificationLinkForAudience(sourceType, assignment.ID, assignment.SubjectClassID, "teacher")
+	default:
+		return ""
+	}
+}
+
+func (s *commentService) commentNotificationLinkForAudience(sourceType domain.SourceType, sourceID string, subjectClassID string, audience string) string {
+	switch sourceType {
+	case domain.SourceMaterial:
+		if audience == "student" {
+			return fmt.Sprintf("/student/subjects/%s/materials/%s", subjectClassID, sourceID)
+		}
+		return fmt.Sprintf("/teacher/subjects/%s/materials/%s", subjectClassID, sourceID)
+	case domain.SourceAssignment:
+		if audience == "student" {
+			return fmt.Sprintf("/student/subjects/%s/assignments/%s", subjectClassID, sourceID)
+		}
+		return fmt.Sprintf("/teacher/subjects/%s/assignments/%s", subjectClassID, sourceID)
 	default:
 		return ""
 	}
