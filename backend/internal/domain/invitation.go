@@ -5,6 +5,7 @@ import "time"
 type Invitation struct {
 	ID           string     `gorm:"primaryKey;column:inv_id;default:gen_random_uuid()" json:"invitationId"`
 	SchoolID     string     `gorm:"column:inv_school_id;type:uuid" json:"schoolId"`
+	School       School     `gorm:"foreignKey:SchoolID;references:ID" json:"school,omitempty"`
 	Email        string     `gorm:"column:inv_email" json:"email"`
 	Role         string     `gorm:"column:inv_role" json:"role"`
 	TokenHash    string     `gorm:"column:inv_token_hash" json:"-"`

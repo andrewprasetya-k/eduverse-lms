@@ -9,6 +9,8 @@ Base URL: `http://localhost:8080/api`
 - `POST /login` - User login
 - `POST /register` - Public user self-registration (plain global account only)
 - `POST /school-registration-requests` - Submit a public school registration request for later super admin review
+- `GET /invitations/:token` - Validate an invitation token and return safe invitation metadata
+- `POST /invitations/:token/accept` - Accept an invitation, set password for new/no-password users, and create membership
 
 **All other endpoints require JWT authentication.**
 

@@ -230,3 +230,75 @@ Response:
 ```
 
 The raw invitation token is returned only once for development/testing because email sending is not implemented yet. The database stores only `inv_token_hash`.
+
+## Public Invitation Accept
+
+Invitation links are public because users receiving invitations may not have accounts yet. The raw token is never stored in the database; incoming tokens are hashed and compared to `inv_token_hash`.
+
+### Get Invitation Metadata
+
+`GET /api/invitations/:token`
+
+Returns safe metadata for a valid invitation token.
+
+```json
+{
+  "invitationId": "f68b33f8-7fcb-4d06-9e6d-cbf0fa0e41b0",
+  "email": "budi@example.com",
+  "role": "admin",
+  "school": {
+    "schoolId": "7d521362-fb37-4137-824f-948d8acb2f45",
+    "schoolCode": "SMWM",
+    "schoolName": "SMA Wiyata Mandala"
+  },
+  "expiresAt": "2026-07-09T05:00:00Z",
+  "status": "valid"
+}
+```
+
+Invalid, expired, revoked, or already accepted tokens return a generic invalid/expired error.
+
+### Accept Invitation
+
+`POST /api/invitations/:token/accept`
+
+```json
+{
+  "name": "Budi Santoso",
+  "password": "Password123!",
+  "confirmPassword": "Password123!"
+}
+```
+
+Behavior:
+
+- Validates the token hash.
+- Rejects expired, revoked, accepted, invalid, or deleted-school invitations.
+- Creates a new user when the invited email does not exist.
+- Reuses an existing user when the invited email already exists.
+- Does not overwrite an existing user's password.
+- Sets the password only for a new user or an existing user with no password.
+- Creates or restores the school membership.
+- Assigns the invited role to the membership.
+- Marks the invitation as accepted.
+
+Response:
+
+```json
+{
+  "message": "Invitation accepted",
+  "user": {
+    "userId": "b1a3952d-0852-48b9-af25-d5c38c242721",
+    "fullName": "Budi Santoso",
+    "email": "budi@example.com"
+  },
+  "school": {
+    "schoolId": "7d521362-fb37-4137-824f-948d8acb2f45",
+    "schoolCode": "SMWM",
+    "schoolName": "SMA Wiyata Mandala"
+  },
+  "role": "admin"
+}
+```
+
+Accepting an invitation is atomic. If user creation/reuse, membership creation/restore, role assignment, or accepted marking fails, the transaction rolls back.
