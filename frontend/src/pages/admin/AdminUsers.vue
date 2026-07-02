@@ -11,12 +11,10 @@ import {
   PhUsers,
   PhWarningCircle,
 } from "@phosphor-icons/vue";
+import * as XLSX from "xlsx";
 import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
-import {
-  getRoles,
-  syncUserRoles,
-} from "../../services/adminUser";
+import { getRoles, syncUserRoles } from "../../services/adminUser";
 import {
   createAdminSchoolMember,
   getAdminSchoolMembers,
@@ -26,9 +24,7 @@ import {
   commitSchoolMemberImport,
   previewSchoolMemberImport,
 } from "../../services/adminSchoolMemberImport";
-import type {
-  RoleItem,
-} from "../../types/adminUser";
+import type { RoleItem } from "../../types/adminUser";
 import type {
   AdminSchoolMemberCreatePayload,
   AdminSchoolMemberItem,
@@ -228,8 +224,17 @@ function getApiErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+const importTemplateRows = [
+  ["fullName", "email", "role", "classCode"],
+  ["Budi Santoso", "budi@siswa.sch.id", "student", "X-IPA-1"],
+  ["Siti Rahma", "siti@guru.sch.id", "teacher", ""],
+  ["Admin Sekolah", "admin@sekolah.sch.id", "admin", ""],
+];
+
+type ImportHeader = "fullName" | "email" | "role" | "classCode";
+
 function downloadTemplate() {
-  const csv = "fullName,email,role,classCode\nBudi Santoso,budi@siswa.sch.id,student,X-IPA-1\nSiti Rahma,siti@guru.sch.id,teacher,\nAdmin Sekolah,admin@sekolah.sch.id,admin,\n";
+  const csv = toCsv(importTemplateRows);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -237,6 +242,120 @@ function downloadTemplate() {
   link.download = "template-import-warga-sekolah.csv";
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function downloadExcelTemplate() {
+  const worksheet = XLSX.utils.aoa_to_sheet(importTemplateRows);
+  worksheet["!cols"] = [{ wch: 24 }, { wch: 28 }, { wch: 14 }, { wch: 16 }];
+  worksheet["!autofilter"] = { ref: "A1:D4" };
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Import Warga");
+  XLSX.writeFile(workbook, "template-import-warga-sekolah.xlsx", {
+    compression: true,
+  });
+}
+
+function csvEscape(value: unknown) {
+  const text = String(value ?? "");
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+  return text;
+}
+
+function toCsv(rows: unknown[][]) {
+  return rows.map((row) => row.map(csvEscape).join(",")).join("\n");
+}
+
+function normalizeImportHeader(value: unknown): ImportHeader | "" {
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+
+  if (
+    normalized === "fullname" ||
+    normalized === "nama" ||
+    normalized === "namalengkap"
+  ) {
+    return "fullName";
+  }
+  if (normalized === "email" || normalized === "alamatemail") {
+    return "email";
+  }
+  if (normalized === "role" || normalized === "peran") {
+    return "role";
+  }
+  if (normalized === "classcode" || normalized === "kodekelas") {
+    return "classCode";
+  }
+  return "";
+}
+
+function isExcelFile(file: File) {
+  const name = file.name.toLowerCase();
+  return (
+    name.endsWith(".xlsx") ||
+    file.type ===
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+}
+
+async function convertXlsxToCsvFile(file: File) {
+  const workbook = XLSX.read(await file.arrayBuffer(), {
+    type: "array",
+    cellDates: false,
+  });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) {
+    throw new Error("Workbook Excel tidak memiliki sheet.");
+  }
+
+  const worksheet = workbook.Sheets[sheetName];
+  const rawRows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
+    header: 1,
+    blankrows: false,
+    defval: "",
+  });
+
+  const [rawHeader, ...dataRows] = rawRows;
+  if (!rawHeader) {
+    throw new Error("Sheet Excel kosong.");
+  }
+
+  const headers = rawHeader.map(normalizeImportHeader);
+  const requiredHeaders: ImportHeader[] = ["fullName", "email", "role"];
+  const missingHeaders = requiredHeaders.filter(
+    (header) => !headers.includes(header),
+  );
+  if (missingHeaders.length > 0) {
+    throw new Error("Header Excel wajib memuat fullName, email, dan role.");
+  }
+
+  const rows = dataRows
+    .map((row) => {
+      const mapped = new Map<string, unknown>();
+      headers.forEach((header, index) => {
+        if (header) mapped.set(header, row[index]);
+      });
+      return [
+        mapped.get("fullName") ?? "",
+        mapped.get("email") ?? "",
+        mapped.get("role") ?? "",
+        mapped.get("classCode") ?? "",
+      ];
+    })
+    .filter((row) => row.some((value) => String(value ?? "").trim() !== ""));
+
+  if (rows.length === 0) {
+    throw new Error("Sheet Excel belum memiliki baris data.");
+  }
+
+  const csv = toCsv([["fullName", "email", "role", "classCode"], ...rows]);
+  return new File([csv], file.name.replace(/\.xlsx$/i, ".csv"), {
+    type: "text/csv;charset=utf-8",
+  });
 }
 
 function resetImportState() {
@@ -257,11 +376,16 @@ async function handleImportFileChange(event: Event) {
 
   importPreviewLoading.value = true;
   try {
-    importPreview.value = await previewSchoolMemberImport(file);
+    const previewFile = isExcelFile(file)
+      ? await convertXlsxToCsvFile(file)
+      : file;
+    importPreview.value = await previewSchoolMemberImport(previewFile);
   } catch (error) {
     importError.value = getApiErrorMessage(
       error,
-      "File import belum bisa divalidasi. Pastikan format CSV sesuai template.",
+      error instanceof Error
+        ? error.message
+        : "File import belum bisa divalidasi. Pastikan format CSV atau XLSX sesuai template.",
     );
   } finally {
     importPreviewLoading.value = false;
@@ -335,7 +459,12 @@ async function submitManualMember() {
         ? manualForm.value.classCode?.trim() || undefined
         : undefined,
   };
-  if (!payload.fullName || !payload.email || !payload.password || !payload.role) {
+  if (
+    !payload.fullName ||
+    !payload.email ||
+    !payload.password ||
+    !payload.role
+  ) {
     toast.error("Nama, email, password awal, dan peran wajib diisi.");
     return;
   }
@@ -725,7 +854,9 @@ onMounted(async () => {
                   :disabled="manualForm.role !== 'student'"
                 />
               </label>
-              <p class="rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#92400e]">
+              <p
+                class="rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#92400e]"
+              >
                 Password awal digunakan untuk akun baru. Pengguna dapat
                 mengganti password setelah login.
               </p>
@@ -751,71 +882,85 @@ onMounted(async () => {
                     Import warga sekolah
                   </h3>
                   <p class="mt-1 text-xs leading-5 text-[#6b7280]">
-                    Upload template CSV untuk menambahkan banyak warga sekaligus.
+                    Upload template CSV atau Excel untuk menambahkan banyak
+                    warga sekaligus.
                   </p>
                 </div>
               </div>
 
               <div class="mt-4 space-y-4">
-              <button
-                type="button"
-                class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#ebe7df] bg-white px-4 py-2.5 text-sm font-medium text-[#171322] transition hover:border-[#ea580c] hover:text-[#ea580c]"
-                @click="downloadTemplate"
-              >
-                <PhDownloadSimple :size="17" weight="duotone" />
-                Download template CSV
-              </button>
+                <div class="grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#ebe7df] bg-white px-4 py-2.5 text-sm font-medium text-[#171322] transition hover:border-[#ea580c] hover:text-[#ea580c]"
+                    @click="downloadTemplate"
+                  >
+                    <PhDownloadSimple :size="17" weight="duotone" />
+                    Template CSV
+                  </button>
 
-              <label class="block text-xs font-medium text-[#6b7280]">
-                File CSV
-                <input
-                  type="file"
-                  accept=".csv,text/csv"
-                  class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition file:mr-3 file:rounded-md file:border-0 file:bg-[#fff4ee] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#ea580c] focus:border-[#4f46e5] focus:bg-white"
-                  @change="handleImportFileChange"
-                />
-              </label>
+                  <button
+                    type="button"
+                    class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#ebe7df] bg-white px-4 py-2.5 text-sm font-medium text-[#171322] transition hover:border-[#ea580c] hover:text-[#ea580c]"
+                    @click="downloadExcelTemplate"
+                  >
+                    <PhDownloadSimple :size="17" weight="duotone" />
+                    Template Excel
+                  </button>
+                </div>
 
-              <label class="block text-xs font-medium text-[#6b7280]">
-                Password awal untuk akun baru
-                <input
-                  v-model="importDefaultPassword"
-                  type="password"
-                  placeholder="Minimal 6 karakter"
-                  class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#4f46e5] focus:bg-white"
-                />
-              </label>
+                <label class="block text-xs font-medium text-[#6b7280]">
+                  File CSV atau Excel
+                  <input
+                    type="file"
+                    accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition file:mr-3 file:rounded-md file:border-0 file:bg-[#fff4ee] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#ea580c] focus:border-[#4f46e5] focus:bg-white"
+                    @change="handleImportFileChange"
+                  />
+                </label>
 
-              <p class="rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#92400e]">
-                Password awal hanya dipakai untuk akun baru. Pengguna dapat
-                mengganti password setelah login.
-              </p>
+                <label class="block text-xs font-medium text-[#6b7280]">
+                  Password awal untuk akun baru
+                  <input
+                    v-model="importDefaultPassword"
+                    type="password"
+                    placeholder="Minimal 6 karakter"
+                    class="mt-2 w-full rounded-lg border border-[#ebe7df] bg-[#fbfaf8] px-3.5 py-2.5 text-sm text-[#171322] outline-none transition placeholder:text-[#9ca3af] focus:border-[#4f46e5] focus:bg-white"
+                  />
+                </label>
 
-              <button
-                type="button"
-                class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#ea580c] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#c2410c] disabled:opacity-60"
-                :disabled="
-                  importCommitLoading ||
-                  importPreviewLoading ||
-                  !importPreview ||
-                  importPreview.invalidCount > 0
-                "
-                @click="submitImportCommit"
-              >
-                <PhUploadSimple :size="17" weight="duotone" />
-                {{ importCommitLoading ? "Mengimport..." : "Import warga" }}
-              </button>
+                <p
+                  class="rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-3 py-2 text-xs leading-5 text-[#92400e]"
+                >
+                  Password awal hanya dipakai untuk akun baru. Pengguna dapat
+                  mengganti password setelah login.
+                </p>
 
-              <button
-                v-if="importPreview || importResult || importFile"
-                type="button"
-                class="inline-flex w-full items-center justify-center rounded-lg border border-[#ebe7df] bg-white px-4 py-2.5 text-sm font-medium text-[#171322] transition hover:bg-[#fbfaf8]"
-                :disabled="importCommitLoading || importPreviewLoading"
-                @click="resetImportState"
-              >
-                Reset import
-              </button>
-            </div>
+                <button
+                  type="button"
+                  class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#ea580c] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#c2410c] disabled:opacity-60"
+                  :disabled="
+                    importCommitLoading ||
+                    importPreviewLoading ||
+                    !importPreview ||
+                    importPreview.invalidCount > 0
+                  "
+                  @click="submitImportCommit"
+                >
+                  <PhUploadSimple :size="17" weight="duotone" />
+                  {{ importCommitLoading ? "Mengimport..." : "Import warga" }}
+                </button>
+
+                <button
+                  v-if="importPreview || importResult || importFile"
+                  type="button"
+                  class="inline-flex w-full items-center justify-center rounded-lg border border-[#ebe7df] bg-white px-4 py-2.5 text-sm font-medium text-[#171322] transition hover:bg-[#fbfaf8]"
+                  :disabled="importCommitLoading || importPreviewLoading"
+                  @click="resetImportState"
+                >
+                  Reset import
+                </button>
+              </div>
             </div>
 
             <div class="mt-4 space-y-3">
@@ -843,10 +988,14 @@ onMounted(async () => {
                 class="rounded-lg border border-[#ebe7df] bg-[#fbfaf8] p-3"
               >
                 <div class="flex flex-wrap gap-2 text-xs">
-                  <span class="rounded-lg bg-[#ecfdf3] px-2.5 py-1 font-semibold text-[#027a48]">
+                  <span
+                    class="rounded-lg bg-[#ecfdf3] px-2.5 py-1 font-semibold text-[#027a48]"
+                  >
                     {{ importPreview.validCount }} valid
                   </span>
-                  <span class="rounded-lg bg-[#fef2f2] px-2.5 py-1 font-semibold text-[#dc2626]">
+                  <span
+                    class="rounded-lg bg-[#fef2f2] px-2.5 py-1 font-semibold text-[#dc2626]"
+                  >
                     {{ importPreview.invalidCount }} invalid
                   </span>
                 </div>
@@ -865,14 +1014,17 @@ onMounted(async () => {
                     <div class="flex items-start justify-between gap-2">
                       <div class="min-w-0">
                         <p class="text-xs font-semibold text-[#171322]">
-                          Baris {{ row.rowNumber }} · {{ row.fullName || "Nama kosong" }}
+                          Baris {{ row.rowNumber }} ·
+                          {{ row.fullName || "Nama kosong" }}
                         </p>
                         <p class="mt-1 break-all text-xs text-[#6b7280]">
                           {{ row.email || "Email kosong" }}
                         </p>
                         <p class="mt-1 text-xs text-[#6b7280]">
                           {{ roleLabel(row.role) }}
-                          <span v-if="row.classCode"> · {{ row.classCode }}</span>
+                          <span v-if="row.classCode">
+                            · {{ row.classCode }}</span
+                          >
                         </p>
                       </div>
                       <span
