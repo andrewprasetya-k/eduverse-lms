@@ -3,6 +3,7 @@ package repository
 import (
 	"backend/internal/domain"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -10,6 +11,9 @@ import (
 type SchoolRegistrationRequestRepository interface {
 	Create(request *domain.SchoolRegistrationRequest) error
 	HasPendingDuplicate(schoolName string, picEmail string) (bool, error)
+	List(status string, page int, limit int) ([]*domain.SchoolRegistrationRequest, int64, error)
+	GetByID(id string) (*domain.SchoolRegistrationRequest, error)
+	RejectPending(id string, reviewerID string, reviewedAt time.Time, reviewNote *string) error
 }
 
 type schoolRegistrationRequestRepository struct {
@@ -35,4 +39,47 @@ func (r *schoolRegistrationRequestRepository) HasPendingDuplicate(schoolName str
 		).
 		Count(&count).Error
 	return count > 0, err
+}
+
+func (r *schoolRegistrationRequestRepository) List(status string, page int, limit int) ([]*domain.SchoolRegistrationRequest, int64, error) {
+	var requests []*domain.SchoolRegistrationRequest
+	var total int64
+
+	query := r.db.Model(&domain.SchoolRegistrationRequest{})
+	if status != "" {
+		query = query.Where("srr_status = ?", status)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * limit
+	err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&requests).Error
+	return requests, total, err
+}
+
+func (r *schoolRegistrationRequestRepository) GetByID(id string) (*domain.SchoolRegistrationRequest, error) {
+	var request domain.SchoolRegistrationRequest
+	err := r.db.Where("srr_id = ?", id).First(&request).Error
+	return &request, err
+}
+
+func (r *schoolRegistrationRequestRepository) RejectPending(id string, reviewerID string, reviewedAt time.Time, reviewNote *string) error {
+	result := r.db.Model(&domain.SchoolRegistrationRequest{}).
+		Where("srr_id = ? AND srr_status = ?", id, domain.SchoolRegistrationPending).
+		Updates(map[string]interface{}{
+			"srr_status":      domain.SchoolRegistrationRejected,
+			"srr_reviewed_by": reviewerID,
+			"srr_reviewed_at": reviewedAt,
+			"srr_review_note": reviewNote,
+			"updated_at":      reviewedAt,
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }

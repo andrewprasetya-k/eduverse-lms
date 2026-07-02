@@ -276,6 +276,9 @@ func main() {
 		superAdminAPI := api.Group("/super-admin")
 		{
 			superAdminAPI.POST("/school-bootstrap", middleware.RequireSystemSuperAdmin(schoolService), superAdminBootstrapHandler.BootstrapSchool)
+			superAdminAPI.GET("/school-registration-requests", middleware.RequireSystemSuperAdmin(schoolService), schoolRegistrationRequestHandler.List)
+			superAdminAPI.GET("/school-registration-requests/:id", middleware.RequireSystemSuperAdmin(schoolService), schoolRegistrationRequestHandler.GetByID)
+			superAdminAPI.PATCH("/school-registration-requests/:id/reject", middleware.RequireSystemSuperAdmin(schoolService), schoolRegistrationRequestHandler.Reject)
 		}
 
 		classAPI := api.Group("/classes")

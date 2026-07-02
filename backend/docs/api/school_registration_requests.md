@@ -73,3 +73,97 @@ If a pending request already exists with the same normalized `picEmail` or `scho
 ```
 
 Approved and rejected historical requests are not blocked in this foundation step.
+
+## Super Admin Management
+
+The following endpoints require JWT authentication and system `super_admin` role.
+
+### List Requests
+
+`GET /api/super-admin/school-registration-requests?status=pending&page=1&limit=10`
+
+Query parameters:
+
+- `status`: optional, one of `pending`, `approved`, or `rejected`. Defaults to `pending`.
+- `page`: optional, defaults to `1`.
+- `limit`: optional, defaults to `10`, maximum `100`.
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "requestId": "b2d3c64f-5c8c-47c1-8a35-b71fd67ef15e",
+      "schoolName": "SMA Wiyata Mandala",
+      "picName": "Budi Santoso",
+      "picEmail": "budi@example.com",
+      "status": "pending",
+      "createdAt": "2026-07-02T04:00:00Z",
+      "updatedAt": "2026-07-02T04:00:00Z"
+    }
+  ],
+  "totalItems": 1,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1
+}
+```
+
+### Get Request Detail
+
+`GET /api/super-admin/school-registration-requests/:id`
+
+Response includes submitted optional fields and review metadata when available:
+
+```json
+{
+  "requestId": "b2d3c64f-5c8c-47c1-8a35-b71fd67ef15e",
+  "schoolName": "SMA Wiyata Mandala",
+  "npsn": "12345678",
+  "picName": "Budi Santoso",
+  "picEmail": "budi@example.com",
+  "picPhone": "081234567890",
+  "picRole": "Kepala Sekolah",
+  "message": "Kami ingin mencoba Wiyata untuk semester baru.",
+  "status": "pending",
+  "createdAt": "2026-07-02T04:00:00Z",
+  "updatedAt": "2026-07-02T04:00:00Z"
+}
+```
+
+### Reject Request
+
+`PATCH /api/super-admin/school-registration-requests/:id/reject`
+
+Only `pending` requests can be rejected.
+
+Request body:
+
+```json
+{
+  "reason": "Data sekolah belum lengkap."
+}
+```
+
+`reason` is optional and limited to 1000 characters.
+
+Response:
+
+```json
+{
+  "message": "School registration request rejected",
+  "request": {
+    "requestId": "b2d3c64f-5c8c-47c1-8a35-b71fd67ef15e",
+    "schoolName": "SMA Wiyata Mandala",
+    "picName": "Budi Santoso",
+    "picEmail": "budi@example.com",
+    "status": "rejected",
+    "reviewedBy": "8c80d272-51a5-47e5-9078-74118dc77b5d",
+    "reviewedAt": "2026-07-02T05:00:00Z",
+    "reviewNote": "Data sekolah belum lengkap.",
+    "createdAt": "2026-07-02T04:00:00Z",
+    "updatedAt": "2026-07-02T05:00:00Z"
+  }
+}
+```
