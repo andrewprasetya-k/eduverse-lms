@@ -29,6 +29,9 @@ Authorization: Bearer <your-jwt-token>
 - `GET /super-admin/school-registration-requests/:id` - Get school registration request detail (system super_admin only)
 - `PATCH /super-admin/school-registration-requests/:id/approve` - Approve a pending school registration request and issue an admin invitation token (system super_admin only)
 - `PATCH /super-admin/school-registration-requests/:id/reject` - Reject a pending school registration request (system super_admin only)
+- `POST /admin/school-member-invitations` - Create a teacher/student invitation token for the active school (school admin only)
+- `GET /admin/school-member-invitations` - List active-school member invitations by status (school admin only)
+- `PATCH /admin/school-member-invitations/:id/revoke` - Revoke a pending active-school member invitation (school admin only)
 - `POST /schools` - Create school
 - `POST /super-admin/school-bootstrap` - Atomically create school tenant and assign initial school admin (system super_admin only)
 - `GET /schools` - List all schools (with pagination)

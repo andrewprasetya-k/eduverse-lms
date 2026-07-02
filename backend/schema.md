@@ -79,6 +79,8 @@ inv_id uuid [pk, default: `gen_random_uuid()`]
 inv_school_id uuid [not null, ref: > schools.sch_id]
 inv_email text [not null]
 inv_role text [not null]
+inv_full_name text
+inv_class_id uuid [ref: > classes.cls_id]
 inv_token_hash text [not null, unique]
 inv_invited_by uuid [not null, ref: > users.usr_id]
 inv_target_user_id uuid [ref: > users.usr_id]

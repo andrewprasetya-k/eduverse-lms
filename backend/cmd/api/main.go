@@ -64,6 +64,9 @@ func main() {
 	schoolUserHandler := handler.NewSchoolUserHandler(schoolUserService, schoolService)
 	adminSchoolMemberImportService := service.NewAdminSchoolMemberImportService(db)
 	adminSchoolMemberImportHandler := handler.NewAdminSchoolMemberImportHandler(adminSchoolMemberImportService)
+	schoolMemberInvitationRepo := repository.NewSchoolMemberInvitationRepository(db)
+	schoolMemberInvitationService := service.NewSchoolMemberInvitationService(schoolMemberInvitationRepo)
+	schoolMemberInvitationHandler := handler.NewSchoolMemberInvitationHandler(schoolMemberInvitationService)
 
 	authService := service.NewAuthService(userRepo, schoolUserRepo)
 	authHandler := handler.NewAuthHandler(authService)
@@ -247,6 +250,14 @@ func main() {
 			adminSchoolMemberAPI.POST("", adminSchoolMemberImportHandler.AddMember)
 			adminSchoolMemberAPI.DELETE("/:schoolUserId", adminSchoolMemberImportHandler.RemoveMember)
 			adminSchoolMemberAPI.PATCH("/:schoolUserId/restore", adminSchoolMemberImportHandler.RestoreMember)
+		}
+
+		schoolMemberInvitationAPI := api.Group("/admin/school-member-invitations")
+		schoolMemberInvitationAPI.Use(middleware.RequireSchoolMember(schoolService), middleware.RequireRole(schoolService, "admin"))
+		{
+			schoolMemberInvitationAPI.GET("", schoolMemberInvitationHandler.List)
+			schoolMemberInvitationAPI.POST("", schoolMemberInvitationHandler.Create)
+			schoolMemberInvitationAPI.PATCH("/:id/revoke", schoolMemberInvitationHandler.Revoke)
 		}
 
 		subjectAPI := api.Group("/subjects")

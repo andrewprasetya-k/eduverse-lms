@@ -8,6 +8,9 @@ type Invitation struct {
 	School       School     `gorm:"foreignKey:SchoolID;references:ID" json:"school,omitempty"`
 	Email        string     `gorm:"column:inv_email" json:"email"`
 	Role         string     `gorm:"column:inv_role" json:"role"`
+	FullName     *string    `gorm:"column:inv_full_name" json:"fullName,omitempty"`
+	ClassID      *string    `gorm:"column:inv_class_id;type:uuid" json:"classId,omitempty"`
+	Class        Class      `gorm:"foreignKey:ClassID;references:ID" json:"class,omitempty"`
 	TokenHash    string     `gorm:"column:inv_token_hash" json:"-"`
 	InvitedBy    string     `gorm:"column:inv_invited_by;type:uuid" json:"invitedBy"`
 	TargetUserID *string    `gorm:"column:inv_target_user_id;type:uuid" json:"targetUserId,omitempty"`
