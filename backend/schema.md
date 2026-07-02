@@ -74,6 +74,27 @@ indexes {
 }
 }
 
+Table invitations {
+inv_id uuid [pk, default: `gen_random_uuid()`]
+inv_school_id uuid [not null, ref: > schools.sch_id]
+inv_email text [not null]
+inv_role text [not null]
+inv_token_hash text [not null, unique]
+inv_invited_by uuid [not null, ref: > users.usr_id]
+inv_target_user_id uuid [ref: > users.usr_id]
+inv_expires_at timestamptz [not null]
+inv_accepted_at timestamptz
+inv_revoked_at timestamptz
+created_at timestamptz [default: `now()`]
+updated_at timestamptz [default: `now()`]
+
+indexes {
+(inv_school_id, inv_email, inv_role) [name: 'idx_invitations_school_email_role']
+(inv_email, inv_accepted_at, inv_revoked_at) [name: 'idx_invitations_email_status']
+(inv_expires_at) [name: 'idx_invitations_expires_at']
+}
+}
+
 Table academic_years {
 acy_id uuid [pk, default: `gen_random_uuid()`]
 acy_sch_id uuid [ref: > schools.sch_id]

@@ -45,10 +45,40 @@ type RejectSchoolRegistrationRequestDTO struct {
 	Reason *string `json:"reason"`
 }
 
+type ApproveSchoolRegistrationRequestDTO struct {
+	SchoolCode string  `json:"schoolCode"`
+	SchoolName *string `json:"schoolName"`
+	AdminName  *string `json:"adminName"`
+	AdminEmail *string `json:"adminEmail"`
+	Note       *string `json:"note"`
+}
+
 type SchoolRegistrationRequestListResponseDTO struct {
 	Data       []SchoolRegistrationRequestDetailDTO `json:"data"`
 	TotalItems int64                                `json:"totalItems"`
 	Page       int                                  `json:"page"`
 	Limit      int                                  `json:"limit"`
 	TotalPages int                                  `json:"totalPages"`
+}
+
+type ApprovedSchoolDTO struct {
+	SchoolID   string `json:"schoolId"`
+	SchoolCode string `json:"schoolCode"`
+	SchoolName string `json:"schoolName"`
+}
+
+type AdminInvitationDTO struct {
+	InvitationID string `json:"invitationId"`
+	Email        string `json:"email"`
+	Role         string `json:"role"`
+	ExpiresAt    string `json:"expiresAt"`
+	AcceptURL    string `json:"acceptUrl"`
+	Token        string `json:"token"`
+}
+
+type ApproveSchoolRegistrationRequestResponseDTO struct {
+	Message    string                             `json:"message"`
+	Request    SchoolRegistrationRequestDetailDTO `json:"request"`
+	School     ApprovedSchoolDTO                  `json:"school"`
+	Invitation AdminInvitationDTO                 `json:"invitation"`
 }

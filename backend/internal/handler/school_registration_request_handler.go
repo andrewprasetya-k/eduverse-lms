@@ -81,12 +81,30 @@ func (h *SchoolRegistrationRequestHandler) Reject(c *gin.Context) {
 	})
 }
 
+func (h *SchoolRegistrationRequestHandler) Approve(c *gin.Context) {
+	var input dto.ApproveSchoolRegistrationRequestDTO
+	if err := c.ShouldBindJSON(&input); err != nil && err != io.EOF {
+		HandleBindingError(c, err)
+		return
+	}
+
+	response, err := h.service.Approve(c.Param("id"), middleware.GetUserID(c), input)
+	if err != nil {
+		handleSchoolRegistrationRequestError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func handleSchoolRegistrationRequestError(c *gin.Context, err error) {
 	errStr := err.Error()
 
 	switch {
 	case strings.Contains(errStr, "pending duplicate"):
 		c.JSON(http.StatusConflict, gin.H{"error": "A pending registration request already exists for this school or contact email"})
+	case strings.Contains(errStr, "duplicate school code"):
+		c.JSON(http.StatusConflict, gin.H{"error": "School code already exists"})
 	case strings.Contains(errStr, "is not pending"):
 		c.JSON(http.StatusConflict, gin.H{"error": "School registration request is not pending"})
 	case strings.Contains(errStr, "school registration"):

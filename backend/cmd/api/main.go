@@ -278,6 +278,7 @@ func main() {
 			superAdminAPI.POST("/school-bootstrap", middleware.RequireSystemSuperAdmin(schoolService), superAdminBootstrapHandler.BootstrapSchool)
 			superAdminAPI.GET("/school-registration-requests", middleware.RequireSystemSuperAdmin(schoolService), schoolRegistrationRequestHandler.List)
 			superAdminAPI.GET("/school-registration-requests/:id", middleware.RequireSystemSuperAdmin(schoolService), schoolRegistrationRequestHandler.GetByID)
+			superAdminAPI.PATCH("/school-registration-requests/:id/approve", middleware.RequireSystemSuperAdmin(schoolService), schoolRegistrationRequestHandler.Approve)
 			superAdminAPI.PATCH("/school-registration-requests/:id/reject", middleware.RequireSystemSuperAdmin(schoolService), schoolRegistrationRequestHandler.Reject)
 		}
 

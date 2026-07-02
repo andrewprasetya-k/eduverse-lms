@@ -167,3 +167,66 @@ Response:
   }
 }
 ```
+
+### Approve Request
+
+`PATCH /api/super-admin/school-registration-requests/:id/approve`
+
+Approving a request creates a school, creates an admin invitation, and marks the request as approved in one transaction. It does not create a user, school membership, password, or send email yet.
+
+Only `pending` requests can be approved.
+
+Request body:
+
+```json
+{
+  "schoolCode": "SMWM",
+  "schoolName": "SMA Wiyata Mandala",
+  "adminName": "Budi Santoso",
+  "adminEmail": "budi@example.com",
+  "note": "Approved"
+}
+```
+
+Rules:
+
+- `schoolCode` is required and must be unique.
+- `schoolName` defaults to the submitted `schoolName` when empty or omitted.
+- `adminName` defaults to the submitted `picName` when empty or omitted.
+- `adminEmail` defaults to the submitted `picEmail` when empty or omitted.
+- `note` is optional and limited to 1000 characters.
+
+Response:
+
+```json
+{
+  "message": "School registration request approved",
+  "request": {
+    "requestId": "b2d3c64f-5c8c-47c1-8a35-b71fd67ef15e",
+    "schoolName": "SMA Wiyata Mandala",
+    "picName": "Budi Santoso",
+    "picEmail": "budi@example.com",
+    "status": "approved",
+    "reviewedBy": "8c80d272-51a5-47e5-9078-74118dc77b5d",
+    "reviewedAt": "2026-07-02T05:00:00Z",
+    "reviewNote": "Approved",
+    "createdAt": "2026-07-02T04:00:00Z",
+    "updatedAt": "2026-07-02T05:00:00Z"
+  },
+  "school": {
+    "schoolId": "7d521362-fb37-4137-824f-948d8acb2f45",
+    "schoolCode": "SMWM",
+    "schoolName": "SMA Wiyata Mandala"
+  },
+  "invitation": {
+    "invitationId": "f68b33f8-7fcb-4d06-9e6d-cbf0fa0e41b0",
+    "email": "budi@example.com",
+    "role": "admin",
+    "expiresAt": "2026-07-09T05:00:00Z",
+    "acceptUrl": "/invite/FmVZgNLLXioYVCw7gN3NqTB6O1C5rjyHfBH0BRwsgH0",
+    "token": "FmVZgNLLXioYVCw7gN3NqTB6O1C5rjyHfBH0BRwsgH0"
+  }
+}
+```
+
+The raw invitation token is returned only once for development/testing because email sending is not implemented yet. The database stores only `inv_token_hash`.

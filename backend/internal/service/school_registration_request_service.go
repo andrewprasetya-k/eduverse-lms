@@ -4,6 +4,10 @@ import (
 	"backend/internal/domain"
 	"backend/internal/dto"
 	"backend/internal/repository"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"net/mail"
 	"strings"
@@ -17,6 +21,7 @@ type SchoolRegistrationRequestService interface {
 	List(status string, page int, limit int) (*dto.SchoolRegistrationRequestListResponseDTO, error)
 	GetByID(id string) (*dto.SchoolRegistrationRequestDetailDTO, error)
 	Reject(id string, reviewerID string, input dto.RejectSchoolRegistrationRequestDTO) (*dto.SchoolRegistrationRequestDetailDTO, error)
+	Approve(id string, reviewerID string, input dto.ApproveSchoolRegistrationRequestDTO) (*dto.ApproveSchoolRegistrationRequestResponseDTO, error)
 }
 
 type schoolRegistrationRequestService struct {
@@ -159,6 +164,108 @@ func (s *schoolRegistrationRequestService) Reject(id string, reviewerID string, 
 	return &response, nil
 }
 
+func (s *schoolRegistrationRequestService) Approve(id string, reviewerID string, input dto.ApproveSchoolRegistrationRequestDTO) (*dto.ApproveSchoolRegistrationRequestResponseDTO, error) {
+	id = strings.TrimSpace(id)
+	reviewerID = strings.TrimSpace(reviewerID)
+	if id == "" {
+		return nil, errors.New("school registration request id is required")
+	}
+	if reviewerID == "" {
+		return nil, errors.New("school registration reviewer is required")
+	}
+
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if existing.Status != domain.SchoolRegistrationPending {
+		return nil, errors.New("school registration request is not pending")
+	}
+
+	schoolCode := strings.TrimSpace(input.SchoolCode)
+	schoolName := valueOrDefault(input.SchoolName, existing.SchoolName)
+	adminName := valueOrDefault(input.AdminName, existing.PICName)
+	adminEmail := strings.ToLower(valueOrDefault(input.AdminEmail, existing.PICEmail))
+	note := cleanOptional(input.Note)
+
+	if schoolCode == "" {
+		return nil, errors.New("school registration school code is required")
+	}
+	if len(schoolCode) > 50 {
+		return nil, errors.New("school registration school code exceeds 50 characters")
+	}
+	if schoolName == "" {
+		return nil, errors.New("school registration school name is required")
+	}
+	if len(schoolName) > 150 {
+		return nil, errors.New("school registration school name exceeds 150 characters")
+	}
+	if adminName == "" {
+		return nil, errors.New("school registration admin name is required")
+	}
+	if len(adminName) > 150 {
+		return nil, errors.New("school registration admin name exceeds 150 characters")
+	}
+	if adminEmail == "" {
+		return nil, errors.New("school registration admin email is required")
+	}
+	if _, err := mail.ParseAddress(adminEmail); err != nil {
+		return nil, errors.New("school registration admin email is invalid")
+	}
+	if note != nil && len(*note) > 1000 {
+		return nil, errors.New("school registration approval note exceeds 1000 characters")
+	}
+
+	rawToken, tokenHash, err := generateInvitationToken()
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	expiresAt := now.Add(7 * 24 * time.Hour)
+	schoolPhone := ""
+	if existing.PICPhone != nil {
+		schoolPhone = *existing.PICPhone
+	}
+
+	school := &domain.School{
+		Name:  schoolName,
+		Code:  schoolCode,
+		Email: adminEmail,
+		Phone: schoolPhone,
+	}
+	invitation := &domain.Invitation{
+		Email:     adminEmail,
+		Role:      "admin",
+		TokenHash: tokenHash,
+		InvitedBy: reviewerID,
+		ExpiresAt: expiresAt,
+	}
+
+	updatedRequest, err := s.repo.ApprovePending(id, school, invitation, reviewerID, now, note)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.ApproveSchoolRegistrationRequestResponseDTO{
+		Message: "School registration request approved",
+		Request: mapSchoolRegistrationRequestDetail(updatedRequest),
+		School: dto.ApprovedSchoolDTO{
+			SchoolID:   school.ID,
+			SchoolCode: school.Code,
+			SchoolName: school.Name,
+		},
+		Invitation: dto.AdminInvitationDTO{
+			InvitationID: invitation.ID,
+			Email:        invitation.Email,
+			Role:         invitation.Role,
+			ExpiresAt:    formatAPITime(invitation.ExpiresAt),
+			AcceptURL:    "/invite/" + rawToken,
+			Token:        rawToken,
+		},
+	}, nil
+}
+
 func validateSchoolRegistrationRequest(request *domain.SchoolRegistrationRequest) error {
 	if request.SchoolName == "" {
 		return errors.New("school registration school name is required")
@@ -202,6 +309,28 @@ func cleanOptional(value *string) *string {
 		return nil
 	}
 	return &trimmed
+}
+
+func valueOrDefault(value *string, fallback string) string {
+	if value == nil {
+		return strings.TrimSpace(fallback)
+	}
+	trimmed := strings.TrimSpace(*value)
+	if trimmed == "" {
+		return strings.TrimSpace(fallback)
+	}
+	return trimmed
+}
+
+func generateInvitationToken() (string, string, error) {
+	tokenBytes := make([]byte, 32)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		return "", "", err
+	}
+
+	rawToken := base64.RawURLEncoding.EncodeToString(tokenBytes)
+	sum := sha256.Sum256([]byte(rawToken))
+	return rawToken, hex.EncodeToString(sum[:]), nil
 }
 
 func isValidSchoolRegistrationStatus(status string) bool {

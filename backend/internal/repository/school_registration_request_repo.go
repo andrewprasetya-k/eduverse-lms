@@ -2,10 +2,12 @@ package repository
 
 import (
 	"backend/internal/domain"
+	"errors"
 	"strings"
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type SchoolRegistrationRequestRepository interface {
@@ -14,6 +16,7 @@ type SchoolRegistrationRequestRepository interface {
 	List(status string, page int, limit int) ([]*domain.SchoolRegistrationRequest, int64, error)
 	GetByID(id string) (*domain.SchoolRegistrationRequest, error)
 	RejectPending(id string, reviewerID string, reviewedAt time.Time, reviewNote *string) error
+	ApprovePending(id string, school *domain.School, invitation *domain.Invitation, reviewerID string, reviewedAt time.Time, reviewNote *string) (*domain.SchoolRegistrationRequest, error)
 }
 
 type schoolRegistrationRequestRepository struct {
@@ -82,4 +85,63 @@ func (r *schoolRegistrationRequestRepository) RejectPending(id string, reviewerI
 		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+func (r *schoolRegistrationRequestRepository) ApprovePending(id string, school *domain.School, invitation *domain.Invitation, reviewerID string, reviewedAt time.Time, reviewNote *string) (*domain.SchoolRegistrationRequest, error) {
+	var updatedRequest *domain.SchoolRegistrationRequest
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var request domain.SchoolRegistrationRequest
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("srr_id = ?", id).
+			First(&request).Error; err != nil {
+			return err
+		}
+		if request.Status != domain.SchoolRegistrationPending {
+			return errors.New("school registration request is not pending")
+		}
+
+		var schoolCount int64
+		if err := tx.Unscoped().Model(&domain.School{}).
+			Where("sch_code = ?", school.Code).
+			Count(&schoolCount).Error; err != nil {
+			return err
+		}
+		if schoolCount > 0 {
+			return errors.New("school registration duplicate school code")
+		}
+
+		if err := tx.Create(school).Error; err != nil {
+			return err
+		}
+
+		invitation.SchoolID = school.ID
+		if err := tx.Create(invitation).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&domain.SchoolRegistrationRequest{}).
+			Where("srr_id = ? AND srr_status = ?", id, domain.SchoolRegistrationPending).
+			Updates(map[string]interface{}{
+				"srr_status":      domain.SchoolRegistrationApproved,
+				"srr_reviewed_by": reviewerID,
+				"srr_reviewed_at": reviewedAt,
+				"srr_review_note": reviewNote,
+				"updated_at":      reviewedAt,
+			}).Error; err != nil {
+			return err
+		}
+
+		var refreshed domain.SchoolRegistrationRequest
+		if err := tx.Where("srr_id = ?", id).First(&refreshed).Error; err != nil {
+			return err
+		}
+		updatedRequest = &refreshed
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return updatedRequest, nil
 }
